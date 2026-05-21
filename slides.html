@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrandPulse AI · Hackathon Pitch</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;--white:#ffffff;--gray:#f0f2f6;--muted:#6c757d;
+  --accent:#4361ee;--accent2:#7209b7;--accent3:#f72585;
+  --heytea:#1a1a1a;--nayuki:#c0737a;--chapanda:#3d8b37;
+  --green:#198754;--yellow:#ffc107;--red:#dc3545;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif}
+
+/* ── Slide Container ── */
+.deck{width:100%;height:100%;position:relative}
+.slide{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;justify-content:center;align-items:center;
+  padding:60px 80px;
+  opacity:0;transition:opacity .35s ease;
+}
+.slide.active{display:flex;opacity:1}
+
+/* ── Controls ── */
+.controls{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;gap:16px;align-items:center;z-index:100;
+}
+.btn-nav{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:#fff;padding:8px 20px;border-radius:30px;cursor:pointer;
+  font-size:14px;transition:background .2s;backdrop-filter:blur(8px);
+}
+.btn-nav:hover{background:rgba(255,255,255,.25)}
+.counter{color:rgba(255,255,255,.5);font-size:13px;min-width:60px;text-align:center}
+.progress{
+  position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent3));
+  transition:width .35s ease;z-index:100;
+}
+
+/* ── Typography ── */
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.tag-blue{background:#4361ee22;color:#4361ee;border:1px solid #4361ee44}
+.tag-purple{background:#7209b722;color:#7209b7;border:1px solid #7209b744}
+.tag-pink{background:#f7258522;color:#f72585;border:1px solid #f7258544}
+.tag-green{background:#19875422;color:#198754;border:1px solid #19875444}
+.tag-white{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+
+/* ════════════════════════════════════
+   SLIDE 1 — Cover
+════════════════════════════════════ */
+.s1{background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 50%,#16213e 100%);text-align:center}
+.s1 .logo{font-size:56px;font-weight:800;color:#fff;letter-spacing:-2px;margin-bottom:12px}
+.s1 .logo span{background:linear-gradient(90deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s1 .sub{font-size:20px;color:rgba(255,255,255,.6);margin-bottom:40px;font-weight:300}
+.s1 .brands{display:flex;gap:20px;justify-content:center;margin-bottom:40px}
+.brand-pill{padding:8px 20px;border-radius:30px;font-size:14px;font-weight:600}
+.s1 .meta{color:rgba(255,255,255,.3);font-size:13px}
+.s1 .meta span{color:rgba(255,255,255,.5);margin:0 8px}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none}
+
+/* ════════════════════════════════════
+   SLIDE 2 — Problem
+════════════════════════════════════ */
+.s2{background:#fff}
+.slide-title{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.h1{font-size:42px;font-weight:800;color:var(--black);line-height:1.15;margin-bottom:12px}
+.h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lead{font-size:17px;color:#495057;line-height:1.6;margin-bottom:36px;max-width:600px}
+.pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%}
+.pain-card{background:#f8f9fa;border-radius:16px;padding:24px;border-left:4px solid var(--accent)}
+.pain-card.p2{border-color:var(--accent2)}
+.pain-card.p3{border-color:var(--accent3)}
+.pain-icon{font-size:28px;margin-bottom:12px}
+.pain-title{font-size:15px;font-weight:700;color:var(--black);margin-bottom:8px}
+.pain-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* ════════════════════════════════════
+   SLIDE 3 — Solution
+════════════════════════════════════ */
+.s3{background:linear-gradient(135deg,#0a0a0a,#1a1a2e)}
+.s3 .h1{color:#fff}
+.solution-row{display:flex;gap:40px;align-items:center;width:100%;margin-top:32px}
+.solution-left{flex:1}
+.solution-right{flex:1;display:flex;flex-direction:column;gap:14px}
+.sol-item{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 20px}
+.sol-icon{font-size:24px;flex-shrink:0}
+.sol-text{font-size:14px;color:rgba(255,255,255,.85);line-height:1.4}
+.sol-text strong{color:#fff;display:block;margin-bottom:2px}
+.big-stat{text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:32px;margin-bottom:16px}
+.big-num{font-size:64px;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.big-label{font-size:14px;color:rgba(255,255,255,.5);margin-top:8px}
+
+/* ════════════════════════════════════
+   SLIDE 4 — Modules
+════════════════════════════════════ */
+.s4{background:#fff}
+.modules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;margin-top:24px}
+.mod-card{border-radius:16px;padding:22px;position:relative;overflow:hidden;cursor:default;transition:transform .2s}
+.mod-card:hover{transform:translateY(-3px)}
+.mod-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.mc1{background:#f0f4ff}.mc1::before{background:var(--accent)}
+.mc2{background:#f5f0ff}.mc2::before{background:var(--accent2)}
+.mc3{background:#fff0f8}.mc3::before{background:var(--accent3)}
+.mc4{background:#f0fff4}.mc4::before{background:var(--green)}
+.mc5{background:#fffbf0}.mc5::before{background:var(--yellow)}
+.mc6{background:#fff0f0}.mc6::before{background:var(--red)}
+.mod-icon{font-size:28px;margin-bottom:10px}
+.mod-name{font-size:15px;font-weight:700;color:var(--black);margin-bottom:6px}
+.mod-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.mod-tag{font-size:11px;font-weight:700;margin-top:10px;display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.06);color:var(--muted)}
+
+/* ════════════════════════════════════
+   SLIDE 5 — GEO
+════════════════════════════════════ */
+.s5{background:#fff}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px;width:100%;margin-top:24px;align-items:start}
+.geo-score-list{display:flex;flex-direction:column;gap:10px}
+.score-row{display:flex;align-items:center;gap:12px}
+.score-label{font-size:13px;color:#495057;width:140px;flex-shrink:0}
+.score-bar-wrap{flex:1;height:8px;background:#f0f2f6;border-radius:4px;overflow:hidden}
+.score-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent3))}
+.score-num{font-size:13px;font-weight:700;color:var(--black);width:25px;text-align:right}
+.insight-box{background:#f8f9fa;border-radius:12px;padding:20px;margin-top:16px}
+.insight-box .ins-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.ins-item{font-size:13px;color:#495057;padding:6px 0;border-bottom:1px solid #e9ecef;line-height:1.4}
+.ins-item:last-child{border:none}
+
+/* ════════════════════════════════════
+   SLIDE 6 — Content Studio
+════════════════════════════════════ */
+.s6{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.s6 .h1{color:#fff}
+.platform-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:100%;margin-top:24px}
+.plat-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px 16px;text-align:center}
+.plat-icon{font-size:28px;margin-bottom:10px}
+.plat-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px}
+.plat-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.4}
+.content-example{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;margin-top:20px;width:100%}
+.ex-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.ex-text{font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;font-style:italic}
+
+/* ════════════════════════════════════
+   SLIDE 7 — Brand Analysis
+════════════════════════════════════ */
+.s7{background:#fff}
+.brand-compare{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;margin-top:24px}
+.bc-card{border-radius:16px;padding:22px;border-top:4px solid}
+.bc1{background:#fafafa;border-color:var(--heytea)}
+.bc2{background:#fff5f5;border-color:var(--nayuki)}
+.bc3{background:#f5fff5;border-color:var(--chapanda)}
+.bc-brand{font-size:15px;font-weight:800;color:var(--black);margin-bottom:4px}
+.bc-pos{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.bc-score{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bc-score-label{font-size:12px;color:var(--muted);flex:1}
+.bc-score-val{font-size:14px;font-weight:700;color:var(--black)}
+.stars{color:#ffc107;font-size:12px}
+
+/* ════════════════════════════════════
+   SLIDE 8 — Tech Stack
+════════════════════════════════════ */
+.s8{background:linear-gradient(135deg,#0a0a0a,#1a1a2e)}
+.s8 .h1{color:#fff}
+.tech-arch{display:flex;flex-direction:column;gap:16px;width:100%;margin-top:28px}
+.arch-row{display:flex;gap:12px;align-items:stretch}
+.arch-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1.5px;text-transform:uppercase;width:90px;display:flex;align-items:center;flex-shrink:0}
+.arch-items{display:flex;gap:10px;flex:1;flex-wrap:wrap}
+.arch-chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 16px;font-size:13px;color:#fff;display:flex;align-items:center;gap:8px}
+.arch-chip .ch-icon{font-size:18px}
+.arch-chip .ch-name{font-weight:600}
+.arch-chip .ch-sub{font-size:11px;color:rgba(255,255,255,.4);display:block}
+.arch-arrow{text-align:center;color:rgba(255,255,255,.2);font-size:20px;margin:-4px 0}
+
+/* ════════════════════════════════════
+   SLIDE 9 — Sentiment + Compliance
+════════════════════════════════════ */
+.s9{background:#fff}
+.two-panel{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%;margin-top:24px}
+.panel{background:#f8f9fa;border-radius:16px;padding:24px}
+.panel-title{font-size:14px;font-weight:700;color:var(--black);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sentiment-bar{height:12px;border-radius:6px;overflow:hidden;display:flex;margin-bottom:12px}
+.s-pos{background:var(--green)}
+.s-neu{background:#adb5bd}
+.s-neg{background:var(--red)}
+.legend-row{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-bottom:16px}
+.compliance-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:13px;line-height:1.4}
+.badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;flex-shrink:0;margin-top:1px}
+.badge-green{background:#d1e7dd;color:var(--green)}
+.badge-yellow{background:#fff3cd;color:#856404}
+.badge-red{background:#f8d7da;color:var(--red)}
+
+/* ════════════════════════════════════
+   SLIDE 10 — Demo Live
+════════════════════════════════════ */
+.s10{background:linear-gradient(135deg,#0a0a0a,#1a1a2e);text-align:center}
+.s10 .h1{color:#fff;margin-bottom:16px}
+.demo-link-box{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:20px;padding:32px 48px;margin:24px 0;display:inline-block}
+.demo-url{font-size:18px;color:#4cc9f0;font-family:monospace;letter-spacing:.5px}
+.demo-hint{font-size:14px;color:rgba(255,255,255,.4);margin-top:8px}
+.feature-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:24px}
+.fp{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:8px 18px;border-radius:30px;font-size:13px}
+
+/* ════════════════════════════════════
+   SLIDE 11 — Positioning / Advantage
+════════════════════════════════════ */
+.s11{background:#fff}
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;margin-top:24px}
+.vs-col{border-radius:16px;padding:24px}
+.vs-col.us{background:linear-gradient(135deg,#f0f4ff,#f5f0ff);border:2px solid var(--accent)}
+.vs-col.them{background:#f8f9fa;border:2px solid #dee2e6}
+.vs-head{font-size:14px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.vs-item{font-size:13px;color:#495057;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.vs-item:last-child{border:none}
+.check{color:var(--green);flex-shrink:0;font-weight:700}
+.cross{color:var(--red);flex-shrink:0;font-weight:700}
+
+/* ════════════════════════════════════
+   SLIDE 12 — Closing
+════════════════════════════════════ */
+.s12{background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 50%,#16213e 100%);text-align:center}
+.s12 .h1{color:#fff;font-size:48px;margin-bottom:12px}
+.s12 .sub{font-size:18px;color:rgba(255,255,255,.5);margin-bottom:48px}
+.cta-grid{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.cta-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px 28px;text-align:center}
+.cta-icon{font-size:32px;margin-bottom:8px}
+.cta-text{font-size:14px;color:rgba(255,255,255,.8);font-weight:600}
+.cta-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px}
+.team-line{font-size:13px;color:rgba(255,255,255,.3);margin-top:8px}
+</style>
+</head>
+<body>
+<div id="progress" class="progress" style="width:8.33%"></div>
+
+<div class="deck">
+
+<!-- ══ SLIDE 1 ══ -->
+<div class="slide s1 active">
+  <div class="grid-bg"></div>
+  <div class="logo">Brand<span>Pulse</span> AI</div>
+  <div class="sub">AI 品牌与市场增长工作台 · 24h Hackathon MVP</div>
+  <div class="brands">
+    <div class="brand-pill" style="background:#1a1a1a;color:#fff">🍵 喜茶 HEYTEA</div>
+    <div class="brand-pill" style="background:#c0737a;color:#fff">🌸 奈雪的茶 Nayuki</div>
+    <div class="brand-pill" style="background:#3d8b37;color:#fff">🐼 茶百道 ChaPanda</div>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:32px">
+    <span class="tag tag-blue">RAG · ChromaDB</span>
+    <span class="tag tag-purple">Claude API</span>
+    <span class="tag tag-pink">GEO Analysis</span>
+    <span class="tag tag-green">RefChecker</span>
+    <span class="tag tag-white">Streamlit</span>
+  </div>
+  <div class="meta">2026 · AI Brand Intelligence Hackathon<span>|</span>Team BrandPulse</div>
+</div>
+
+<!-- ══ SLIDE 2 ══ -->
+<div class="slide s2">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title">PROBLEM</div>
+    <div class="h1">品牌在 AI 时代<em>看不见、摸不着</em></div>
+    <div class="lead">消费者已开始用 ChatGPT、Claude、Perplexity 做购买决策，<br>但品牌方既不知道 AI 怎么描述自己，也没有工具应对。</div>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-icon">🔍</div>
+        <div class="pain-title">GEO 盲区</div>
+        <div class="pain-desc">不知道 AI 搜索中品牌是否被正确提及，可见度无法量化</div>
+      </div>
+      <div class="pain-card p2">
+        <div class="pain-icon">📊</div>
+        <div class="pain-title">情报碎片化</div>
+        <div class="pain-desc">舆情、竞品、内容分散在不同工具，决策链条长、效率低</div>
+      </div>
+      <div class="pain-card p3">
+        <div class="pain-icon">⚠️</div>
+        <div class="pain-title">合规风险</div>
+        <div class="pain-desc">AI 生成内容难以快速合规审查，「最」「第一」等违禁词频繁出现</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 3 ══ -->
+<div class="slide s3">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title" style="color:rgba(255,255,255,.4)">SOLUTION</div>
+    <div class="h1" style="color:#fff;margin-bottom:8px">一个工作台，<br>解决品牌 AI 时代全链路情报需求</div>
+    <div class="solution-row">
+      <div class="solution-left">
+        <div class="big-stat">
+          <div class="big-num">6</div>
+          <div class="big-label">核心分析模块 · 全流程覆盖</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px;font-size:13px;color:rgba(255,255,255,.7)">
+            ✅ 品牌知识库 RAG · 精准召回，拒绝幻觉
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px;font-size:13px;color:rgba(255,255,255,.7)">
+            ✅ 多品牌隔离 · 三品牌独立向量库，无数据串扰
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px;font-size:13px;color:rgba(255,255,255,.7)">
+            ✅ RefChecker · 每条输出标注「官方事实 / AI推断」
+          </div>
+        </div>
+      </div>
+      <div class="solution-right">
+        <div class="sol-item">
+          <div class="sol-icon">🔍</div>
+          <div class="sol-text"><strong>品牌 & 产品分析</strong>定位、调性、竞争优势一键生成</div>
+        </div>
+        <div class="sol-item">
+          <div class="sol-icon">🌐</div>
+          <div class="sol-text"><strong>GEO 搜索可见度</strong>量化品牌在 AI 搜索中的表现</div>
+        </div>
+        <div class="sol-item">
+          <div class="sol-icon">✍️</div>
+          <div class="sol-text"><strong>内容生成工厂</strong>小红书 / 抖音 / 海报 / KOL Brief</div>
+        </div>
+        <div class="sol-item">
+          <div class="sol-icon">📊</div>
+          <div class="sol-text"><strong>市场定位</strong>STP 分层 + SWOT 四象限</div>
+        </div>
+        <div class="sol-item">
+          <div class="sol-icon">📰</div>
+          <div class="sol-text"><strong>AI 舆情分析</strong>情感分类 + 风险预警</div>
+        </div>
+        <div class="sol-item">
+          <div class="sol-icon">🛡️</div>
+          <div class="sol-text"><strong>合规审查</strong>广告法违禁词 + AI推断标注</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 4 ══ -->
+<div class="slide s4">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title">MODULES</div>
+    <div class="h1">六大模块，<em>覆盖品牌增长全链路</em></div>
+    <div class="modules-grid">
+      <div class="mod-card mc1">
+        <div class="mod-icon">🔍</div>
+        <div class="mod-name">品牌 & 产品分析</div>
+        <div class="mod-desc">品牌定位、调性解析、产品卖点提炼、竞争优劣势对比</div>
+        <div class="mod-tag">必选 · 任务卡 1</div>
+      </div>
+      <div class="mod-card mc2">
+        <div class="mod-icon">🌐</div>
+        <div class="mod-name">GEO 搜索可见度</div>
+        <div class="mod-desc">量化品牌在 AI 搜索（ChatGPT/Claude/Perplexity）中的提及率与准确性</div>
+        <div class="mod-tag">GEO · 任务卡 2</div>
+      </div>
+      <div class="mod-card mc3">
+        <div class="mod-icon">✍️</div>
+        <div class="mod-name">内容生成工厂</div>
+        <div class="mod-desc">一键生成小红书种草、抖音脚本、活动海报标题、KOL Brief</div>
+        <div class="mod-tag">内容矩阵 · 任务卡 4</div>
+      </div>
+      <div class="mod-card mc4">
+        <div class="mod-icon">📊</div>
+        <div class="mod-name">市场定位分析</div>
+        <div class="mod-desc">STP 市场细分与目标选择、SWOT 四象限、差异化战略建议</div>
+        <div class="mod-tag">战略 · 任务卡 3</div>
+      </div>
+      <div class="mod-card mc5">
+        <div class="mod-icon">📰</div>
+        <div class="mod-name">AI 舆情分析</div>
+        <div class="mod-desc">情感三色分类（正向/中性/负向）、负面主题聚类、官方回应建议</div>
+        <div class="mod-tag">舆情监控</div>
+      </div>
+      <div class="mod-card mc6">
+        <div class="mod-icon">🛡️</div>
+        <div class="mod-name">合规审查哨所</div>
+        <div class="mod-desc">广告法违禁词检测、AI推断标注（RefChecker）、修改建议输出</div>
+        <div class="mod-tag">风控 · RefChecker</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 5 ══ -->
+<div class="slide s5">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title">GEO ANALYSIS</div>
+    <div class="h1">GEO 可见度：<em>量化品牌在 AI 中的存在感</em></div>
+    <div class="two-col">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:14px;letter-spacing:1px;text-transform:uppercase">综合评分对比（模拟数据）</div>
+        <div class="geo-score-list">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px">🌸 奈雪的茶 Nayuki</div>
+          <div class="score-row"><div class="score-label">GEO 综合</div><div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div><div class="score-num">8.0</div></div>
+          <div class="score-row"><div class="score-label">AI 描述准确性</div><div class="score-bar-wrap"><div class="score-bar" style="width:80%"></div></div><div class="score-num">8.0</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px">🍵 喜茶 HEYTEA</div>
+          <div class="score-row"><div class="score-label">GEO 综合</div><div class="score-bar-wrap"><div class="score-bar" style="width:73%"></div></div><div class="score-num">7.3</div></div>
+          <div class="score-row"><div class="score-label">AI 描述准确性</div><div class="score-bar-wrap"><div class="score-bar" style="width:70%"></div></div><div class="score-num">7.0</div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px">🐼 茶百道 ChaPanda</div>
+          <div class="score-row"><div class="score-label">GEO 综合</div><div class="score-bar-wrap"><div class="score-bar" style="width:62%"></div></div><div class="score-num">6.2</div></div>
+          <div class="score-row"><div class="score-label">AI 描述准确性</div><div class="score-bar-wrap"><div class="score-bar" style="width:60%"></div></div><div class="score-num">6.0</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="insight-box">
+          <div class="ins-title">核心洞察</div>
+          <div class="ins-item">🔴 茶百道招牌产品 AI 识别度偏低，「杨枝甘露」未被主动关联</div>
+          <div class="ins-item">🟡 喜茶「低糖选择」问题可见度不足，营养信息缺失</div>
+          <div class="ins-item">🟢 奈雪「茶+软欧包」双品类在 AI 中具垄断性认知优势</div>
+          <div class="ins-item">💡 GEO 优化 = 在官网结构化内容中主动植入 AI 可抓取的品牌事实</div>
+        </div>
+        <div style="background:#f0f4ff;border-radius:12px;padding:16px 20px;margin-top:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px">什么是 GEO？</div>
+          <div style="font-size:13px;color:#495057;line-height:1.5">Generative Engine Optimization — AI 时代的 SEO，目标是让品牌被 AI 搜索引擎准确、正面地引用</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 6 ══ -->
+<div class="slide s6">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title" style="color:rgba(255,255,255,.4)">CONTENT STUDIO</div>
+    <div class="h1" style="color:#fff">内容生成工厂：<br><span style="background:linear-gradient(90deg,#4cc9f0,#f72585);-webkit-background-clip:text;-webkit-text-fill-color:transparent">一键生成四平台内容矩阵</span></div>
+    <div class="platform-grid">
+      <div class="plat-card">
+        <div class="plat-icon">📱</div>
+        <div class="plat-name">小红书</div>
+        <div class="plat-desc">种草笔记 · 话题标签 · 情感化文案</div>
+      </div>
+      <div class="plat-card">
+        <div class="plat-icon">🎬</div>
+        <div class="plat-name">抖音</div>
+        <div class="plat-desc">短视频脚本 · 3幕结构 · 钩子设计</div>
+      </div>
+      <div class="plat-card">
+        <div class="plat-icon">🖼️</div>
+        <div class="plat-name">海报标题</div>
+        <div class="plat-desc">5组标题备选 · 适配不同调性</div>
+      </div>
+      <div class="plat-card">
+        <div class="plat-icon">🤝</div>
+        <div class="plat-name">KOL Brief</div>
+        <div class="plat-desc">合作说明书 · 核心卖点 · 创作边界</div>
+      </div>
+    </div>
+    <div class="content-example">
+      <div class="ex-label">小红书示例（喜茶·多肉葡萄）</div>
+      <div class="ex-text">「葡萄季来了！喜茶多肉葡萄 ✨ 真实果肉不是果浆，每一口都能咬到饱满果粒…冰冰凉凉超治愈 🍇 #喜茶 #多肉葡萄 #鲜果茶推荐」</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 7 ══ -->
+<div class="slide s7">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title">BRAND INTELLIGENCE</div>
+    <div class="h1">三品牌 AI 热度对比（<em>模拟数据</em>）</div>
+    <div class="brand-compare">
+      <div class="bc-card bc1">
+        <div class="bc-brand">🍵 喜茶 HEYTEA</div>
+        <div class="bc-pos">高端新式茶饮先行者<br>「灵感之茶」极简美学</div>
+        <div class="bc-score"><div class="bc-score-label">AI 热度指数</div><div class="bc-score-val">92</div></div>
+        <div class="bc-score"><div class="bc-score-label">GEO 评分</div><div class="bc-score-val">7.3</div></div>
+        <div class="bc-score"><div class="bc-score-label">综合评分</div><div class="bc-score-val">8.1</div></div>
+        <div class="stars">⭐⭐⭐⭐</div>
+      </div>
+      <div class="bc-card bc2">
+        <div class="bc-brand">🌸 奈雪的茶 Nayuki</div>
+        <div class="bc-pos">港股上市·茶+烘焙双品类<br>第三空间生活方式</div>
+        <div class="bc-score"><div class="bc-score-label">AI 热度指数</div><div class="bc-score-val">84</div></div>
+        <div class="bc-score"><div class="bc-score-label">GEO 评分</div><div class="bc-score-val">8.0</div></div>
+        <div class="bc-score"><div class="bc-score-label">综合评分</div><div class="bc-score-val">8.3</div></div>
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="bc-card bc3">
+        <div class="bc-brand">🐼 茶百道 ChaPanda</div>
+        <div class="bc-pos">万店规模·熊猫IP<br>下沉市场高性价比</div>
+        <div class="bc-score"><div class="bc-score-label">AI 热度指数</div><div class="bc-score-val">79</div></div>
+        <div class="bc-score"><div class="bc-score-label">GEO 评分</div><div class="bc-score-val">6.2</div></div>
+        <div class="bc-score"><div class="bc-score-label">综合评分</div><div class="bc-score-val">7.8</div></div>
+        <div class="stars">⭐⭐⭐</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;text-align:center;font-size:12px;color:var(--muted)">⚠️ 以上为模拟评估数据，仅用于演示工具能力，不代表真实市场表现</div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 8 ══ -->
+<div class="slide s8">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title" style="color:rgba(255,255,255,.4)">TECH STACK</div>
+    <div class="h1" style="color:#fff">技术架构：<span style="background:linear-gradient(90deg,#4cc9f0,#7209b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">RAG · ChromaDB · Claude</span></div>
+    <div class="tech-arch">
+      <div class="arch-row">
+        <div class="arch-label">前端</div>
+        <div class="arch-items">
+          <div class="arch-chip"><span class="ch-icon">🖥️</span><div><span class="ch-name">Streamlit</span><span class="ch-sub">多页面仪表盘</span></div></div>
+          <div class="arch-chip"><span class="ch-icon">📄</span><div><span class="ch-name">demo.html</span><span class="ch-sub">无服务器独立演示</span></div></div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-label">AI 引擎</div>
+        <div class="arch-items">
+          <div class="arch-chip"><span class="ch-icon">🤖</span><div><span class="ch-name">Claude claude-sonnet-4-6</span><span class="ch-sub">Anthropic · Prompt Cache</span></div></div>
+          <div class="arch-chip"><span class="ch-icon">🔗</span><div><span class="ch-name">LangChain</span><span class="ch-sub">RAG 编排</span></div></div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-label">知识库</div>
+        <div class="arch-items">
+          <div class="arch-chip"><span class="ch-icon">🗄️</span><div><span class="ch-name">ChromaDB</span><span class="ch-sub">本地持久化向量库</span></div></div>
+          <div class="arch-chip"><span class="ch-icon">🔢</span><div><span class="ch-name">all-MiniLM-L6-v2</span><span class="ch-sub">Sentence Embedding</span></div></div>
+          <div class="arch-chip"><span class="ch-icon">🏷️</span><div><span class="ch-name">3 Brand Collections</span><span class="ch-sub">品牌级数据隔离</span></div></div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-label">质控</div>
+        <div class="arch-items">
+          <div class="arch-chip"><span class="ch-icon">✅</span><div><span class="ch-name">RefChecker</span><span class="ch-sub">官方事实 / AI推断 / 待复核</span></div></div>
+          <div class="arch-chip"><span class="ch-icon">🛡️</span><div><span class="ch-name">Compliance Guard</span><span class="ch-sub">广告法违禁词检测</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 9 ══ -->
+<div class="slide s9">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title">SENTIMENT & COMPLIANCE</div>
+    <div class="h1">舆情监控 + <em>合规审查</em>，双保险</div>
+    <div class="two-panel">
+      <div class="panel">
+        <div class="panel-title">📰 AI 舆情分析（喜茶示例）</div>
+        <div class="sentiment-bar">
+          <div class="s-pos" style="width:68%"></div>
+          <div class="s-neu" style="width:22%"></div>
+          <div class="s-neg" style="width:10%"></div>
+        </div>
+        <div class="legend-row">
+          <span>🟢 正向 68%</span><span>⚪ 中性 22%</span><span>🔴 负向 10%</span>
+        </div>
+        <div style="font-size:13px;color:#495057;line-height:1.6">
+          <div style="margin-bottom:6px">✅ 高颜值、出片效果好</div>
+          <div style="margin-bottom:6px">✅ 鲜果感强、口感清爽</div>
+          <div style="margin-bottom:6px">⚠️ 价格偏高（低频负面）</div>
+          <div style="margin-top:10px;font-weight:600;color:var(--green)">整体风险等级：🟢 低风险</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🛡️ 合规审查（RefChecker）</div>
+        <div class="compliance-item"><span class="badge badge-red">违禁</span>「全国销量<strong>第一</strong>」→ 绝对化用语，违反广告法第9条</div>
+        <div class="compliance-item"><span class="badge badge-red">违禁</span>「<strong>最</strong>受年轻人欢迎」→ 需有调查数据支撑</div>
+        <div class="compliance-item"><span class="badge badge-yellow">AI推断</span>「顾客满意度极高」→ 需官方数据核实方可使用</div>
+        <div class="compliance-item"><span class="badge badge-green">官方事实</span>「2012年广东江门创立」→ 有据可查，可安全使用</div>
+        <div style="background:#d1e7dd;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:12px;color:var(--green)">
+          ✅ RefChecker 对每条 AI 输出自动标注置信度，保护品牌法务风险
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 10 ══ -->
+<div class="slide s10">
+  <div class="slide-title" style="color:rgba(255,255,255,.4)">LIVE DEMO</div>
+  <div class="h1">现在，看它跑起来</div>
+  <div class="demo-link-box">
+    <div class="demo-url">jennyjunqiuhe921.github.io/brandpulse-ai/demo.html</div>
+    <div class="demo-hint">在线 Demo · 无需服务器 · 直接浏览器打开</div>
+  </div>
+  <div class="feature-pills">
+    <div class="fp">🏠 智能仪表盘</div>
+    <div class="fp">🔍 品牌 & 产品分析</div>
+    <div class="fp">🌐 GEO 可见度</div>
+    <div class="fp">✍️ 内容生成工厂</div>
+    <div class="fp">📊 市场定位</div>
+    <div class="fp">📰 AI 舆情</div>
+    <div class="fp">🛡️ 合规审查</div>
+  </div>
+  <div style="margin-top:24px;font-size:13px;color:rgba(255,255,255,.3)">
+    Streamlit 版本 · 本地运行 · 接入 Claude API 后全功能解锁
+  </div>
+</div>
+
+<!-- ══ SLIDE 11 ══ -->
+<div class="slide s11">
+  <div style="width:100%;max-width:900px">
+    <div class="slide-title">DIFFERENTIATION</div>
+    <div class="h1">为什么选 <em>BrandPulse AI</em>？</div>
+    <div class="vs-grid">
+      <div class="vs-col us">
+        <div class="vs-head" style="color:var(--accent)">🚀 BrandPulse AI</div>
+        <div class="vs-item"><span class="check">✓</span>GEO 可见度量化（AI时代专属指标）</div>
+        <div class="vs-item"><span class="check">✓</span>RAG 知识库 · 品牌级数据隔离，拒绝幻觉</div>
+        <div class="vs-item"><span class="check">✓</span>RefChecker · 每条输出可信度标注</div>
+        <div class="vs-item"><span class="check">✓</span>内容 → 合规一键联动，降低法务风险</div>
+        <div class="vs-item"><span class="check">✓</span>品牌专属调性，不是通用 Prompt</div>
+        <div class="vs-item"><span class="check">✓</span>24h 内构建完整 MVP</div>
+      </div>
+      <div class="vs-col them">
+        <div class="vs-head" style="color:var(--muted)">📊 传统品牌监测工具</div>
+        <div class="vs-item"><span class="cross">✗</span>无 AI 搜索可见度评估</div>
+        <div class="vs-item"><span class="cross">✗</span>数据陈旧，更新周期慢</div>
+        <div class="vs-item"><span class="cross">✗</span>输出不可信度标注</div>
+        <div class="vs-item"><span class="cross">✗</span>内容生成与合规审查分离</div>
+        <div class="vs-item"><span class="cross">✗</span>通用模板，品牌调性缺失</div>
+        <div class="vs-item"><span class="cross">✗</span>实施周期长、成本高</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 12 ══ -->
+<div class="slide s12">
+  <div class="grid-bg"></div>
+  <div class="h1">让每个品牌<br>在 AI 时代被看见</div>
+  <div class="sub">BrandPulse AI · 24h Hackathon MVP · 2026</div>
+  <div class="cta-grid">
+    <div class="cta-item">
+      <div class="cta-icon">🌐</div>
+      <div class="cta-text">在线 Demo</div>
+      <div class="cta-sub">github.io/brandpulse-ai/demo.html</div>
+    </div>
+    <div class="cta-item">
+      <div class="cta-icon">💻</div>
+      <div class="cta-text">源码</div>
+      <div class="cta-sub">github.com/jennyjunqiuhe921/brandpulse-ai</div>
+    </div>
+    <div class="cta-item">
+      <div class="cta-icon">🤖</div>
+      <div class="cta-text">技术栈</div>
+      <div class="cta-sub">Claude · ChromaDB · Streamlit</div>
+    </div>
+  </div>
+  <div class="team-line">Built with ❤️ by Team BrandPulse · Powered by Anthropic Claude</div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn-nav" onclick="go(-1)">← 上一张</button>
+  <div class="counter" id="counter">1 / 12</div>
+  <button class="btn-nav" onclick="go(1)">下一张 →</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+
+function go(dir) {
+  slides[cur].classList.remove('active');
+  cur = (cur + dir + total) % total;
+  slides[cur].classList.add('active');
+  document.getElementById('counter').textContent = (cur+1) + ' / ' + total;
+  document.getElementById('progress').style.width = ((cur+1)/total*100) + '%';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') go(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+});
+
+// Touch swipe
+let tx = 0;
+document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+});
+</script>
+</body>
+</html>
