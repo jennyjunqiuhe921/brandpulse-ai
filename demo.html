@@ -172,6 +172,7 @@ tr:hover td{background:#fafbfc}
     <button class="nav-btn" onclick="switchPage('content')" id="nav-content">✍️ 内容生成工厂</button>
     <button class="nav-btn" onclick="switchPage('positioning')" id="nav-positioning">📊 市场定位</button>
     <button class="nav-btn" onclick="switchPage('sentiment')" id="nav-sentiment">📰 AI 舆情分析</button>
+    <button class="nav-btn" onclick="switchPage('collection')" id="nav-collection">📡 数据采集</button>
     <button class="nav-btn" onclick="switchPage('compliance')" id="nav-compliance">🛡️ 合规审查</button>
   </div>
 
@@ -192,23 +193,7 @@ tr:hover td{background:#fafbfc}
   <div class="page-title">📊 智能品牌中控仪表盘</div>
   <div class="page-caption">AI Brand Intelligence · 所有数据基于公开信息与模拟演示，不代表真实市场表现</div>
 
-  <div class="col-3">
-    <div class="metric-card brand-heytea">
-      <div class="metric-label">🍵 喜茶 HEYTEA · AI热度指数</div>
-      <div class="metric-value">92</div>
-      <div class="metric-delta up">↑ +3.2% vs 上月</div>
-    </div>
-    <div class="metric-card brand-nayuki">
-      <div class="metric-label">🌸 奈雪的茶 Nayuki · AI热度指数</div>
-      <div class="metric-value">84</div>
-      <div class="metric-delta up">↑ +1.8% vs 上月</div>
-    </div>
-    <div class="metric-card brand-chapanda">
-      <div class="metric-label">🐼 茶百道 ChaPanda · AI热度指数</div>
-      <div class="metric-value">79</div>
-      <div class="metric-delta up">↑ +5.1% vs 上月</div>
-    </div>
-  </div>
+  <div id="home-metrics-dynamic" class="col-3"></div>
 
   <div class="col-7-5">
     <div>
@@ -224,32 +209,9 @@ tr:hover td{background:#fafbfc}
     <div>
       <div class="card">
         <div class="card-title">🚨 待优化任务提醒</div>
-        <div class="alert alert-warning">
-          <strong>🍵 喜茶 HEYTEA</strong>
-          · GEO「低糖选择」可见度偏低 → 建议补充官网营养/成分页<br>
-          · 价格信息在AI中可能过时 → 更新官网价格区间说明
-        </div>
-        <div class="alert alert-info">
-          <strong>🌸 奈雪 Nayuki</strong>
-          · 菜单描述可能与实际不符 → 定期同步官网产品页<br>
-          · 门店空间数据缺乏具体数字 → 补充面积、座位数
-        </div>
-        <div class="alert alert-info">
-          <strong>🐼 茶百道 ChaPanda</strong>
-          · 招牌产品AI识别度偏低 → 补充产品详情页<br>
-          · 下沉市场门店数据未充分曝光 → 发布省市分布媒体稿
-        </div>
+        <div id="home-tasks-dynamic"></div>
       </div>
-      <div class="card">
-        <div class="card-title">🏅 行业综合能力排名（模拟评估）</div>
-        <table>
-          <tr><th>品牌</th><th>综合</th><th>GEO</th><th>舆情</th></tr>
-          <tr><td>🌸 奈雪</td><td><strong>8.3</strong></td><td>8.0</td><td>🟢</td></tr>
-          <tr><td>🍵 喜茶</td><td><strong>8.1</strong></td><td>7.3</td><td>🟢</td></tr>
-          <tr><td>🐼 茶百道</td><td><strong>7.8</strong></td><td>6.2</td><td>🟢</td></tr>
-        </table>
-        <p style="font-size:11px;color:#adb5bd;margin-top:8px">⚠️ 模拟评估数据，不构成商业判断</p>
-      </div>
+      <div class="card" id="home-rank-dynamic"></div>
     </div>
   </div>
 </div>
@@ -474,6 +436,47 @@ tr:hover td{background:#fafbfc}
 <div class="disclaimer">
   ⚠️ <strong>免责声明</strong>：本作品仅用于比赛演示。相关企业分析基于公开信息和 AI 工具辅助生成，不代表对企业经营、产品质量、市场表现或声誉状况的事实认定。所有输出均需在真实商业使用前由企业授权人员进行复核。 &nbsp;|&nbsp; Powered by BrandPulse AI · Claude Sonnet · ChromaDB
 </div>
+
+<!-- ──────────────────── DATA COLLECTION ──────────────────── -->
+<div class="page" id="page-collection">
+  <div class="page-title">📡 数据采集中心</div>
+  <div class="page-caption">采集品牌舆情与行业动态 · 结果可送往舆情分析或合规审查模块</div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('collection','tab-col-brand')">🎯 品牌舆情采集</button>
+    <button class="tab-btn" onclick="switchTab('collection','tab-col-industry')">📊 行业动态采集</button>
+  </div>
+
+  <div class="tab-content active" id="collection-tab-col-brand">
+    <div class="card">
+      <div class="card-title" id="col-brand-title">🎯 品牌舆情采集</div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <select id="col-platform" style="padding:6px 12px;border-radius:8px;border:1px solid #dee2e6;font-size:13px">
+          <option>全渠道</option><option>小红书</option><option>微博</option><option>抖音</option>
+        </select>
+        <select id="col-days" style="padding:6px 12px;border-radius:8px;border:1px solid #dee2e6;font-size:13px">
+          <option>近7天</option><option>近30天</option><option>近90天</option>
+        </select>
+        <button onclick="runBrandCollection()" style="padding:8px 20px;background:#4361ee;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">🔍 开始采集</button>
+      </div>
+      <div id="col-brand-results"><div style="color:#adb5bd;font-size:13px;padding:20px 0">配置参数后点击「开始采集」获取品牌最新舆情</div></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="collection-tab-col-industry">
+    <div class="card">
+      <div class="card-title">📊 行业动态采集</div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <select id="col-category" style="padding:6px 12px;border-radius:8px;border:1px solid #dee2e6;font-size:13px">
+          <option>全部</option><option>行业报告</option><option>竞品动向</option><option>营销趋势</option><option>消费洞察</option><option>品类趋势</option>
+        </select>
+        <button onclick="runIndustryCollection()" style="padding:8px 20px;background:#4361ee;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">🔍 开始采集</button>
+      </div>
+      <div id="col-industry-results"><div style="color:#adb5bd;font-size:13px;padding:20px 0">选择分类后点击「开始采集」获取行业最新动态</div></div>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- ═══════════════════════════════ DATA ═══════════════════════════════════ -->
@@ -668,11 +671,250 @@ function switchTab(page, tabId) {
 // ═══ Render All ═══
 function renderAll() {
   const d = DATA[currentBrand];
+  renderHome(d);
   renderBrand(d);
   renderGeo(d);
   renderContent(d);
   renderPositioning(d);
   renderSentiment(d);
+}
+
+// ═══ Home Page — Brand-focused ═══
+const AI_SCORES  = {heytea:92, nayuki:84, chapanda:79};
+const AI_DELTAS  = {heytea:3.2, nayuki:1.8, chapanda:5.1};
+const GEO_SCORES = {heytea:7.3, nayuki:8.0, chapanda:6.2};
+const COMP_SCORES= {heytea:8.1, nayuki:8.3, chapanda:7.8};
+const BRAND_TASKS_MAP = {
+  heytea:[
+    {level:'red',  text:'GEO：「低糖选择」类问题可见度偏低 → 建议补充官网营养/成分信息页'},
+    {level:'warn', text:'价格信息在 AI 中可能过时 → 建议官网更新明确价格区间说明'},
+    {level:'warn', text:'联名活动结束后旧内容残留 → 建议及时下架或存档历史联名页面'},
+  ],
+  nayuki:[
+    {level:'warn', text:'菜单产品描述可能与实际不符 → 建议定期同步官网产品页'},
+    {level:'warn', text:'门店空间数据缺乏具体数字 → 补充平均面积、座位数等可验证信息'},
+    {level:'ok',   text:'港股上市背书已被 AI 准确识别 → 持续在品牌资料中强化此信息'},
+  ],
+  chapanda:[
+    {level:'red',  text:'招牌产品 AI 识别度偏低 → 补充杨枝甘露、芋泥波波等产品详情页'},
+    {level:'red',  text:'下沉市场覆盖数据未充分曝光 → 发布各省门店分布数据媒体稿'},
+    {level:'warn', text:'熊猫 IP 来源故事在 AI 中描述模糊 → 官网品牌故事页增加 IP 起源说明'},
+  ],
+};
+const BRAND_NAMES_FULL = {heytea:'🍵 喜茶 HEYTEA', nayuki:'🌸 奈雪的茶 Nayuki', chapanda:'🐼 茶百道 ChaPanda'};
+
+function renderHome(d) {
+  const b = currentBrand;
+  const comps = Object.keys(BRAND_NAMES_FULL).filter(k => k !== b);
+
+  // ── Metrics row: current brand big + 2 competitors ──
+  const metricsEl = document.getElementById('home-metrics-dynamic');
+  if (metricsEl) {
+    metricsEl.innerHTML = `
+      <div class="metric-card" style="border-top:4px solid ${d.color};flex:1.4">
+        <div style="font-size:11px;font-weight:700;color:${d.color};letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">🎯 本品牌</div>
+        <div class="metric-label">${BRAND_NAMES_FULL[b]}</div>
+        <div class="metric-value">${AI_SCORES[b]}</div>
+        <div class="metric-delta up">↑ +${AI_DELTAS[b]}% vs 上月</div>
+        <div style="margin-top:8px;font-size:12px;color:#495057">GEO评分 <strong>${GEO_SCORES[b]}</strong>/10 &nbsp;·&nbsp; 综合 <strong>${COMP_SCORES[b]}</strong></div>
+      </div>
+      ${comps.map(ck => {
+        const gap = Math.round((AI_SCORES[b]-AI_SCORES[ck])*10)/10;
+        const geoGap = Math.round((GEO_SCORES[b]-GEO_SCORES[ck])*10)/10;
+        const gapStr = (gap>=0?'+':'')+gap;
+        const geoStr = (geoGap>=0?'+':'')+geoGap;
+        return `<div class="metric-card" style="flex:1;opacity:.85">
+          <div style="font-size:11px;font-weight:700;color:#adb5bd;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">竞品基准</div>
+          <div class="metric-label">${BRAND_NAMES_FULL[ck]}</div>
+          <div class="metric-value" style="font-size:28px">${AI_SCORES[ck]}</div>
+          <div class="metric-delta ${gap>=0?'up':'down'}" style="font-size:12px">本品牌 ${gapStr} · GEO差 ${geoStr}</div>
+        </div>`;
+      }).join('')}
+    `;
+  }
+
+  // ── Task reminders for current brand only ──
+  const tasksEl = document.getElementById('home-tasks-dynamic');
+  if (tasksEl) {
+    const tasks = BRAND_TASKS_MAP[b] || [];
+    tasksEl.innerHTML = tasks.map(t => {
+      const cls = t.level==='red'?'alert-danger':t.level==='ok'?'alert-success':'alert-warning';
+      const icon = t.level==='red'?'🔴':t.level==='ok'?'🟢':'🟡';
+      return `<div class="alert ${cls}" style="margin-bottom:8px;font-size:13px">${icon} ${t.text}</div>`;
+    }).join('');
+  }
+
+  // ── Competitive benchmark table ──
+  const rankEl = document.getElementById('home-rank-dynamic');
+  if (rankEl) {
+    const allBrands = ['nayuki','heytea','chapanda'];
+    const rows = allBrands.map(bk => {
+      const isSelf = bk === b;
+      const bg = isSelf ? `background:${DATA[bk].color}15;font-weight:700` : '';
+      const badge = isSelf ? `<span style="background:${DATA[bk].color};color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:6px">本品牌</span>` : '';
+      return `<tr style="${bg}"><td>${BRAND_NAMES_FULL[bk]}${badge}</td><td>${COMP_SCORES[bk]}</td><td>${GEO_SCORES[bk]}</td><td>🟢 正向</td></tr>`;
+    });
+    rankEl.innerHTML = `
+      <div class="card-title">🏅 竞品对标：综合能力评估（模拟）</div>
+      <table><tr><th>品牌</th><th>综合评分</th><th>GEO评分</th><th>舆情</th></tr>${rows.join('')}</table>
+      <p style="font-size:11px;color:#adb5bd;margin-top:8px">⚠️ 模拟评估数据，本品牌行已高亮标注</p>
+    `;
+  }
+
+  // Update page title to current brand
+  const titleEl = document.querySelector('#page-home .page-title');
+  if (titleEl) titleEl.textContent = `📊 ${BRAND_NAMES_FULL[b]} · AI 品牌情报中控台`;
+}
+
+// ═══ Collection Demo Data ═══
+const COLLECTION_DATA = {
+  heytea:[
+    {title:'喜茶新品「多肉青提」首周口碑汇总', source:'小红书', time:'2025-06-18', heat:'🔥🔥🔥', sentiment:'正向',
+     comments:[
+      {user:'茶饮博主_晴天', time:'06-18 14:23', text:'青提颗粒超大，果汁感很足！就是排队要40分钟 😅 但真的值得等', likes:1284, s:'正向'},
+      {user:'奶茶控Annie',   time:'06-18 15:01', text:'不甜不腻，比上季草莓味好喝很多，今年夏天就它了', likes:892, s:'正向'},
+      {user:'健康生活家',    time:'06-19 09:12', text:'30多块一杯，喝完荷包疼，但是真的好喝没法反驳', likes:441, s:'中性'},
+      {user:'打工人日常',    time:'06-19 12:33', text:'附近门店下午三点就卖完了……能不能多备点货', likes:328, s:'负向'},
+    ]},
+    {title:'喜茶GO小程序体验 & 排队优化讨论', source:'微博', time:'2025-06-15', heat:'🔥🔥', sentiment:'中性',
+     comments:[
+      {user:'城市生活志', time:'06-15 10:05', text:'喜茶GO预约功能终于好用了，不用在店里干等，体验感升级很多', likes:567, s:'正向'},
+      {user:'效率控007',  time:'06-15 11:22', text:'预计等待20分钟，实际等了45分钟，高峰期准确率有待提升', likes:334, s:'负向'},
+    ]},
+    {title:'喜茶 × 国潮品牌联名限定款引发关注', source:'抖音', time:'2025-06-10', heat:'🔥🔥🔥', sentiment:'正向',
+     comments:[
+      {user:'潮流追踪者', time:'06-10 20:15', text:'联名设计真的好看！杯套收藏了，国风美学拿捏了', likes:2341, s:'正向'},
+      {user:'营销观察',   time:'06-10 21:00', text:'喜茶联名频率很高，保持品质和调性是关键', likes:876, s:'中性'},
+    ]},
+  ],
+  nayuki:[
+    {title:'奈雪新品「霸气橙子」季节限定评测', source:'小红书', time:'2025-06-17', heat:'🔥🔥', sentiment:'正向',
+     comments:[
+      {user:'精致生活研究所', time:'06-17 13:45', text:'橙子榨汁现做，维C感满满，这个夏天的续命饮品', likes:934, s:'正向'},
+      {user:'甜品控小雅',     time:'06-17 15:20', text:'搭配软欧包真的很有腔调，场景感做得比其他品牌好很多', likes:712, s:'正向'},
+      {user:'理性消费派',     time:'06-18 10:00', text:'35一杯，消费降级下性价比不占优', likes:489, s:'负向'},
+    ]},
+    {title:'奈雪门店空间体验：第三空间测评', source:'微博', time:'2025-06-12', heat:'🔥', sentiment:'正向',
+     comments:[
+      {user:'都市慢生活', time:'06-12 16:00', text:'旗舰店真的很大，有沙发有大桌，工作下午茶两不误', likes:423, s:'正向'},
+      {user:'空间设计迷', time:'06-12 17:30', text:'奈雪的软装和选址都很用心，有空间溢价的品牌', likes:318, s:'正向'},
+    ]},
+  ],
+  chapanda:[
+    {title:'茶百道「杨枝甘露」夏日限定版：性价比之王？', source:'小红书', time:'2025-06-16', heat:'🔥🔥🔥', sentiment:'正向',
+     comments:[
+      {user:'平价茶饮测评', time:'06-16 12:00', text:'15块钱喝到鲜芒果+椰浆，性价比真的没得说', likes:1876, s:'正向'},
+      {user:'芒果爱好者',   time:'06-16 13:30', text:'芒果粒很大块，椰浆够浓，西柚酸度刚好平衡', likes:1203, s:'正向'},
+      {user:'挑剔的吃货',   time:'06-16 15:00', text:'有几家门店的芒果不够熟，品质稳定性需要把关', likes:567, s:'负向'},
+    ]},
+    {title:'茶百道熊猫IP周边引发收集热潮', source:'抖音', time:'2025-06-14', heat:'🔥🔥', sentiment:'正向',
+     comments:[
+      {user:'IP收藏家',  time:'06-14 20:00', text:'丁丁猫联名杯第三款出了！已经集齐整套，IP运营真的用心', likes:2108, s:'正向'},
+      {user:'品牌IP研究', time:'06-15 09:00', text:'茶百道把IP做成了核心差异化资产，同价位里辨识度最高', likes:678, s:'正向'},
+    ]},
+  ],
+};
+const INDUSTRY_DATA = [
+  {title:'2025夏季茶饮趋势：鲜果茶持续增长，低糖化成主流', source:'36氪', time:'2025-06-15', cat:'行业报告',
+   summary:'据最新市场调研，鲜果茶品类同比增长34%，低糖/无糖选项在点单中占比已超40%。',
+   comments:[
+    {user:'茶饮行业观察', time:'06-15 10:00', text:'低糖化是不可逆的趋势，品牌必须在菜单结构上主动适配', likes:876},
+    {user:'消费投资人',   time:'06-16 09:00', text:'低糖赛道的核心还是口感，不能为了低糖牺牲风味', likes:445},
+  ]},
+  {title:'新式茶饮出海加速：东南亚市场竞争格局分析', source:'虎嗅', time:'2025-06-12', cat:'竞品动向',
+   summary:'霸王茶姬在东南亚门店数突破500家，茶百道新加坡店开业排长队。',
+   comments:[
+    {user:'海外餐饮观察',  time:'06-12 14:00', text:'东南亚的华人社区是第一波流量，但要真正做大必须打进本地消费者', likes:567},
+    {user:'品牌全球化研究', time:'06-13 10:00', text:'在地化采购还是从国内运输，成本差异巨大', likes:423},
+  ]},
+  {title:'联名营销升温：茶饮品牌跨界联名频率创历史新高', source:'营销前线', time:'2025-06-10', cat:'营销趋势',
+   summary:'上半年茶饮品牌联名事件同比增长67%，消费者对联名的新鲜感疲劳开始显现。',
+   comments:[
+    {user:'营销案例库', time:'06-10 16:00', text:'联名泡沫的信号已经出现，下半年可能会看到一波「联名减速」', likes:789},
+    {user:'品牌策略师K', time:'06-10 17:30', text:'真正好的联名应该是1+1>2，品牌调性契合比IP知名度更重要', likes:612},
+  ]},
+  {title:'00后消费行为研究：茶饮消费偏好与品牌忠诚度报告', source:'CBNData', time:'2025-06-08', cat:'消费洞察',
+   summary:'00后月均茶饮消费4.2次，品牌忠诚度较低，小红书是最重要的种草渠道（占比58%）。',
+   comments:[
+    {user:'年轻人研究所', time:'06-08 11:00', text:'00后的消费忠诚度确实很低，品牌要靠持续创新维系', likes:934},
+    {user:'小红书运营', time:'06-08 14:00', text:'58%的种草来自小红书，这个数据值得所有茶饮品牌重视', likes:712},
+  ]},
+];
+
+function renderTopicCard(t) {
+  const sColor = t.sentiment==='正向'?'#198754':t.sentiment==='负向'?'#dc3545':'#6c757d';
+  const sIcon  = t.sentiment==='正向'?'🟢':t.sentiment==='负向'?'🔴':'⚪';
+  const commentsHtml = t.comments.map(c => {
+    const cs = c.s==='正向'?'🟢':c.s==='负向'?'🔴':'⚪';
+    return `<div style="padding:10px;border-bottom:1px solid #f0f2f6;font-size:13px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span>${cs} <strong>@${c.user}</strong> · ${c.time}</span>
+        <span style="color:#adb5bd">👍 ${c.likes}</span>
+      </div>
+      <div style="color:#495057;line-height:1.5">${c.text}</div>
+    </div>`;
+  }).join('');
+  return `<div style="border:1px solid #dee2e6;border-radius:12px;margin-bottom:14px;overflow:hidden">
+    <div style="padding:14px 16px;background:#f8f9fa;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleTopic(this)">
+      <div>
+        <span style="color:${sColor};font-weight:700">${sIcon} ${t.sentiment}</span>
+        <strong style="margin-left:10px">${t.title}</strong>
+      </div>
+      <span style="color:#adb5bd;font-size:12px">${t.source} · ${t.time} · ${t.heat} · ${t.comments.length}条评论 ▼</span>
+    </div>
+    <div class="topic-body" style="display:none">${commentsHtml}</div>
+  </div>`;
+}
+
+function toggleTopic(header) {
+  const body = header.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? 'block' : 'none';
+  const arrow = header.querySelector('span:last-child');
+  if (arrow) arrow.textContent = arrow.textContent.replace('▼','▲').replace('▲▲','▼');
+}
+
+function runBrandCollection() {
+  const el = document.getElementById('col-brand-results');
+  const titleEl = document.getElementById('col-brand-title');
+  el.innerHTML = '<div style="color:#4361ee;padding:12px 0">⏳ 正在采集数据…</div>';
+  setTimeout(() => {
+    const data = COLLECTION_DATA[currentBrand] || [];
+    titleEl.textContent = '🎯 ' + BRAND_NAMES_FULL[currentBrand] + ' · 舆情采集结果';
+    const totalComments = data.reduce((s,t)=>s+t.comments.length,0);
+    el.innerHTML = `<div style="background:#d1e7dd;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#198754">
+      ✅ 采集完成 · 共 ${data.length} 个话题 · ${totalComments} 条评论
+      <button onclick="sendToSentiment()" style="margin-left:16px;padding:4px 12px;background:#198754;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">📤 送往舆情分析</button>
+    </div>` + data.map(renderTopicCard).join('');
+  }, 1200);
+}
+
+function runIndustryCollection() {
+  const el = document.getElementById('col-industry-results');
+  el.innerHTML = '<div style="color:#4361ee;padding:12px 0">⏳ 正在采集行业动态…</div>';
+  setTimeout(() => {
+    el.innerHTML = `<div style="background:#d1e7dd;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#198754">
+      ✅ 采集完成 · 共 ${INDUSTRY_DATA.length} 条行业动态
+    </div>` + INDUSTRY_DATA.map(t => `
+      <div style="border:1px solid #dee2e6;border-radius:12px;margin-bottom:14px;overflow:hidden">
+        <div style="padding:14px 16px;background:#f8f9fa;cursor:pointer" onclick="toggleTopic(this)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>${t.title}</strong>
+            <span style="color:#adb5bd;font-size:12px">${t.source} · ${t.time} · ${t.cat} ▼</span>
+          </div>
+        </div>
+        <div class="topic-body" style="display:none">
+          <div style="padding:12px 16px;background:#fff8e1;font-size:13px;color:#495057;line-height:1.6">${t.summary}</div>
+          ${t.comments.map(c=>`<div style="padding:10px 16px;border-top:1px solid #f0f2f6;font-size:13px">
+            <strong>@${c.user}</strong> · ${c.time} · 👍${c.likes}<br>
+            <span style="color:#495057">${c.text}</span>
+          </div>`).join('')}
+        </div>
+      </div>`).join('');
+  }, 1000);
+}
+
+function sendToSentiment() {
+  alert('已标记为「送往舆情分析」\\n\\n演示版中请切换到「AI 舆情分析」页面查看效果');
 }
 
 function renderBrand(d) {
