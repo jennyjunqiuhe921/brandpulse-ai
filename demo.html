@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrandPulse AI · 品牌与市场增长工作台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;background:#f0f2f6;color:#262730;display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{width:260px;min-height:100vh;background:#fff;border-right:1px solid #e6e9ef;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid #f0f2f6}
+.sidebar-header h2{font-size:18px;font-weight:700;color:#262730}
+.sidebar-header p{font-size:11px;color:#808495;margin-top:2px}
+.brand-section{padding:14px 12px 8px}
+.brand-label{font-size:11px;font-weight:600;color:#808495;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding:0 4px}
+.brand-btn{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid transparent;background:transparent;cursor:pointer;text-align:left;font-size:13px;font-weight:500;color:#262730;transition:all .15s;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.brand-btn:hover{background:#f0f2f6}
+.brand-btn.active{border-color:var(--brand-color);background:var(--brand-bg);color:var(--brand-color);font-weight:600}
+.brand-btn .dot{width:8px;height:8px;border-radius:50%;background:var(--brand-color);flex-shrink:0}
+.nav-section{padding:8px 12px;flex:1}
+.nav-label{font-size:11px;font-weight:600;color:#808495;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 6px;padding:0 4px}
+.nav-btn{width:100%;padding:8px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;text-align:left;font-size:13px;color:#495057;transition:all .15s;display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.nav-btn:hover{background:#f0f2f6;color:#262730}
+.nav-btn.active{background:#ff4b4b14;color:#ff4b4b;font-weight:600}
+.sidebar-footer{padding:14px 16px;border-top:1px solid #f0f2f6;font-size:11px;color:#adb5bd;line-height:1.5}
+.kb-badge{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:6px 10px;background:#f8f9fa;border-radius:6px;font-size:11px}
+.kb-badge span:first-child{color:#6c757d}
+.kb-badge strong{color:#198754}
+
+/* ── Main ── */
+.main{flex:1;min-width:0;padding:24px;overflow-y:auto}
+.page{display:none}
+.page.active{display:block}
+
+/* ── Cards & Layout ── */
+.page-title{font-size:22px;font-weight:700;color:#262730;margin-bottom:4px}
+.page-caption{font-size:13px;color:#808495;margin-bottom:20px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;color:#262730;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.divider{height:1px;background:#f0f2f6;margin:20px 0}
+.row{display:flex;gap:16px;margin-bottom:16px}
+.row>.card{flex:1;margin-bottom:0}
+.col-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.col-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
+.col-7-5{display:grid;grid-template-columns:7fr 5fr;gap:16px;margin-bottom:16px}
+
+/* ── Metric Cards ── */
+.metric-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid var(--brand-color,#ff4b4b)}
+.metric-label{font-size:12px;color:#808495;margin-bottom:4px}
+.metric-value{font-size:28px;font-weight:700;color:#262730;line-height:1.1}
+.metric-delta{font-size:12px;margin-top:4px}
+.metric-delta.up{color:#198754}
+.metric-delta.down{color:#dc3545}
+
+/* ── Alert boxes ── */
+.alert{border-radius:8px;padding:12px 16px;margin-bottom:10px;font-size:13px;line-height:1.6;border-left:4px solid}
+.alert-warning{background:#fff3cd;border-color:#ffc107;color:#664d03}
+.alert-info{background:#cff4fc;border-color:#0dcaf0;color:#055160}
+.alert-success{background:#d1e7dd;border-color:#198754;color:#0a3622}
+.alert-danger{background:#f8d7da;border-color:#dc3545;color:#58151c}
+.alert strong{display:block;margin-bottom:4px;font-size:13px}
+
+/* ── Tags ── */
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin:2px}
+.tag-green{background:#d1e7dd;color:#0a3622}
+.tag-yellow{background:#fff3cd;color:#664d03}
+.tag-red{background:#f8d7da;color:#58151c}
+.tag-blue{background:#cff4fc;color:#055160}
+.tag-gray{background:#f0f2f6;color:#495057}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8f9fa;padding:10px 12px;text-align:left;font-weight:600;color:#495057;border-bottom:2px solid #dee2e6}
+td{padding:10px 12px;border-bottom:1px solid #f0f2f6;color:#262730}
+tr:hover td{background:#fafbfc}
+
+/* ── GEO Score ── */
+.geo-item{padding:14px 0;border-bottom:1px solid #f0f2f6}
+.geo-item:last-child{border-bottom:none}
+.geo-q{font-size:13px;font-weight:600;margin-bottom:8px;color:#262730}
+.geo-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.geo-suggest{font-size:12px;color:#6c757d;background:#f8f9fa;padding:6px 10px;border-radius:6px;border-left:3px solid #0dcaf0}
+
+/* ── Content tabs ── */
+.tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid #f0f2f6;padding-bottom:0}
+.tab-btn{padding:8px 14px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:#808495;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;border-radius:4px 4px 0 0}
+.tab-btn:hover{color:#262730;background:#f8f9fa}
+.tab-btn.active{color:#ff4b4b;border-bottom-color:#ff4b4b;font-weight:600}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── Content blocks ── */
+.content-block{background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;border:1px solid #e9ecef}
+.content-block h4{font-size:13px;font-weight:700;margin-bottom:8px;color:#262730}
+
+/* ── Score bar ── */
+.score-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.score-label{font-size:12px;color:#495057;width:120px;flex-shrink:0}
+.score-bar-wrap{flex:1;background:#f0f2f6;border-radius:4px;height:8px;overflow:hidden}
+.score-bar{height:8px;border-radius:4px;transition:width .5s}
+.score-num{font-size:12px;font-weight:600;color:#262730;width:30px;text-align:right}
+
+/* ── SWOT grid ── */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.swot-cell{padding:14px;border-radius:8px;font-size:13px;line-height:1.7}
+.swot-s{background:#d1e7dd}
+.swot-w{background:#fff3cd}
+.swot-o{background:#cff4fc}
+.swot-t{background:#f8d7da}
+.swot-cell h4{font-weight:700;margin-bottom:8px}
+
+/* ── Sentiment bar ── */
+.sentiment-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:8px 0 4px}
+.sentiment-pos{background:#198754}
+.sentiment-neu{background:#6c757d}
+.sentiment-neg{background:#dc3545}
+
+/* ── Compliance table ── */
+.risk-high{color:#dc3545;font-weight:600}
+.risk-mid{color:#fd7e14;font-weight:600}
+.risk-low{color:#198754;font-weight:600}
+
+/* ── Brand color vars ── */
+.brand-heytea{--brand-color:#1a1a1a;--brand-bg:#f0f0f0}
+.brand-nayuki{--brand-color:#c0737a;--brand-bg:#fdf0f0}
+.brand-chapanda{--brand-color:#3d8b37;--brand-bg:#edf7ed}
+
+/* ── Disclaimer ── */
+.disclaimer{font-size:11px;color:#adb5bd;background:#fff;border-radius:8px;padding:12px 16px;margin-top:16px;border:1px solid #f0f2f6;line-height:1.6}
+
+/* ── Chart containers ── */
+.chart-wrap{position:relative;height:220px}
+
+/* ── List items ── */
+.check-list{list-style:none;font-size:13px;line-height:2}
+.check-list li::before{margin-right:6px}
+.check-list .ok::before{content:'✅'}
+.check-list .warn::before{content:'⚠️'}
+.check-list .pend::before{content:'❓'}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>📊 BrandPulse AI</h2>
+    <p>品牌与市场增长工作台 · Demo</p>
+  </div>
+
+  <div class="brand-section">
+    <div class="brand-label">选择分析品牌</div>
+    <button class="brand-btn brand-heytea active" onclick="switchBrand('heytea')" id="btn-heytea">
+      <span class="dot" style="--brand-color:#1a1a1a"></span>喜茶 HEYTEA
+    </button>
+    <button class="brand-btn brand-nayuki" onclick="switchBrand('nayuki')" id="btn-nayuki">
+      <span class="dot" style="--brand-color:#c0737a"></span>奈雪的茶 Nayuki
+    </button>
+    <button class="brand-btn brand-chapanda" onclick="switchBrand('chapanda')" id="btn-chapanda">
+      <span class="dot" style="--brand-color:#3d8b37"></span>茶百道 ChaPanda
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">分析模块</div>
+    <button class="nav-btn active" onclick="switchPage('home')" id="nav-home">🏠 智能仪表盘</button>
+    <button class="nav-btn" onclick="switchPage('brand')" id="nav-brand">🔍 品牌 & 产品分析</button>
+    <button class="nav-btn" onclick="switchPage('geo')" id="nav-geo">🌐 GEO 搜索可见度</button>
+    <button class="nav-btn" onclick="switchPage('content')" id="nav-content">✍️ 内容生成工厂</button>
+    <button class="nav-btn" onclick="switchPage('positioning')" id="nav-positioning">📊 市场定位</button>
+    <button class="nav-btn" onclick="switchPage('sentiment')" id="nav-sentiment">📰 AI 舆情分析</button>
+    <button class="nav-btn" onclick="switchPage('compliance')" id="nav-compliance">🛡️ 合规审查</button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div>🗄️ 知识库状态</div>
+    <div class="kb-badge"><span>喜茶</span><strong>✅ 6 块</strong></div>
+    <div class="kb-badge"><span>奈雪</span><strong>✅ 4 块</strong></div>
+    <div class="kb-badge"><span>茶百道</span><strong>✅ 4 块</strong></div>
+    <div style="margin-top:10px;font-size:10px;color:#ced4da">RAG · ChromaDB · Claude Sonnet</div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════════ -->
+<main class="main">
+
+<!-- ──────────────────── HOME ──────────────────── -->
+<div class="page active" id="page-home">
+  <div class="page-title">📊 智能品牌中控仪表盘</div>
+  <div class="page-caption">AI Brand Intelligence · 所有数据基于公开信息与模拟演示，不代表真实市场表现</div>
+
+  <div class="col-3">
+    <div class="metric-card brand-heytea">
+      <div class="metric-label">🍵 喜茶 HEYTEA · AI热度指数</div>
+      <div class="metric-value">92</div>
+      <div class="metric-delta up">↑ +3.2% vs 上月</div>
+    </div>
+    <div class="metric-card brand-nayuki">
+      <div class="metric-label">🌸 奈雪的茶 Nayuki · AI热度指数</div>
+      <div class="metric-value">84</div>
+      <div class="metric-delta up">↑ +1.8% vs 上月</div>
+    </div>
+    <div class="metric-card brand-chapanda">
+      <div class="metric-label">🐼 茶百道 ChaPanda · AI热度指数</div>
+      <div class="metric-value">79</div>
+      <div class="metric-delta up">↑ +5.1% vs 上月</div>
+    </div>
+  </div>
+
+  <div class="col-7-5">
+    <div>
+      <div class="card">
+        <div class="card-title">🌐 GEO 可见度评分对比（模拟数据）</div>
+        <div class="chart-wrap"><canvas id="geoChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 AI 搜索热度趋势（2025年1-6月，模拟）</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">🚨 待优化任务提醒</div>
+        <div class="alert alert-warning">
+          <strong>🍵 喜茶 HEYTEA</strong>
+          · GEO「低糖选择」可见度偏低 → 建议补充官网营养/成分页<br>
+          · 价格信息在AI中可能过时 → 更新官网价格区间说明
+        </div>
+        <div class="alert alert-info">
+          <strong>🌸 奈雪 Nayuki</strong>
+          · 菜单描述可能与实际不符 → 定期同步官网产品页<br>
+          · 门店空间数据缺乏具体数字 → 补充面积、座位数
+        </div>
+        <div class="alert alert-info">
+          <strong>🐼 茶百道 ChaPanda</strong>
+          · 招牌产品AI识别度偏低 → 补充产品详情页<br>
+          · 下沉市场门店数据未充分曝光 → 发布省市分布媒体稿
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏅 行业综合能力排名（模拟评估）</div>
+        <table>
+          <tr><th>品牌</th><th>综合</th><th>GEO</th><th>舆情</th></tr>
+          <tr><td>🌸 奈雪</td><td><strong>8.3</strong></td><td>8.0</td><td>🟢</td></tr>
+          <tr><td>🍵 喜茶</td><td><strong>8.1</strong></td><td>7.3</td><td>🟢</td></tr>
+          <tr><td>🐼 茶百道</td><td><strong>7.8</strong></td><td>6.2</td><td>🟢</td></tr>
+        </table>
+        <p style="font-size:11px;color:#adb5bd;margin-top:8px">⚠️ 模拟评估数据，不构成商业判断</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────────── BRAND ANALYSIS ──────────────────── -->
+<div class="page" id="page-brand">
+  <div class="page-title">🔍 品牌 & 产品分析</div>
+  <div class="page-caption">任务卡1（必选）· 输入：官方公开资料 · 输出：定位、调性、优势、风险提示</div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('brand','tab-ba')">🏷️ 品牌分析</button>
+    <button class="tab-btn" onclick="switchTab('brand','tab-pa')">📦 产品分析</button>
+  </div>
+
+  <div class="tab-content active" id="brand-tab-ba">
+    <div class="col-2">
+      <div class="card">
+        <div class="card-title">品牌定位 & 关键词</div>
+        <div id="ba-positioning" style="font-size:13px;line-height:1.8"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">目标客群 & 品牌调性</div>
+        <div id="ba-tone" style="font-size:13px;line-height:1.8"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">品牌核心优势</div>
+      <ul class="check-list" id="ba-advantages"></ul>
+    </div>
+    <div class="col-2">
+      <div class="card">
+        <div class="card-title">品牌表达一致性评估</div>
+        <div id="ba-consistency" style="font-size:13px;line-height:1.8"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">风险与注意事项</div>
+        <div id="ba-risks" style="font-size:13px;line-height:1.8"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="brand-tab-pa">
+    <div class="card">
+      <div class="card-title">产品基本信息 & 功能拆解</div>
+      <div id="pa-info" style="font-size:13px;line-height:1.8"></div>
+    </div>
+    <div class="col-2">
+      <div class="card">
+        <div class="card-title">用户痛点匹配 & 核心卖点</div>
+        <div id="pa-usp" style="font-size:13px;line-height:1.8"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">使用场景 & 产品价值主张</div>
+        <div id="pa-value" style="font-size:13px;line-height:1.8"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────────── GEO ──────────────────── -->
+<div class="page" id="page-geo">
+  <div class="page-title">🌐 GEO / AI 搜索可见度分析</div>
+  <div class="page-caption">任务卡2 · 模拟用户向AI提问，分析品牌在AI回答中的可见度、准确性与内容补强建议</div>
+
+  <div class="col-2">
+    <div class="card">
+      <div class="card-title">综合可见度评分</div>
+      <div id="geo-scores"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗺️ 各维度雷达图（模拟）</div>
+      <div style="position:relative;height:200px"><canvas id="geoRadar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">AI 搜索测试问题 · 逐题分析</div>
+    <div id="geo-questions"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 内容补强优先级行动计划</div>
+    <div id="geo-actions"></div>
+  </div>
+</div>
+
+<!-- ──────────────────── CONTENT ──────────────────── -->
+<div class="page" id="page-content">
+  <div class="page-title">✍️ 内容生成工厂</div>
+  <div class="page-caption">任务卡4 · 多平台内容矩阵生成 · 品牌调性适配 · 合规标注</div>
+
+  <div class="alert alert-info" style="margin-bottom:16px">
+    <strong>生成参数</strong>
+    产品：<span id="content-product"></span> &nbsp;|&nbsp; 调性：<span id="content-tone"></span> &nbsp;|&nbsp; 目标：夏日新品上线，提升年轻消费者种草转化
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('content','tab-xhs')">📱 小红书</button>
+    <button class="tab-btn" onclick="switchTab('content','tab-dy')">🎬 抖音脚本</button>
+    <button class="tab-btn" onclick="switchTab('content','tab-poster')">🖼️ 海报标题</button>
+    <button class="tab-btn" onclick="switchTab('content','tab-kol')">🤝 KOL Brief</button>
+  </div>
+
+  <div class="tab-content active" id="content-tab-xhs">
+    <div class="card"><div class="card-title">📱 小红书种草文案</div><div class="content-block" id="content-xhs"></div></div>
+  </div>
+  <div class="tab-content" id="content-tab-dy">
+    <div class="card"><div class="card-title">🎬 抖音/短视频脚本</div><div class="content-block" id="content-dy"></div></div>
+  </div>
+  <div class="tab-content" id="content-tab-poster">
+    <div class="card"><div class="card-title">🖼️ 海报标题组合</div><div class="content-block" id="content-poster"></div></div>
+  </div>
+  <div class="tab-content" id="content-tab-kol">
+    <div class="card"><div class="card-title">🤝 KOL 合作 Brief</div><div class="content-block" id="content-kol"></div></div>
+  </div>
+
+  <div class="alert alert-warning">
+    ⚠️ 标注 <strong>[创意内容]</strong> 的部分为AI创意发挥，须人工核实是否符合品牌调性；标注 <strong>[品牌信息]</strong> 的部分来自知识库，须核实信息仍准确有效后方可发布。
+  </div>
+</div>
+
+<!-- ──────────────────── POSITIONING ──────────────────── -->
+<div class="page" id="page-positioning">
+  <div class="page-title">📊 市场定位分析</div>
+  <div class="page-caption">STP 框架 + SWOT 分析 + 差异化定位建议</div>
+
+  <div class="card">
+    <div class="card-title">STP 分析</div>
+    <div id="stp-content" style="font-size:13px;line-height:1.8"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">SWOT 分析</div>
+    <div class="swot-grid" id="swot-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">差异化定位建议 & 渠道策略</div>
+    <div id="positioning-strategy" style="font-size:13px;line-height:1.8"></div>
+  </div>
+</div>
+
+<!-- ──────────────────── SENTIMENT ──────────────────── -->
+<div class="page" id="page-sentiment">
+  <div class="page-title">📰 AI 舆情分析</div>
+  <div class="page-caption">基于公开评论样本，识别正负向情感、风险等级与官方回应建议</div>
+
+  <div class="col-2">
+    <div class="card">
+      <div class="card-title">情感分布</div>
+      <div class="sentiment-bar" id="sentiment-bar"></div>
+      <div style="display:flex;gap:16px;font-size:12px;margin-top:6px" id="sentiment-legend"></div>
+      <div class="divider"></div>
+      <div id="sentiment-summary" style="font-size:13px;line-height:1.8"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">风险评级 & 官方回应建议</div>
+      <div id="sentiment-risk" style="font-size:13px;line-height:1.8"></div>
+    </div>
+  </div>
+
+  <div class="col-2">
+    <div class="card">
+      <div class="card-title">✅ 正向舆情核心主题</div>
+      <div id="sentiment-pos" style="font-size:13px;line-height:1.8"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠️ 负向/风险舆情核心主题</div>
+      <div id="sentiment-neg" style="font-size:13px;line-height:1.8"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────────── COMPLIANCE ──────────────────── -->
+<div class="page" id="page-compliance">
+  <div class="page-title">🛡️ 合规审查哨所</div>
+  <div class="page-caption">自动检测绝对化用语、虚假宣传、竞品贬低等风险 · RefChecker 驱动</div>
+
+  <div class="card">
+    <div class="card-title">待审查示例文本（高风险样本）</div>
+    <div class="content-block" style="background:#fff8f8;border-color:#f5c6cb;color:#495057">喜茶是新式茶饮行业<strong style="color:#dc3545">第一品牌</strong>，产品口味<strong style="color:#dc3545">最好</strong>，喝了我们的茶你<strong style="color:#dc3545">一定不会去喝其他家</strong>！我们的芝士是全国<strong style="color:#dc3545">最顶级</strong>的食材，健康无添加，喝了<strong style="color:#dc3545">包你变年轻</strong>。<strong style="color:#dc3545">竞争对手的产品根本比不上我们</strong>。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">整体风险等级：<span class="risk-high">🔴 高风险</span></div>
+    <table>
+      <tr><th>#</th><th>原文片段</th><th>问题类型</th><th>风险</th><th>修改建议</th></tr>
+      <tr><td>1</td><td>行业第一品牌</td><td>绝对化用语</td><td><span class="risk-high">🔴 高</span></td><td>改为"知名新式茶饮品牌"</td></tr>
+      <tr><td>2</td><td>产品口味最好</td><td>绝对化+无法证实</td><td><span class="risk-high">🔴 高</span></td><td>改为"口味广受好评"（需数据支撑）</td></tr>
+      <tr><td>3</td><td>一定不会喝其他家</td><td>虚假/夸大承诺</td><td><span class="risk-high">🔴 高</span></td><td>删除，此类承诺违反广告法</td></tr>
+      <tr><td>4</td><td>全国最顶级食材</td><td>绝对化用语</td><td><span class="risk-high">🔴 高</span></td><td>改为"精选优质食材"并注明来源</td></tr>
+      <tr><td>5</td><td>健康无添加</td><td>可能涉及虚假宣传</td><td><span class="risk-mid">🟡 中</span></td><td>删除或改为"按食品安全标准生产"</td></tr>
+      <tr><td>6</td><td>喝了包你变年轻</td><td>虚假功效声明</td><td><span class="risk-high">🔴 高</span></td><td>删除，饮品不得声称功效性结果</td></tr>
+      <tr><td>7</td><td>竞争对手根本比不上</td><td>贬低竞品</td><td><span class="risk-high">🔴 高</span></td><td>删除全句，正面陈述自身优势</td></tr>
+    </table>
+  </div>
+
+  <div class="col-2">
+    <div class="card">
+      <div class="card-title">✅ 合规通过项</div>
+      <ul class="check-list">
+        <li class="ok">品牌名称使用正确</li>
+        <li class="ok">未涉及个人隐私信息</li>
+        <li class="ok">未出现违禁成分声明</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">总体修改建议</div>
+      <ul class="check-list">
+        <li class="warn">全面删除绝对化用语（最/第一/顶级）</li>
+        <li class="warn">删除竞品贬低内容，改为正面陈述</li>
+        <li class="warn">去除无法证实的功效承诺</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert alert-warning">
+    ⚠️ 本审查由AI辅助完成，仅供参考。正式发布前须由品牌授权人员及法务部门进行最终人工复核。
+  </div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ <strong>免责声明</strong>：本作品仅用于比赛演示。相关企业分析基于公开信息和 AI 工具辅助生成，不代表对企业经营、产品质量、市场表现或声誉状况的事实认定。所有输出均需在真实商业使用前由企业授权人员进行复核。 &nbsp;|&nbsp; Powered by BrandPulse AI · Claude Sonnet · ChromaDB
+</div>
+</main>
+
+<!-- ═══════════════════════════════ DATA ═══════════════════════════════════ -->
+<script>
+const DATA = {
+  heytea: {
+    name:"喜茶 HEYTEA", emoji:"🍵", color:"#1a1a1a",
+    pos:"高端新式茶饮，以"灵感之茶"为核心主张，面向一二线城市追求个性与品质的年轻消费者。",
+    keywords:["灵感","极简","年轻","有态度","创新","跨界","品质感"],
+    tone:"✅ 酷而克制——拒绝"可爱卖萌"路线，极简黑白视觉，文案简洁有力，强调创意与态度。",
+    audience:"✅ 核心：18-35岁，一二线城市，月收入5000+，追求个性化生活方式的年轻白领与学生。",
+    advantages:[
+      {ok:true,text:"品类首创：率先推出奶盖茶（芝士茶），开创新式茶饮品类细分赛道"},
+      {ok:true,text:"联名营销：与FENDI、藤原浩等高端IP跨界，持续制造话题"},
+      {ok:true,text:"产品创新速度：每月上新，季节限定维持消费者新鲜感"},
+      {ok:true,text:"数字化运营：喜茶GO小程序预点+会员体系，运营效率高"},
+      {ok:false,text:"品牌溢价能力：极简美学支撑相对高价，降低纯价格竞争压力【AI推断】"},
+    ],
+    consistency:"✅ 视觉：黑白极简LOGO与包装高度统一。✅ 文案：官方渠道克制有态度。⚠️ 产品线：主线与喜小茶副线需注意品牌稀释。",
+    risks:"⚠️ 竞争加剧：奈雪、茶百道快速成长。⚠️ 品质管控：规模扩张后标准化挑战持续。❓ 消费降级压力：高客单价接受度需持续关注。",
+    product:{name:"多肉葡萄",info:"鲜果茶 · 约28-35元 · 新鲜葡萄果肉（非果浆）+ 轻茶底，透明杯身展示饱满果粒",usp:"✅ 真实水果感可感知\n✅ 高颜值出片，小红书种草高频产品\n⚠️ 季节限定感，制造稀缺话题【AI推断】",value:"使用场景：写字楼午后打卡、社媒打卡拍照。\n\n价值主张：「一杯看得见的新鲜——用真实葡萄果肉，让每一口都是灵感时刻。」"},
+    geo:{scores:[{label:"品牌知名度与曝光",val:9},{label:"AI描述准确性",val:7},{label:"官方内容丰富度",val:6},{label:"竞品差异化优势",val:7},{label:"综合GEO评分",val:7.3}],
+      questions:[
+        {q:"推荐几个高端新式茶饮品牌？",vis:"高",acc:"准确",comp:"奈雪并列，差异化描述有时模糊",tip:"官网品牌故事页增加结构化定位描述"},
+        {q:"奶盖茶哪个品牌最值得尝试？",vis:"高",acc:"准确","comp":"首创地位记录充分，其他品牌跟进后区分可能模糊",tip:"FAQ明确「喜茶是奶盖茶品类开创者（2012年）」的时间线"},
+        {q:"喜茶和奈雪哪个更好？",vis:"高",acc:"部分准确",comp:"奈雪「茶+软欧包」特色可能获AI更高「特色感」",tip:"官网增加品牌差异化FAQ，明确与其他品牌的本质区别"},
+        {q:"喜茶有什么健康低糖的选择？",vis:"中",acc:"可能偏差",comp:"主打健康的品牌在此问题描述更清晰",tip:"🔴 高优先级：官网产品页增加营养信息和低糖产品专区"},
+        {q:"喜茶一杯大概多少钱？",vis:"中",acc:"可能偏差",comp:"茶百道价格更稳定清晰",tip:"官网明确价格区间说明（大部分产品15-40元）"},
+        {q:"约会适合去哪家茶饮？",vis:"中",acc:"部分准确",comp:"奈雪第三空间定位在此问题占明显优势",tip:"针对DP旗舰大店增加「空间体验」相关描述"},
+        {q:"新式茶饮联名做得好的品牌？",vis:"高",acc:"准确",comp:"联名频次和知名度领先行业",tip:"官网建立「联名历史」页面，系统化整理记录"},
+        {q:"想喝有设计感的网红茶饮去哪？",vis:"高",acc:"准确",comp:"茶颜悦色等具国风美学也有竞争力",tip:"社媒官方账号增加「品牌美学」系列内容"},
+      ],
+      actions:["🔴 【最高优先级】官网产品页增加营养/成分/价格信息——显著提升健康类和价格类问题可见度","🟡 官网增加品牌差异化FAQ——明确喜茶与其他品牌的本质区别","🟡 建立联名历史页面——强化「联名文化」在AI中的品牌标签","🟢 旗舰店空间体验内容——补强约会/聚会场景认知"]
+    },
+    content:{product:"多肉葡萄",tone:"酷/有态度",
+      xhs:"[品牌信息] 喜茶多肉葡萄这个夏天真的绝了🍇\n\n整颗葡萄粒沉在杯底，吸管一戳进去——甜！真实的那种甜，不是香精味。\n\n透明杯身拍出来颜色也太好看了，紫色渐变，朋友圈发出去直接被问「在哪买的」。\n\n[创意内容] 夏天就要对自己好一点，30块换一杯有灵感的下午茶，值了。\n\n📍 喜茶GO直接预约，不用排队\n#喜茶 #多肉葡萄 #夏日饮品推荐 #下午茶打卡 #新式茶饮",
+      dy:"[创意内容]\n开场（0-3秒）：手持透明杯，镜头推进葡萄粒特写——「你见过这么多葡萄的茶吗？」\n\n产品展示（3-15秒）：\n· 镜头：杯身侧面，葡萄粒沉底，颜色通透\n· 口播：「喜茶多肉葡萄，用的是真实葡萄果肉，不是果浆」[品牌信息]\n· 动作：摇晃杯子，葡萄粒滚动，插吸管\n\n口播（15-25秒）：「喝到一半发现葡萄粒根本喝不完，这就是我爱喝的感觉」[创意内容]\n\n结尾CTA（25-30秒）：「评论区告诉我你喜欢几分糖，关注我带你解锁更多好喝的🍇」",
+      poster:"组合一（酷感风格）\n主标题：「灵感，从一颗葡萄开始」\n副标题：真实果肉，不将就的下午茶\n\n组合二（清爽夏日）\n主标题：「今夏，把葡萄喝进去」\n副标题：多肉葡萄 · 真实水果 · 夏季限定\n\n组合三（社交传播向）\n主标题：「这一杯，值得发朋友圈」\n副标题：喜茶多肉葡萄 · 现在点单",
+      kol:"【合作背景】\n喜茶多肉葡萄夏季上线，目标触达追求品质生活的年轻用户群体。\n\n【产品核心信息】[品牌信息]\n· 产品：多肉葡萄（鲜果茶系列）\n· 价格：约28-35元\n· 核心卖点：真实葡萄果肉、高颜值透明杯装\n\n【创作方向】[创意内容]\n· 场景：下午茶打卡、闺蜜出行、城市探店\n· 风格：真实种草，避免广告感，强调亲身体验\n\n【禁止事项】\n· 禁止使用「最好喝/第一/唯一」等绝对化用语\n· 禁止对比或提及竞品\n· 禁止声称功效（减肥、美容等）\n\n【发布要求】\n· 平台：小红书/微博/抖音二选一\n· 发布时间：上午10点或下午3-5点"
+    },
+    stp:{seg:"人口：18-35岁，一二线城市，月收入5000+\n心理【AI推断】：追求"有态度"生活方式，对设计美学有感知，愿为颜值和品质付溢价\n行为：✅ 高频消费，数字化程度高，习惯小程序预点",
+      target:"✅ 核心：一二线城市18-30岁年轻消费者，有品质诉求、社媒活跃、追求个性\n⚠️ 次级：对潮流文化感兴趣、关注跨界联名的时尚消费者【AI推断】",
+      pos:"✅ 在消费者心智中占据「高端新式茶饮」+「有灵感有态度的生活方式品牌」双重位置。"},
+    swot:{s:"✅ 品类首创优势：奶盖茶开创者，先发认知强\n✅ 品牌调性鲜明：极简有态度，差异化突出\n✅ 产品创新能力：高频上新+联名，持续保鲜\n✅ 数字化基础：GO小程序+会员体系领先",
+      w:"⚠️ 高客单价：30+定价在消费降级环境承压\n⚠️ 规模扩张后品质一致性挑战\n❓ 下沉市场渗透有限",
+      o:"⚠️ 健康化趋势：无糖/低糖消费升级，纯茶系列有扩张空间\n⚠️ 出海机会：东南亚等市场认知度提升\n⚠️ IP经济：跨界联名潮流持续",
+      t:"✅ 竞争加剧：奈雪、茶百道各占不同价位\n⚠️ 同质化：奶盖茶品类被大量模仿\n⚠️ 原材料成本波动：鲜果季节性涨价"},
+    strategy:"差异化建议：\n⚠️ 强化「灵感」品牌叙事，在所有触点持续强化精神内核【AI推断】\n⚠️ 发力健康茶饮，纯茶系列作为增长第二曲线【AI推断】\n✅ 联名策略升级，从产品联名到文化共创\n\n渠道策略：\n✅ 线上：持续强化小程序+会员体系，数据化运营提升复购\n⚠️ 线下：核心商圈标准店保持旗舰体验，GO店布局写字楼【AI推断】",
+    sentiment:{pos:62,neu:25,neg:13,
+      posThemes:["产品口感认可：「多肉葡萄真的绝了，每次来必点」","品质感与送礼场景：「送礼拿出去有面子」","数字化便利：「GO店很方便，提前点好直接取」","视觉打卡价值：「联名款杯子超好看」"],
+      negThemes:["等待时间 🟡：「排队等了40分钟」— 中等频率","价格敏感 🟡：「30多一杯，学生党消费不太起」— 中等频率","产品稳定性 🟡：「波波冰有点稀，不如以前浓郁」— 低频"],
+      risk:"🟢 低风险",riskDetail:"价格敏感度在消费降级环境下有上升可能；产品稳定性需重点管控。",
+      responses:["针对排队：主动推广小程序预点功能，将痛点转化为数字化优势","针对价格：用「真实食材故事」内容营销，构建「贵得有道理」认知","针对稳定性：内部建立质控反馈，公开展示食材标准与出品流程"]
+    }
+  },
+  nayuki: {
+    name:"奈雪的茶 Nayuki", emoji:"🌸", color:"#c0737a",
+    pos:"以「一杯好茶+一口软欧包」为核心差异化，打造都市年轻女性的「第三空间」生活方式品牌。",
+    keywords:["精致","温柔","生活方式","第三空间","茶+烘焙","都市女性","仪式感"],
+    tone:"✅ 温暖而精致——视觉以暖色调为主，文案有生活感和情绪共鸣，强调「美好生活场景」而非单纯产品功能。",
+    audience:"✅ 核心：20-35岁都市女性，月收入5000+，追求精致生活方式，有下午茶消费习惯。",
+    advantages:[
+      {ok:true,text:"双品类差异化：茶饮+软欧包组合，在茶饮品牌中具有极高独特性"},
+      {ok:true,text:"港股上市：首家上市茶饮品牌，信息透明度高，品牌公信力强"},
+      {ok:true,text:"第三空间：大面积门店提供舒适坐席，满足「坐下来慢慢喝」的场景需求"},
+      {ok:false,text:"直营模式：保证品质和服务一致性，但扩张速度受限【AI推断】"},
+    ],
+    consistency:"✅ 视觉层：暖色系美学在门店、包装、社媒保持高度一致。✅ 产品层：茶饮+软欧包双品类组合统一执行。⚠️ 价格层：高定价与「亲民」形象存在一定张力，需注意传播口径。",
+    risks:"⚠️ 客单价压力：套餐50-65元，消费降级环境下承压。⚠️ 扩张速度：直营模式覆盖城市密度低于加盟品牌。❓ 烘焙竞争加剧：好利来等烘焙品牌布局饮品，竞争交叉。",
+    product:{name:"霸气玉油柑",info:"鲜果茶 · 约28-35元 · 玉油柑（橄榄科小众鲜果）+ 轻茶底，先酸后苦再回甘，具有独特味觉记忆点",usp:"✅ 小众稀缺感：玉油柑知名度低，猎奇尝鲜驱动\n✅ 奈雪「霸气」系列品质背书\n⚠️ 先苦后甜体验：独特味觉层次，差异化体验【AI推断】",value:"使用场景：奈雪门店宽敞坐席，适合闺蜜下午茶、个人犒赏。\n\n价值主张：「用一颗你没见过的果，开启今天的灵感下午茶。」【AI推断】"},
+    geo:{scores:[{label:"品牌知名度与曝光",val:8},{label:"AI描述信息准确性",val:8},{label:"官方内容丰富度",val:7},{label:"竞品差异化优势",val:9},{label:"综合GEO评分",val:8.0}],
+      questions:[
+        {q:"茶饮品牌中哪家有软欧包或甜品？",vis:"高",acc:"准确",comp:"此问题奈雪占据绝对优势，无直接竞品",tip:"官网增加「为什么选择软欧包+茶」的品牌故事"},
+        {q:"适合女生的精致茶饮品牌？",vis:"高",acc:"准确",comp:"与喜茶并列，但奈雪「温柔」标签区隔更清晰",tip:"官方社媒增加真实女性消费者场景内容"},
+        {q:"哪家茶饮店空间大适合聊天？",vis:"高",acc:"准确",comp:"此问题奈雪具有明显优势，竞品门店普遍较小",tip:"官网增加门店空间数据（平均面积、座位数）"},
+        {q:"奈雪的茶有什么招牌产品？",vis:"高",acc:"部分准确",comp:"喜茶多肉系列知名度更高，可能被优先推荐",tip:"官网产品页保持实时更新，重点产品增加详细描述"},
+        {q:"港股上市的茶饮品牌有哪些？",vis:"高",acc:"准确",comp:"茶百道后续上市，两品牌均被提及，奈雪先发优势仍存",tip:"品牌介绍中持续强调「首家上市茶饮品牌」历史地位"},
+        {q:"茶饮+烘焙双品类的品牌？",vis:"高",acc:"准确",comp:"无直接竞品，此维度具有垄断性优势",tip:"无需特别补强，保持现有内容即可"},
+        {q:"想体验生活方式感的茶饮店？",vis:"中高",acc:"部分准确",comp:"喜茶在「生活方式」感知上也有强标签",tip:"媒体稿增加「第三空间」具体体验描述，区分与喜茶差异"},
+        {q:"奈雪的茶适合坐下来慢慢喝吗？",vis:"高",acc:"准确",comp:"此问题奈雪优势明显，喜茶GO店以快取为主",tip:"增加「可以待多久」等具体数据，增强可信度"},
+      ],
+      actions:["🟡 产品信息实时更新——菜单变化快，官网需与实际菜单同步","🟡 空间体验数据化——增加具体数字（面积、座位数），让AI有数据可引用","🟢 「首家上市」历史地位强化——是信息可信度的有力背书"]
+    },
+    content:{product:"霸气玉油柑",tone:"温柔/精致",
+      xhs:"[品牌信息] 奈雪霸气玉油柑，喝过的人都说「很难描述但还想再来」🍊\n\n第一口酸，然后苦，然后——甜。\n玉油柑，你可能没见过，但你一定会记住它。\n\n[创意内容] 下午三点，一个人坐在奈雪的大沙发里，一杯霸气玉油柑，窗外是忙碌的世界，我暂时不属于那里。\n\n这杯茶就是我今天对自己最好的事。🌿\n\n#奈雪的茶 #霸气玉油柑 #小众茶饮 #下午茶打卡 #一个人的下午茶",
+      dy:"[创意内容]\n开场（0-3秒）：手持透明杯靠近镜头——「你知道什么是玉油柑吗？」\n\n产品展示（3-15秒）：\n· 奈雪宽敞门店，舒适坐席，杯中玉油柑果实可见\n· 口播：「奈雪的霸气玉油柑，用的是这种很小众的鲜果」[品牌信息]\n· 动作：轻摇杯身，果实沉浮\n\n感受描述（15-25秒）：「先酸后苦再回甘，好像今天先苦后甜的一天」[创意内容]\n\n结尾CTA：「评论区说说你试过最特别的茶饮口味 👇」",
+      poster:"组合一（情感向）\n主标题：「先苦后甜，像今天」\n副标题：奈雪霸气玉油柑 · 小众鲜果下午茶\n\n组合二（精致风）\n主标题：「一颗你没见过的果」\n副标题：霸气玉油柑 · 奈雪出品 · 现在点单\n\n组合三（场景向）\n主标题：「把下午还给自己」\n副标题：奈雪·软欧包·霸气果茶 / 今天的仪式感",
+      kol:"【合作背景】\n奈雪霸气玉油柑夏季主推，目标触达追求精致生活的都市女性消费者。\n\n【产品核心信息】[品牌信息]\n· 产品：霸气玉油柑（霸气系列鲜果茶）\n· 价格：约28-35元\n· 核心卖点：小众玉油柑鲜果、先苦后甜独特口感、奈雪大空间体验\n\n【创作方向】[创意内容]\n· 场景：一个人的下午茶、闺蜜聚会、奈雪大店打卡\n· 情感：自我犒赏、生活仪式感、慢下来的片刻\n\n【禁止事项】\n· 禁止使用绝对化用语\n· 禁止对比或提及竞品名称\n· 不得声称任何健康功效"
+    },
+    stp:{seg:"人口：20-35岁都市女性，一二线城市，月收入5000+\n心理【AI推断】：追求精致生活仪式感，愿为「第三空间」体验付溢价\n场景：下午茶、闺蜜聚会、约会、独处充电",
+      target:"✅ 核心：一二线城市20-30岁追求精致生活的都市女性\n⚠️ 次级：情侣约会、商务休闲、工作日「自我犒赏」场景用户【AI推断】",
+      pos:"✅ 「茶饮+软欧包」双品类创造独特定位——不只是一杯茶，而是完整的都市下午茶场景体验品牌。"},
+    swot:{s:"✅ 双品类护城河：茶+软欧包组合难以模仿\n✅ 港股上市：信息公开透明，品牌公信力强\n✅ 大空间门店：真正的第三空间体验\n✅ 直营品质管控：服务标准化程度高",
+      w:"⚠️ 扩张速度慢：直营模式覆盖城市少于加盟品牌\n⚠️ 高客单价：套餐50-65元，价格敏感用户流失风险\n❓ 软欧包运营复杂：保质期短，运营难度高于纯饮品",
+      o:"⚠️ 女性消费升级：都市女性精致消费需求持续提升\n⚠️ 下午茶场景化：「坐下来」体验需求被充分验证\n✅ 港股资本支持：持续融资能力支撑门店扩张",
+      t:"⚠️ 高端茶饮竞争：喜茶等在体验感上形成竞争\n⚠️ 烘焙跨界者：好利来等烘焙品牌入局饮品市场"},
+    strategy:"差异化建议：\n✅ 强化「完整下午茶场景」叙事，持续强化茶+欧包的仪式感\n⚠️ 女性情感营销：针对自我犒赏、闺蜜时光做深度内容营销【AI推断】\n⚠️ 会员体系深化：APP积分驱动高价值用户复购频次【AI推断】\n\n渠道策略：\n✅ 线下：大型购物中心PRO店保持旗舰体验，持续强化第三空间认知\n⚠️ 线上：奈雪APP会员+私域运营，深化女性用户连接【AI推断】",
+    sentiment:{pos:70,neu:17,neg:13,
+      posThemes:["空间体验高度认可：「空间太舒服了，可以坐一下午」","双品类组合满足感：「软欧包+霸气果茶，下午茶满足感很强」","服务质量好评：「服务态度很好，店员会主动介绍新品」","产品差异化认可：「霸气玉油柑是真的好喝，小众茶果很特别」"],
+      negThemes:["价格偏高 🟡：「两个人喝茶吃面包要100多」— 中等频率","门店密度不足 🟡：「希望多开几家，我这边没有奈雪」— 中等频率"],
+      risk:"🟢 低风险",riskDetail:"奈雪舆情整体正向，核心风险来自价格敏感和门店覆盖有限，属结构性问题而非危机信号。",
+      responses:["针对「价格贵」：强化「完整体验」价值主张，通过会员积分和套餐优化提供「划算感」","针对「门店少」：在社媒主动披露扩张计划，将「期待开店」转化为品牌热度"]
+    }
+  },
+  chapanda: {
+    name:"茶百道 ChaPanda", emoji:"🐼", color:"#3d8b37",
+    pos:"以「鲜果+中国茶」为核心，凭借熊猫IP和高性价比，深度覆盖二三线城市及下沉市场的大众消费茶饮品牌。",
+    keywords:["亲民","鲜果","熊猫IP","性价比","加盟","下沉市场","中国茶"],
+    tone:"✅ 接地气、有温度——熊猫形象亲切可爱，产品定价亲民，文案轻松活泼，强调「好喝不贵」的日常消费场景。",
+    audience:"✅ 核心：广泛年龄层，尤其覆盖二三线城市及下沉市场；对价格敏感但追求一定品质的消费者。",
+    advantages:[
+      {ok:true,text:"规模优势：全国超7000家门店（港交所招股书），覆盖密度高"},
+      {ok:true,text:"性价比定位：10-25元价格带，在同等质量标准下竞争力强"},
+      {ok:true,text:"熊猫IP：丁丁猫（熊猫形象）高辨识度，适合大众亲和力传播"},
+      {ok:true,text:"供应链体系：港交所招股书披露完整供应链，支撑成本控制"},
+      {ok:false,text:"加盟赋能：标准化加盟体系支持快速扩张【AI推断】"},
+    ],
+    consistency:"✅ IP层：丁丁猫熊猫形象贯穿杯子、包装、门店、周边。⚠️ 品质一致性：加盟模式下门店执行标准差异是潜在风险。❓ 海外市场：出海品牌调性是否与国内保持一致，待观察。",
+    risks:"⚠️ 加盟质量管控：各加盟商执行标准不一，品质波动可能损害品牌形象。⚠️ 品牌升级压力：亲民定位在消费升级趋势下，向上突破是长期课题。❓ 海外适应性：熊猫IP在不同文化市场的接受度有待验证。",
+    product:{name:"杨枝甘露",info:"鲜果奶茶 · 约13-18元（高性价比）· 芒果果肉+西柚+椰浆，甜中带微酸，椰香浓郁，橙黄配色视觉吸引力强",usp:"✅ 极致性价比：相同品类比高端品牌低30-50%\n✅ 真材实料：芒果果肉+椰浆组合用料扎实\n✅ 门店便利：7000+门店，生活圈高覆盖",value:"使用场景：上下班途中日常解渴、学生放学高频消费。\n\n价值主张：「好喝、量足、不贵——日常那杯值得期待的茶。」【AI推断】"},
+    geo:{scores:[{label:"品牌知名度与曝光",val:7},{label:"AI描述信息准确性",val:6},{label:"官方内容丰富度",val:5},{label:"竞品差异化优势",val:7},{label:"综合GEO评分",val:6.2}],
+      questions:[
+        {q:"性价比高的茶饮品牌有哪些推荐？",vis:"高",acc:"准确",comp:"蜜雪冰城在更低价位段竞争，茶百道在「有质感的性价比」维度更突出",tip:"官网明确标注主力产品价格区间，让AI有准确数据可引用"},
+        {q:"10-20元好喝的奶茶品牌？",vis:"高",acc:"准确",comp:"霸王茶姬、古茗同处此价位，竞争激烈",tip:"强化「鲜果+中国茶」的品质感描述，区分于纯低价竞争"},
+        {q:"二三线城市流行的茶饮品牌？",vis:"中高",acc:"部分准确",comp:"蜜雪冰城在下沉市场AI认知度更高",tip:"🔴 重点补强：增加茶百道在二三线城市门店分布的具体数据"},
+        {q:"茶百道有什么特色招牌产品？",vis:"中",acc:"可能偏差",comp:"喜茶、奈雪的产品标签在AI中更清晰",tip:"🔴 高优先级：官网明确「杨枝甘露、芋泥波波」等招牌产品名称"},
+        {q:"熊猫主题的茶饮品牌是哪个？",vis:"高",acc:"准确",comp:"此问题茶百道具有垄断性，无直接竞品",tip:"在官网「品牌故事」中加强熊猫IP来源和设计理念说明"},
+        {q:"想开奶茶加盟店哪个品牌好？",vis:"高",acc:"准确",comp:"蜜雪冰城在加盟问题上同样高频被提及",tip:"官网加盟页面增加加盟支持体系详述"},
+        {q:"鲜果茶做得好的品牌有哪些？",vis:"中",acc:"部分准确",comp:"此维度高端品牌认知度更高，需主动强化「鲜果」标签",tip:"增加「鲜果原料溯源」相关内容，强化品质标签"},
+        {q:"有去海外开店的中国茶饮品牌吗？",vis:"中",acc:"部分准确",comp:"霸王茶姬海外扩张媒体曝光度更高",tip:"针对东南亚市场进展，主动发布媒体稿"},
+      ],
+      actions:["🔴 【最高优先级】官网建立招牌产品详细描述——杨枝甘露、芋泥波波等产品缺乏AI可检索的详细描述","🟡 下沉市场门店分布数据公开化——发布各省市门店数量数据，强化「二三线城市领导品牌」认知","🟡 海外扩张动态媒体稿——每次新市场进入均发布正式媒体稿","🟢 熊猫IP品牌故事深化——在官网增加丁丁猫IP设计故事"]
+    },
+    content:{product:"杨枝甘露",tone:"亲民/接地气",
+      xhs:"[品牌信息] 茶百道杨枝甘露，才15块！真的不是我替它打广告🥭\n\n椰浆+芒果+西柚，料足量大，每次喝完都感觉赚到了。\n\n[创意内容] 不是所有好喝都要三四十块。\n附近就有茶百道，熊猫杯超可爱，明天继续打工。\n\n下班一杯，今天辛苦了✨\n\n#茶百道 #杨枝甘露 #性价比奶茶 #下班快乐 #熊猫联名",
+      dy:"[创意内容]\n开场（0-3秒）：展示茶百道熊猫杯——「15块，这料你见过吗？」\n\n产品展示（3-15秒）：\n· 口播：「茶百道杨枝甘露，芒果、西柚、椰浆，用的是真材料」[品牌信息]\n· 动作：用吸管搅拌展示料的分量\n\n对比钩子（15-25秒）：「同样的口感，我为什么要多花20块？」[创意内容]\n\n结尾CTA：「附近有茶百道的扣1，今晚一起打卡 🐼」",
+      poster:"组合一（性价比向）\n主标题：「好喝，不贵，就这样」\n副标题：茶百道杨枝甘露 · 真材实料 · 15元起\n\n组合二（IP可爱风）\n主标题：「熊猫说：今天也要喝好茶」\n副标题：茶百道 · 丁丁猫同款 · 全国7000+门店\n\n组合三（日常场景）\n主标题：「下班那杯，值得期待」\n副标题：茶百道 · 附近就有 · 今天辛苦了",
+      kol:"【合作背景】\n茶百道杨枝甘露主推，目标触达日常消费、追求性价比的年轻用户。\n\n【产品核心信息】[品牌信息]\n· 产品：杨枝甘露（鲜果奶茶系列）\n· 价格：约13-18元\n· 核心卖点：芒果+西柚+椰浆真材实料、高性价比、熊猫IP杯款\n\n【创作方向】[创意内容]\n· 场景：下班途中、学生放学、日常解渴\n· 风格：轻松有趣，强调「不用花很多钱也能喝好茶」\n\n【禁止事项】\n· 禁止使用绝对化用语\n· 禁止对比或贬低竞品\n· 不得声称健康功效"
+    },
+    stp:{seg:"地理：二三线城市及下沉市场为核心战场，与高端品牌形成错位竞争\n价格：10-25元中低价格带，覆盖价格敏感型消费者\n行为【AI推断】：高频日常消费，注重便利性和性价比",
+      target:"✅ 核心：二三线城市及下沉市场的广泛消费群体，尤其是日常高频饮品需求用户\n⚠️ 次级：一线城市追求性价比的学生和年轻白领【AI推断】",
+      pos:"✅ 以规模优势+性价比定位，在中低价格带建立领导地位；熊猫IP提供品牌情感差异化，超越纯价格竞争。"},
+    swot:{s:"✅ 门店规模：7000+门店（招股书），覆盖密度是核心竞争壁垒\n✅ 价格优势：10-25元，性价比突出\n✅ IP优势：丁丁猫熊猫形象高辨识度，亲和力强\n✅ 供应链成熟：成本控制能力强（招股书披露）",
+      w:"⚠️ 加盟品质控制：执行差异影响品牌一致性\n⚠️ 品牌升级空间有限：亲民定位难以快速向上突破",
+      o:"✅ 下沉市场红利：二三线城市新式茶饮渗透率持续提升\n⚠️ 出海机会：熊猫IP具有国际文化亲和力【AI推断】",
+      t:"✅ 蜜雪冰城竞争：同一价格带的强劲对手\n⚠️ 消费升级：部分用户随收入增长向中高端品牌迁移"},
+    strategy:"差异化建议：\n✅ IP深度运营：将丁丁猫IP延伸到更多周边和联名，提升品牌情感价值\n⚠️ 品质标准化升级：通过技术手段提升加盟门店品质一致性【AI推断】\n⚠️ 下沉市场深耕：在高密度市场继续加深而非盲目扩张【AI推断】\n\n渠道策略：\n✅ 线下：以高密度加盟门店覆盖为核心，持续深耕二三线城市\n⚠️ 线上：外卖平台运营是日常高频消费的重要补充渠道【AI推断】",
+    sentiment:{pos:62,neu:25,neg:13,
+      posThemes:["高性价比认可：「杨枝甘露才15块，好喝不贵」","IP情感好感：「熊猫杯超可爱，每次都想收集」","料足实惠：「芋泥波波是真材实料，芋泥量很足」","便利性好评：「附近就有一家，买起来很方便」"],
+      negThemes:["门店品质一致性 🟡：「不同门店口味稳定性有差异」— 中等频率","食材新鲜度 🟡：「有时候鲜果茶的水果不太新鲜」— 低频"],
+      risk:"🟢 低风险",riskDetail:"茶百道舆情正向度较高，最值得关注的是加盟模式下的品质一致性问题，是长期需要系统性管理的挑战。",
+      responses:["针对「品质不稳定」：主动发布「品质标准公示」内容，展示统一的原材料验收和出品标准","针对「水果新鲜度」：强化供应链「当日鲜果」承诺传播，配合门店溯源信息透明化"]
+    }
+  }
+};
+
+// ═══ State ═══
+let currentBrand = 'heytea';
+let currentPage = 'home';
+let charts = {};
+
+// ═══ Brand Switch ═══
+function switchBrand(brand) {
+  currentBrand = brand;
+  document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+brand).classList.add('active');
+  renderAll();
+  // Update geo radar if on geo page
+  if (currentPage === 'geo') buildGeoRadar();
+}
+
+// ═══ Page Switch ═══
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+  if (page === 'geo') setTimeout(buildGeoRadar, 100);
+}
+
+// ═══ Tab Switch ═══
+function switchTab(page, tabId) {
+  const allTabs = document.querySelectorAll('#page-'+page+' .tab-btn');
+  const allContents = document.querySelectorAll('#page-'+page+' .tab-content');
+  allTabs.forEach(t => t.classList.remove('active'));
+  allContents.forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(page+'-'+tabId).classList.add('active');
+}
+
+// ═══ Render All ═══
+function renderAll() {
+  const d = DATA[currentBrand];
+  renderBrand(d);
+  renderGeo(d);
+  renderContent(d);
+  renderPositioning(d);
+  renderSentiment(d);
+}
+
+function renderBrand(d) {
+  set('ba-positioning', `<strong>品牌定位</strong><br>${d.pos}<br><br><strong>品牌关键词</strong><br>${d.keywords.map(k=>`<span class="tag tag-gray">${k}</span>`).join('')}`);
+  set('ba-tone', `<strong>品牌调性</strong><br>${d.tone}<br><br><strong>目标客群</strong><br>${d.audience}`);
+  const ul = document.getElementById('ba-advantages');
+  ul.innerHTML = d.advantages.map(a=>`<li class="${a.ok?'ok':'warn'}">${a.text}</li>`).join('');
+  set('ba-consistency', d.consistency);
+  set('ba-risks', d.risks);
+  set('pa-info', `<strong>产品：${d.product.name}</strong><br>${d.product.info}`);
+  set('pa-usp', d.product.usp);
+  set('pa-value', d.product.value);
+}
+
+function renderGeo(d) {
+  const g = d.geo;
+  let scoresHtml = '';
+  g.scores.forEach(s => {
+    const pct = (s.val/10)*100;
+    const color = s.val>=8?'#198754':s.val>=7?'#0dcaf0':'#ffc107';
+    scoresHtml += `<div class="score-row"><div class="score-label">${s.label}</div><div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div><div class="score-num">${s.val}</div></div>`;
+  });
+  set('geo-scores', scoresHtml);
+
+  let qHtml = '';
+  g.questions.forEach((q,i) => {
+    const visColor = q.vis==='高'?'tag-green':q.vis==='中'?'tag-yellow':'tag-red';
+    const accColor = q.acc==='准确'?'tag-green':q.acc==='部分准确'?'tag-yellow':'tag-red';
+    qHtml += `<div class="geo-item">
+      <div class="geo-q">问题${i+1}：${q.q}</div>
+      <div class="geo-meta">
+        <span class="tag ${visColor}">🎯 提及可能性：${q.vis}</span>
+        <span class="tag ${accColor}">📝 准确性：${q.acc}</span>
+      </div>
+      <div style="font-size:12px;color:#495057;margin-bottom:4px">⚔️ ${q.comp}</div>
+      <div class="geo-suggest">💡 ${q.tip}</div>
+    </div>`;
+  });
+  set('geo-questions', qHtml);
+
+  set('geo-actions', g.actions.map(a=>`<div class="alert alert-info" style="margin-bottom:8px">${a}</div>`).join(''));
+}
+
+function buildGeoRadar() {
+  const d = DATA[currentBrand];
+  if (charts.radar) charts.radar.destroy();
+  const ctx = document.getElementById('geoRadar');
+  if (!ctx) return;
+  const scores = d.geo.scores.slice(0,4).map(s=>s.val);
+  charts.radar = new Chart(ctx, {
+    type:'radar',
+    data:{
+      labels:['知名度','准确性','内容丰富度','差异化优势'],
+      datasets:[{label:d.name,data:scores,backgroundColor:d.color+'33',borderColor:d.color,borderWidth:2,pointBackgroundColor:d.color}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:10,ticks:{stepSize:2,font:{size:10}},pointLabels:{font:{size:11}}}},plugins:{legend:{display:false}}}
+  });
+}
+
+function renderContent(d) {
+  const c = d.content;
+  set('content-product', c.product);
+  set('content-tone', c.tone);
+  set('content-xhs', c.xhs);
+  set('content-dy', c.dy);
+  set('content-poster', c.poster);
+  set('content-kol', c.kol);
+}
+
+function renderPositioning(d) {
+  const stp = `<strong>市场细分（Segmentation）</strong><br>${d.stp.seg}<br><br><strong>目标市场（Targeting）</strong><br>${d.stp.target}<br><br><strong>市场定位（Positioning）</strong><br>${d.stp.pos}`;
+  set('stp-content', stp);
+
+  const swot = document.getElementById('swot-grid');
+  swot.innerHTML = `
+    <div class="swot-cell swot-s"><h4>💪 优势 Strengths</h4>${d.swot.s}</div>
+    <div class="swot-cell swot-w"><h4>⚠️ 劣势 Weaknesses</h4>${d.swot.w}</div>
+    <div class="swot-cell swot-o"><h4>🚀 机会 Opportunities</h4>${d.swot.o}</div>
+    <div class="swot-cell swot-t"><h4>⚡ 威胁 Threats</h4>${d.swot.t}</div>`;
+
+  set('positioning-strategy', d.strategy);
+}
+
+function renderSentiment(d) {
+  const s = d.sentiment;
+  const bar = document.getElementById('sentiment-bar');
+  bar.innerHTML = `<div class="sentiment-pos" style="width:${s.pos}%"></div><div class="sentiment-neu" style="width:${s.neu}%"></div><div class="sentiment-neg" style="width:${s.neg}%"></div>`;
+  set('sentiment-legend', `<span>🟢 正向 ${s.pos}%</span><span>⚪ 中性 ${s.neu}%</span><span>🔴 负向 ${s.neg}%</span>`);
+  set('sentiment-summary', `样本：公开社交平台评论（演示用途）<br><br>${s.posThemes.map(t=>`<div style="margin-bottom:4px">✅ ${t}</div>`).join('')}`);
+  set('sentiment-risk', `<strong>整体风险等级：${s.risk}</strong><br><br>${s.riskDetail}<br><br><strong>官方回应建议：</strong><br>${s.responses.map((r,i)=>`<div style="margin:6px 0;padding:8px;background:#f8f9fa;border-radius:6px;font-size:12px">${i+1}. ${r}</div>`).join('')}`);
+  set('sentiment-pos', s.posThemes.map(t=>`<div style="padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px">✅ ${t}</div>`).join(''));
+  set('sentiment-neg', s.negThemes.map(t=>`<div style="padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px">⚠️ ${t}</div>`).join(''));
+}
+
+function set(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+// ═══ Home Charts ═══
+function buildHomeCharts() {
+  // GEO Bar Chart
+  new Chart(document.getElementById('geoChart'), {
+    type:'bar',
+    data:{
+      labels:['喜茶','奈雪','茶百道'],
+      datasets:[
+        {label:'GEO综合',data:[7.3,8.0,6.2],backgroundColor:'#4361ee88',borderColor:'#4361ee',borderWidth:1.5},
+        {label:'AI准确性',data:[7.0,8.0,6.0],backgroundColor:'#7209b788',borderColor:'#7209b7',borderWidth:1.5},
+        {label:'内容丰富度',data:[6.0,7.0,5.0],backgroundColor:'#f72585aa',borderColor:'#f72585',borderWidth:1.5},
+        {label:'差异化',data:[7.0,9.0,7.0],backgroundColor:'#4cc9f088',borderColor:'#4cc9f0',borderWidth:1.5},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:10,ticks:{stepSize:2}}},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}
+  });
+
+  // Trend Line Chart
+  new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{
+      labels:['1月','2月','3月','4月','5月','6月'],
+      datasets:[
+        {label:'喜茶',data:[82,85,87,88,90,92],borderColor:'#1a1a1a',backgroundColor:'#1a1a1a22',tension:.3,pointRadius:3},
+        {label:'奈雪',data:[76,78,80,81,83,84],borderColor:'#c0737a',backgroundColor:'#c0737a22',tension:.3,pointRadius:3},
+        {label:'茶百道',data:[68,70,73,75,77,79],borderColor:'#3d8b37',backgroundColor:'#3d8b3722',tension:.3,pointRadius:3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:60,max:100}},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}
+  });
+}
+
+// ═══ Init ═══
+buildHomeCharts();
+renderAll();
+</script>
+</body>
+</html>
