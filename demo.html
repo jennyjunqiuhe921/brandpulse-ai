@@ -481,9 +481,9 @@ tr:hover td{background:#fafbfc}
 const DATA = {
   heytea: {
     name:"喜茶 HEYTEA", emoji:"🍵", color:"#1a1a1a",
-    pos:"高端新式茶饮，以"灵感之茶"为核心主张，面向一二线城市追求个性与品质的年轻消费者。",
+    pos:"高端新式茶饮，以\"灵感之茶\"为核心主张，面向一二线城市追求个性与品质的年轻消费者。",
     keywords:["灵感","极简","年轻","有态度","创新","跨界","品质感"],
-    tone:"✅ 酷而克制——拒绝"可爱卖萌"路线，极简黑白视觉，文案简洁有力，强调创意与态度。",
+    tone:"✅ 酷而克制——拒绝\"可爱卖萌\"路线，极简黑白视觉，文案简洁有力，强调创意与态度。",
     audience:"✅ 核心：18-35岁，一二线城市，月收入5000+，追求个性化生活方式的年轻白领与学生。",
     advantages:[
       {ok:true,text:"品类首创：率先推出奶盖茶（芝士茶），开创新式茶饮品类细分赛道"},
@@ -514,7 +514,7 @@ const DATA = {
       poster:"组合一（酷感风格）\n主标题：「灵感，从一颗葡萄开始」\n副标题：真实果肉，不将就的下午茶\n\n组合二（清爽夏日）\n主标题：「今夏，把葡萄喝进去」\n副标题：多肉葡萄 · 真实水果 · 夏季限定\n\n组合三（社交传播向）\n主标题：「这一杯，值得发朋友圈」\n副标题：喜茶多肉葡萄 · 现在点单",
       kol:"【合作背景】\n喜茶多肉葡萄夏季上线，目标触达追求品质生活的年轻用户群体。\n\n【产品核心信息】[品牌信息]\n· 产品：多肉葡萄（鲜果茶系列）\n· 价格：约28-35元\n· 核心卖点：真实葡萄果肉、高颜值透明杯装\n\n【创作方向】[创意内容]\n· 场景：下午茶打卡、闺蜜出行、城市探店\n· 风格：真实种草，避免广告感，强调亲身体验\n\n【禁止事项】\n· 禁止使用「最好喝/第一/唯一」等绝对化用语\n· 禁止对比或提及竞品\n· 禁止声称功效（减肥、美容等）\n\n【发布要求】\n· 平台：小红书/微博/抖音二选一\n· 发布时间：上午10点或下午3-5点"
     },
-    stp:{seg:"人口：18-35岁，一二线城市，月收入5000+\n心理【AI推断】：追求"有态度"生活方式，对设计美学有感知，愿为颜值和品质付溢价\n行为：✅ 高频消费，数字化程度高，习惯小程序预点",
+    stp:{seg:"人口：18-35岁，一二线城市，月收入5000+\n心理【AI推断】：追求\"有态度\"生活方式，对设计美学有感知，愿为颜值和品质付溢价\n行为：✅ 高频消费，数字化程度高，习惯小程序预点",
       target:"✅ 核心：一二线城市18-30岁年轻消费者，有品质诉求、社媒活跃、追求个性\n⚠️ 次级：对潮流文化感兴趣、关注跨界联名的时尚消费者【AI推断】",
       pos:"✅ 在消费者心智中占据「高端新式茶饮」+「有灵感有态度的生活方式品牌」双重位置。"},
     swot:{s:"✅ 品类首创优势：奶盖茶开创者，先发认知强\n✅ 品牌调性鲜明：极简有态度，差异化突出\n✅ 产品创新能力：高频上新+联名，持续保鲜\n✅ 数字化基础：GO小程序+会员体系领先",
@@ -676,10 +676,10 @@ function renderAll() {
 }
 
 function renderBrand(d) {
-  set('ba-positioning', `<strong>品牌定位</strong><br>${d.pos}<br><br><strong>品牌关键词</strong><br>${d.keywords.map(k=>`<span class="tag tag-gray">${k}</span>`).join('')}`);
+  set('ba-positioning', `<strong>品牌定位</strong><br>${d.pos}<br><br><strong>品牌关键词</strong><br>${d.keywords.map(k=>`<span class="tag tag-gray\">${k}</span>`).join('')}`);
   set('ba-tone', `<strong>品牌调性</strong><br>${d.tone}<br><br><strong>目标客群</strong><br>${d.audience}`);
   const ul = document.getElementById('ba-advantages');
-  ul.innerHTML = d.advantages.map(a=>`<li class="${a.ok?'ok':'warn'}">${a.text}</li>`).join('');
+  ul.innerHTML = d.advantages.map(a=>`<li class=\"${a.ok?'ok':'warn'}\">${a.text}</li>`).join('');
   set('ba-consistency', d.consistency);
   set('ba-risks', d.risks);
   set('pa-info', `<strong>产品：${d.product.name}</strong><br>${d.product.info}`);
@@ -693,7 +693,7 @@ function renderGeo(d) {
   g.scores.forEach(s => {
     const pct = (s.val/10)*100;
     const color = s.val>=8?'#198754':s.val>=7?'#0dcaf0':'#ffc107';
-    scoresHtml += `<div class="score-row"><div class="score-label">${s.label}</div><div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div><div class="score-num">${s.val}</div></div>`;
+    scoresHtml += `<div class=\"score-row\"><div class=\"score-label\">${s.label}</div><div class=\"score-bar-wrap\"><div class=\"score-bar\" style=\"width:${pct}%;background:${color}\"></div></div><div class=\"score-num\">${s.val}</div></div>`;
   });
   set('geo-scores', scoresHtml);
 
@@ -701,19 +701,19 @@ function renderGeo(d) {
   g.questions.forEach((q,i) => {
     const visColor = q.vis==='高'?'tag-green':q.vis==='中'?'tag-yellow':'tag-red';
     const accColor = q.acc==='准确'?'tag-green':q.acc==='部分准确'?'tag-yellow':'tag-red';
-    qHtml += `<div class="geo-item">
-      <div class="geo-q">问题${i+1}：${q.q}</div>
-      <div class="geo-meta">
-        <span class="tag ${visColor}">🎯 提及可能性：${q.vis}</span>
-        <span class="tag ${accColor}">📝 准确性：${q.acc}</span>
+    qHtml += `<div class=\"geo-item\">
+      <div class=\"geo-q\">问题${i+1}：${q.q}</div>
+      <div class=\"geo-meta\">
+        <span class=\"tag ${visColor}\">🎯 提及可能性：${q.vis}</span>
+        <span class=\"tag ${accColor}\">📝 准确性：${q.acc}</span>
       </div>
-      <div style="font-size:12px;color:#495057;margin-bottom:4px">⚔️ ${q.comp}</div>
-      <div class="geo-suggest">💡 ${q.tip}</div>
+      <div style=\"font-size:12px;color:#495057;margin-bottom:4px\">⚔️ ${q.comp}</div>
+      <div class=\"geo-suggest\">💡 ${q.tip}</div>
     </div>`;
   });
   set('geo-questions', qHtml);
 
-  set('geo-actions', g.actions.map(a=>`<div class="alert alert-info" style="margin-bottom:8px">${a}</div>`).join(''));
+  set('geo-actions', g.actions.map(a=>`<div class=\"alert alert-info\" style=\"margin-bottom:8px\">${a}</div>`).join(''));
 }
 
 function buildGeoRadar() {
@@ -748,10 +748,10 @@ function renderPositioning(d) {
 
   const swot = document.getElementById('swot-grid');
   swot.innerHTML = `
-    <div class="swot-cell swot-s"><h4>💪 优势 Strengths</h4>${d.swot.s}</div>
-    <div class="swot-cell swot-w"><h4>⚠️ 劣势 Weaknesses</h4>${d.swot.w}</div>
-    <div class="swot-cell swot-o"><h4>🚀 机会 Opportunities</h4>${d.swot.o}</div>
-    <div class="swot-cell swot-t"><h4>⚡ 威胁 Threats</h4>${d.swot.t}</div>`;
+    <div class=\"swot-cell swot-s\"><h4>💪 优势 Strengths</h4>${d.swot.s}</div>
+    <div class=\"swot-cell swot-w\"><h4>⚠️ 劣势 Weaknesses</h4>${d.swot.w}</div>
+    <div class=\"swot-cell swot-o\"><h4>🚀 机会 Opportunities</h4>${d.swot.o}</div>
+    <div class=\"swot-cell swot-t\"><h4>⚡ 威胁 Threats</h4>${d.swot.t}</div>`;
 
   set('positioning-strategy', d.strategy);
 }
@@ -759,12 +759,12 @@ function renderPositioning(d) {
 function renderSentiment(d) {
   const s = d.sentiment;
   const bar = document.getElementById('sentiment-bar');
-  bar.innerHTML = `<div class="sentiment-pos" style="width:${s.pos}%"></div><div class="sentiment-neu" style="width:${s.neu}%"></div><div class="sentiment-neg" style="width:${s.neg}%"></div>`;
+  bar.innerHTML = `<div class=\"sentiment-pos\" style=\"width:${s.pos}%\"></div><div class=\"sentiment-neu\" style=\"width:${s.neu}%\"></div><div class=\"sentiment-neg\" style=\"width:${s.neg}%\"></div>`;
   set('sentiment-legend', `<span>🟢 正向 ${s.pos}%</span><span>⚪ 中性 ${s.neu}%</span><span>🔴 负向 ${s.neg}%</span>`);
-  set('sentiment-summary', `样本：公开社交平台评论（演示用途）<br><br>${s.posThemes.map(t=>`<div style="margin-bottom:4px">✅ ${t}</div>`).join('')}`);
-  set('sentiment-risk', `<strong>整体风险等级：${s.risk}</strong><br><br>${s.riskDetail}<br><br><strong>官方回应建议：</strong><br>${s.responses.map((r,i)=>`<div style="margin:6px 0;padding:8px;background:#f8f9fa;border-radius:6px;font-size:12px">${i+1}. ${r}</div>`).join('')}`);
-  set('sentiment-pos', s.posThemes.map(t=>`<div style="padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px">✅ ${t}</div>`).join(''));
-  set('sentiment-neg', s.negThemes.map(t=>`<div style="padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px">⚠️ ${t}</div>`).join(''));
+  set('sentiment-summary', `样本：公开社交平台评论（演示用途）<br><br>${s.posThemes.map(t=>`<div style=\"margin-bottom:4px\">✅ ${t}</div>`).join('')}`);
+  set('sentiment-risk', `<strong>整体风险等级：${s.risk}</strong><br><br>${s.riskDetail}<br><br><strong>官方回应建议：</strong><br>${s.responses.map((r,i)=>`<div style=\"margin:6px 0;padding:8px;background:#f8f9fa;border-radius:6px;font-size:12px\">${i+1}. ${r}</div>`).join('')}`);
+  set('sentiment-pos', s.posThemes.map(t=>`<div style=\"padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px\">✅ ${t}</div>`).join(''));
+  set('sentiment-neg', s.negThemes.map(t=>`<div style=\"padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px\">⚠️ ${t}</div>`).join(''));
 }
 
 function set(id, html) {
@@ -807,6 +807,6 @@ function buildHomeCharts() {
 // ═══ Init ═══
 buildHomeCharts();
 renderAll();
-</script>
+"</script>
 </body>
 </html>
