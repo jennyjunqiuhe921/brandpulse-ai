@@ -5,6 +5,12 @@ load_dotenv()
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
+
+# OpenAI-compatible provider (OpenRouter / DeepSeek / Kimi / OpenAI)
+# Set OPENAI_API_KEY to bypass Anthropic and use any OpenAI-compatible endpoint.
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "anthropic/claude-sonnet-4-5")
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
 
 # RAG chunking

@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.sidebar import render as render_sidebar
+from utils.followup_chat import render as render_chat
 import modules.brand_analysis as brand_mod
 import modules.product_analysis as product_mod
 
@@ -38,9 +39,8 @@ with tab1:
         st.markdown(res["output"])
 
         if res.get("chunks"):
-            top = res["chunks"][:2]
             st.markdown("**📎 主要依据来源**（知识库）")
-            for c in top:
+            for c in res["chunks"][:2]:
                 st.caption(f"来源：`{c['source']}` · {c['text'][:80]}...")
 
         if res.get("refcheck"):
@@ -52,6 +52,8 @@ with tab1:
             for i, c in enumerate(res["chunks"], 1):
                 st.markdown(f"**[{i}] 来源：`{c['source']}`**")
                 st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])
+
+        render_chat(brand, res["output"], key=f"brand_{brand}")
 
 # ── Tab 2: Product Analysis ────────────────────────────────────────────────────
 with tab2:
@@ -100,9 +102,8 @@ with tab2:
         st.markdown(res["output"])
 
         if res.get("chunks"):
-            top = res["chunks"][:2]
             st.markdown("**📎 主要依据来源**（知识库）")
-            for c in top:
+            for c in res["chunks"][:2]:
                 st.caption(f"来源：`{c['source']}` · {c['text'][:80]}...")
 
         if res.get("refcheck"):
@@ -114,3 +115,5 @@ with tab2:
             for i, c in enumerate(res["chunks"], 1):
                 st.markdown(f"**[{i}] 来源：`{c['source']}`**")
                 st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])
+
+        render_chat(brand, res["output"], key=f"product_{brand}")

@@ -1,25 +1,52 @@
-"""Thin Claude API wrapper — supports DEMO_MODE when no API key is available."""
+"""LLM wrapper — supports Anthropic, any OpenAI-compatible provider, and DEMO_MODE."""
 import os
 import anthropic
-from config.settings import ANTHROPIC_API_KEY, CLAUDE_MODEL
+from config.settings import (
+    ANTHROPIC_API_KEY, CLAUDE_MODEL,
+    OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL,
+)
 
-_client = None
+_anthropic_client = None
+_openai_client = None
 
-# Auto-enable demo mode if no API key
-DEMO_MODE = not bool(ANTHROPIC_API_KEY)
+# Demo mode activates only when neither key is present
+DEMO_MODE = not bool(ANTHROPIC_API_KEY or OPENAI_API_KEY)
 
 
-def get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    return _client
+def _get_anthropic_client() -> anthropic.Anthropic:
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    return _anthropic_client
+
+
+def _get_openai_client():
+    global _openai_client
+    if _openai_client is None:
+        from openai import OpenAI
+        _openai_client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+    return _openai_client
 
 
 def chat(system: str, user: str, max_tokens: int = 2048) -> str:
     if DEMO_MODE:
         return _demo_response(system, user)
-    response = get_client().messages.create(
+
+    # Prefer OpenAI-compatible provider when its key is set
+    if OPENAI_API_KEY:
+        client = _get_openai_client()
+        resp = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            max_tokens=max_tokens,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+        )
+        return resp.choices[0].message.content
+
+    # Fallback: Anthropic SDK
+    response = _get_anthropic_client().messages.create(
         model=CLAUDE_MODEL,
         max_tokens=max_tokens,
         system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
