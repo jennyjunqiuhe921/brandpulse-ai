@@ -37,12 +37,18 @@ with tab1:
         st.markdown("---")
         st.markdown(res["output"])
 
+        if res.get("chunks"):
+            top = res["chunks"][:2]
+            st.markdown("**📎 主要依据来源**（知识库）")
+            for c in top:
+                st.caption(f"来源：`{c['source']}` · {c['text'][:80]}...")
+
         if res.get("refcheck"):
             st.markdown("---")
             st.subheader("🔎 RefCheck 合规标注")
             st.markdown(res["refcheck"])
 
-        with st.expander("📚 知识库引用来源", expanded=False):
+        with st.expander("📚 完整知识库引用来源", expanded=False):
             for i, c in enumerate(res["chunks"], 1):
                 st.markdown(f"**[{i}] 来源：`{c['source']}`**")
                 st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])
@@ -93,12 +99,18 @@ with tab2:
         st.markdown("---")
         st.markdown(res["output"])
 
+        if res.get("chunks"):
+            top = res["chunks"][:2]
+            st.markdown("**📎 主要依据来源**（知识库）")
+            for c in top:
+                st.caption(f"来源：`{c['source']}` · {c['text'][:80]}...")
+
         if res.get("refcheck"):
             st.markdown("---")
             st.subheader("🔎 RefCheck 合规标注")
             st.markdown(res["refcheck"])
 
-        with st.expander("📚 知识库引用来源", expanded=False):
+        with st.expander("📚 完整知识库引用来源", expanded=False):
             for i, c in enumerate(res["chunks"], 1):
                 st.markdown(f"**[{i}] 来源：`{c['source']}`**")
                 st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])

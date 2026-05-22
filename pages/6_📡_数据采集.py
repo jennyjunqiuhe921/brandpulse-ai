@@ -17,6 +17,21 @@ brand = render_sidebar()
 
 st.markdown("## 📡 数据采集中心")
 st.caption("采集品牌舆情与行业动态，结果可直接送往舆情分析或合规审查模块")
+
+st.markdown(
+    """
+<div style="background:#f8f9fa;border-radius:10px;padding:14px 20px;margin-bottom:8px;font-size:14px">
+<b>📊 数据工作流</b> &nbsp;&nbsp;
+<span style="background:#e3f2fd;border-radius:4px;padding:3px 8px">📡 数据采集</span>
+&nbsp;→&nbsp;
+<span style="background:#e8f5e9;border-radius:4px;padding:3px 8px">📰 舆情分析</span>
+&nbsp;/&nbsp;
+<span style="background:#fff3e0;border-radius:4px;padding:3px 8px">🛡️ 合规审查</span>
+&nbsp;&nbsp;·&nbsp;&nbsp;采集结果可一键流转至下游模块，无需手动复制
+</div>
+""",
+    unsafe_allow_html=True,
+)
 st.divider()
 
 tab_brand, tab_industry = st.tabs(["🎯 品牌舆情采集", "📊 行业动态采集"])

@@ -40,14 +40,31 @@ with col2:
 
 EXAMPLE_RISKY = """喜茶是新式茶饮行业第一品牌，产品口味最好，喝了我们的茶你一定不会去喝其他家！我们的芝士是全国最顶级的食材，健康无添加，喝了包你变年轻。竞争对手的产品根本比不上我们。"""
 
-if st.button("📋 加载示例（含风险内容）"):
-    st.session_state["example_loaded"] = EXAMPLE_RISKY
-    st.rerun()
+with st.expander("📋 风险示例库（点击展开 · 一键加载并运行）", expanded=False):
+    st.markdown("以下样本包含典型合规风险，可一键加载并直接运行审查，快速演示检测能力：")
+    ex_col1, ex_col2 = st.columns(2)
+    with ex_col1:
+        st.markdown("**示例A：绝对化用语 + 虚假功效**")
+        st.code(EXAMPLE_RISKY[:80] + "...", language=None)
+        if st.button("加载示例A并运行", key="load_ex_a", type="primary", use_container_width=True):
+            st.session_state["example_loaded"] = EXAMPLE_RISKY
+            st.session_state["auto_run_compliance"] = True
+            st.rerun()
+    with ex_col2:
+        EXAMPLE_B = """奈雪首创茶饮+软欧包模式，全球独一无二，任何竞品都无法复制。我们的鸭屎香是世界上最好的单丛茶，没有之一。消费者喝了奈雪后普遍反映其他品牌都失去吸引力。"""
+        st.markdown("**示例B：竞品贬低 + 绝对化表述**")
+        st.code(EXAMPLE_B[:80] + "...", language=None)
+        if st.button("加载示例B并运行", key="load_ex_b", type="primary", use_container_width=True):
+            st.session_state["example_loaded"] = EXAMPLE_B
+            st.session_state["auto_run_compliance"] = True
+            st.rerun()
 
 if "example_loaded" in st.session_state:
     content_input = st.session_state["example_loaded"]
 
-if st.button("🚀 运行合规审查", type="primary", disabled=not content_input.strip()):
+auto_run = st.session_state.pop("auto_run_compliance", False)
+
+if st.button("🚀 运行合规审查", type="primary", disabled=not content_input.strip()) or (auto_run and content_input.strip()):
     with st.spinner("正在进行合规审查...（约 15-25 秒）"):
         try:
             result = compliance_mod.run(content_input, brand)

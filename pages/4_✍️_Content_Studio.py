@@ -72,13 +72,43 @@ if "content_result" in st.session_state:
         st.markdown(res["output"])
 
     st.markdown("---")
-    col_a, col_b = st.columns(2)
+
+    # ── 推广策略建议 ──────────────────────────────────────────────────────────
+    st.subheader("📣 推广策略建议")
+    CHANNEL_MAP = {
+        "小红书种草文案": {"渠道": "小红书", "节奏": "发布频率 3-4次/周，以图文为主", "核心指标": "收藏量、搜索词曝光", "预算优先级": "★★★★☆"},
+        "抖音/短视频脚本": {"渠道": "抖音/视频号", "节奏": "每周 1-2 条短视频", "核心指标": "完播率、点赞/转发", "预算优先级": "★★★★★"},
+        "海报标题组合": {"渠道": "线下门店/朋友圈/公众号封面", "节奏": "配合新品节点或活动", "核心指标": "点击率、扫码转化", "预算优先级": "★★★☆☆"},
+        "公众号推文": {"渠道": "微信公众号", "节奏": "每周 1-2 篇深度内容", "核心指标": "阅读量、分享数", "预算优先级": "★★★☆☆"},
+        "KOL/KOC Brief": {"渠道": "全平台达人", "节奏": "新品上市提前 2 周启动", "核心指标": "曝光量、互动率、带货GMV", "预算优先级": "★★★★★"},
+        "微博话题文案": {"渠道": "微博", "节奏": "话题节点 + 产品热搜", "核心指标": "话题阅读量、互动量", "预算优先级": "★★★☆☆"},
+    }
+
+    selected_channels = [p for p in (res.get("platforms") or platforms) if p in CHANNEL_MAP]
+    if selected_channels:
+        strat_cols = st.columns(min(len(selected_channels), 3))
+        for i, ch in enumerate(selected_channels):
+            info = CHANNEL_MAP[ch]
+            with strat_cols[i % len(strat_cols)]:
+                st.markdown(f"**{info['渠道']}**")
+                st.markdown(f"- 节奏：{info['节奏']}")
+                st.markdown(f"- 指标：{info['核心指标']}")
+                st.markdown(f"- 预算优先级：{info['预算优先级']}")
+    else:
+        st.markdown("- 建议在新品上市前 2 周启动 KOL 种草，配合小红书图文同步覆盖")
+        st.markdown("- 核心指标：小红书收藏量 · 抖音完播率 · 公众号阅读量")
+
+    st.caption("⚠️ 以上推广建议为 AI 辅助生成，需结合品牌实际预算和资源由市场团队复核调整")
+
+    st.markdown("---")
+    col_a, col_b, col_c = st.columns([2, 2, 3])
     with col_a:
         st.success("✅ 内容生成完成，请人工复核后使用")
     with col_b:
-        if st.button("🛡️ 发送至合规审查", type="secondary"):
+        if st.button("🛡️ 一键送往合规审查", type="primary", use_container_width=True):
             st.session_state["content_for_compliance"] = res["output"]
-            st.info("已保存到会话，请前往 **7_合规审查** 页面进行审查")
+            st.session_state["auto_run_compliance"] = False
+            st.success("✅ 已送往「合规审查」模块，切换页面即可审查")
 
     with st.expander("📋 查看完整输出", expanded=False):
         st.text_area("完整文本（可复制）", value=res["output"], height=300)

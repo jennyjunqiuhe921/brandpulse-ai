@@ -1,56 +1,19 @@
-"""BrandPulse AI — Streamlit entry point."""
+"""BrandPulse AI — Streamlit entry point (st.navigation API)."""
 import streamlit as st
-from config.settings import BRAND_DISPLAY_NAMES, BRAND_FOCUS
-from core.rag_engine import collection_count
 
-st.set_page_config(
-    page_title="BrandPulse AI",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded",
+pg = st.navigation(
+    {
+        "主要的": [
+            st.Page("pages/1_🏠_Home.py",               title="家",       icon="🏠", default=True),
+            st.Page("pages/2_🔍_Brand_Analysis.py",     title="品牌分析",  icon="🔍"),
+            st.Page("pages/3_🌐_GEO_Analysis.py",       title="地理分析",  icon="🌐"),
+            st.Page("pages/4_✍️_Content_Studio.py",     title="内容工作室", icon="✍️"),
+            st.Page("pages/5_📊_Market_Positioning.py", title="市场定位",  icon="📊"),
+            st.Page("pages/6_📡_数据采集.py",            title="数据采集",  icon="📡"),
+            st.Page("pages/7_📰_Sentiment_Analysis.py", title="情感分析",  icon="📰"),
+            st.Page("pages/8_🛡️_Compliance_Guard.py",  title="合规卫士",  icon="🛡️"),
+            st.Page("pages/9_🔍_竞品分析.py",            title="竞品分析",  icon="🔍"),
+        ]
+    }
 )
-
-# ── Brand selector (persisted in session state) ────────────────────────────────
-st.sidebar.title("📊 BrandPulse AI")
-st.sidebar.markdown("---")
-
-brand_options = list(BRAND_DISPLAY_NAMES.keys())
-selected = st.sidebar.radio(
-    "选择分析品牌",
-    brand_options,
-    format_func=lambda k: BRAND_DISPLAY_NAMES[k],
-)
-st.session_state["brand"] = selected
-
-st.sidebar.markdown("---")
-st.sidebar.caption(f"**战略切入点**\n{BRAND_FOCUS[selected]}")
-
-kb_count = collection_count(selected)
-status = "✅ 已就绪" if kb_count > 0 else "⚠️ 知识库为空，请先运行 ingest_data.py"
-st.sidebar.metric("知识库文档块", kb_count, help=status)
-st.sidebar.markdown("---")
-st.sidebar.caption("导航 → 左侧页面列表选择模块")
-
-# ── Home page ──────────────────────────────────────────────────────────────────
-st.title(f"🍵 BrandPulse AI — {BRAND_DISPLAY_NAMES[selected]}")
-st.markdown(
-    """
-**AI 品牌与市场增长工作台** · 24h Hackathon MVP
-
-| 模块 | 页面 |
-|------|------|
-| 品牌 & 产品分析 | 2_Brand_Analysis |
-| GEO / AI 搜索可见度 | 3_GEO_Analysis |
-| 内容生成工厂 | 4_Content_Studio |
-| 市场定位 (STP/SWOT) | 5_Market_Positioning |
-| AI 舆情分析 | 6_Sentiment_Analysis |
-| 合规审查哨所 | 7_Compliance_Guard |
-"""
-)
-
-st.info(
-    "⚠️ 免责声明：本作品仅用于比赛演示。相关企业分析基于公开信息和 AI 工具辅助生成，"
-    "不代表对企业经营、产品质量、市场表现或声誉状况的事实认定。"
-    "所有输出均需在真实商业使用前由企业授权人员进行复核。",
-    icon="⚠️",
-)
+pg.run()
