@@ -127,15 +127,18 @@ def review_gate(page_key: str) -> bool:
         False — 未复核，下游按钮应禁用
     """
     state_key = f"reviewed_{page_key}"
-    reviewed = st.session_state.get(state_key, False)
+    # 初始化 session state（避免 KeyError）
+    if state_key not in st.session_state:
+        st.session_state[state_key] = False
 
     st.divider()
-    checked = st.checkbox(
+    # 直接把 state_key 作为 key，让 Streamlit 管理值，不传 value= 参数
+    # 避免 value= + key= 双重绑定引发的 React DOM 冲突
+    st.checkbox(
         "✅ 我已人工复核以上 AI 输出内容，确认内容准确且符合品牌合规要求，可用于后续操作",
-        value=reviewed,
-        key=f"review_checkbox_{page_key}",
+        key=state_key,
     )
-    st.session_state[state_key] = checked
+    checked = st.session_state[state_key]
 
     if not checked:
         st.warning("⚠️ **导出 / 归档前请先完成人工复核**，勾选上方确认框后导出按钮将解锁。")

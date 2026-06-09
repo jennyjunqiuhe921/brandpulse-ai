@@ -56,7 +56,7 @@ if st.button("🚀 生成内容矩阵", type="primary", disabled=not platforms o
             result = content_mod.run(brand, product_name, platforms, tone_key, goal)
             st.session_state["content_result"] = result
             st.session_state["content_for_compliance"] = result["output"]
-            st.session_state["reviewed_content"] = False
+            st.session_state.pop("reviewed_content", None)
         except Exception as e:
             st.error(f"生成失败：{e}")
 

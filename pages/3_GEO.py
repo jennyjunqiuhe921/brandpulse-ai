@@ -58,14 +58,14 @@ if st.button("🚀 运行 GEO 分析", type="primary"):
             result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
             result["_brand"] = brand
             st.session_state["geo_result"] = result
-            st.session_state["reviewed_geo"] = False
+            st.session_state.pop("reviewed_geo", None)
         except Exception as e:
             st.error(f"分析失败：{e}")
 
 # 品牌切换后自动清除旧结果
 if st.session_state.get("geo_result", {}).get("_brand") != brand:
     st.session_state.pop("geo_result", None)
-    st.session_state["reviewed_geo"] = False
+    st.session_state.pop("reviewed_geo", None)
 
 if "geo_result" in st.session_state:
     res = st.session_state["geo_result"]

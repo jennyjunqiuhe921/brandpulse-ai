@@ -37,6 +37,10 @@ st.markdown(
 
 brand_name = BRAND_DISPLAY_NAMES[brand]
 
+# 品牌切换时清除样本缓存，让文本框重新加载新品牌的演示数据
+if st.session_state.get("_sentiment_last_brand") != brand:
+    st.session_state.pop("comments_display", None)
+    st.session_state["_sentiment_last_brand"] = brand
 
 # ── 数据来源选择 ───────────────────────────────────────────────────
 collected = st.session_state.get("collected_sentiment_text", "")
@@ -76,14 +80,14 @@ if st.button("🚀 运行舆情分析", type="primary"):
                 result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 result["_brand"] = brand
                 st.session_state["sentiment_result"] = result
-                st.session_state["reviewed_sentiment"] = False
+                st.session_state.pop("reviewed_sentiment", None)
             except Exception as e:
                 st.error(f"分析失败：{e}")
 
 # 品牌切换后自动清除旧结果
 if st.session_state.get("sentiment_result", {}).get("_brand") != brand:
     st.session_state.pop("sentiment_result", None)
-    st.session_state["reviewed_sentiment"] = False
+    st.session_state.pop("reviewed_sentiment", None)
 
 if "sentiment_result" in st.session_state:
     res = st.session_state["sentiment_result"]

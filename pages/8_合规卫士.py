@@ -87,7 +87,8 @@ if st.button("🚀 运行合规审查", type="primary", disabled=not content_inp
             result = compliance_mod.run(content_input, brand)
             result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
             st.session_state["compliance_result"] = result
-            st.session_state["reviewed_compliance"] = False
+            # pop 而非赋值 False，让 review_gate 初始化逻辑重新生效
+            st.session_state.pop("reviewed_compliance", None)
         except Exception as e:
             st.error(f"审查失败：{e}")
 

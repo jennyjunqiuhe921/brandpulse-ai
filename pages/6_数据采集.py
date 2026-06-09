@@ -45,6 +45,14 @@ st.markdown(
 )
 st.divider()
 
+# 品牌切换时清除两个 tab 的缓存数据
+if st.session_state.get("_datacollect_last_brand") != brand:
+    st.session_state.pop("brand_sentiment_data", None)
+    st.session_state.pop("brand_sentiment_brand", None)
+    st.session_state.pop("industry_trend_data", None)
+    st.session_state.pop("industry_trend_brand", None)
+    st.session_state["_datacollect_last_brand"] = brand
+
 tab_brand, tab_industry = st.tabs(["🎯 品牌舆情采集", "📊 行业动态采集"])
 
 # ══════════════════════════════════════════════════════════════════
