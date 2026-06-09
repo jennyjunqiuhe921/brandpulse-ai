@@ -67,3 +67,24 @@ SAMPLE_COMMENTS = {
 7. 活动优惠力度大，买赠活动经常有
 8. 相比其他品牌更接地气，适合日常喝""",
 }
+
+
+def get_sample_comments(brand_key: str) -> str:
+    """Return sample comments for a brand.
+    Returns preset text for the 3 built-in brands;
+    for all other brands returns a generic placeholder that the user
+    can replace with real collected data."""
+    if brand_key in SAMPLE_COMMENTS:
+        return SAMPLE_COMMENTS[brand_key]
+    from config.brand_manager import get_brand
+    b = get_brand(brand_key) or {}
+    name = b.get("name", brand_key)
+    return f"""用户评论样本（来源：公开社交平台，仅用于演示）：
+1. {name}的产品整体体验不错，会推荐给朋友
+2. 价格感觉比同类产品稍高，但品质有保证
+3. 客服响应速度挺快，问题解决得很顺利
+4. 包装设计很有品质感，送礼不错
+5. 最近出的新品很惊喜，期待更多创新
+6. 在某些城市还找不到门店/渠道，希望多扩张
+7. 官方活动力度一般，希望多些会员优惠
+8. 整体来说是同类里比较值得信赖的品牌"""

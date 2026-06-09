@@ -1,3 +1,4 @@
+from __future__ import annotations
 from core.rag_engine import retrieve
 from core.llm_client import chat, build_rag_context, DEMO_MODE
 from config.settings import BRAND_DISPLAY_NAMES
@@ -336,22 +337,26 @@ _DEMO = {
 }
 
 
-def run(main_brand: str, competitor_brand: str) -> dict:
+def _get_preset(main_brand: str, competitor_brand: str) -> str | None:
+    """Return preset demo text for this brand pair, or None if not available."""
     key = (main_brand, competitor_brand)
-    if DEMO_MODE or key not in _DEMO:
-        demo_output = _DEMO.get(key, _DEMO.get((main_brand, competitor_brand), ""))
-        if not demo_output:
-            # fallback: swap key
-            for k in _DEMO:
-                if set(k) == {main_brand, competitor_brand}:
-                    demo_output = _DEMO[k]
-                    break
-        return {
-            "output": demo_output,
-            "chunks": [],
-            "demo_mode": True,
-        }
+    if key in _DEMO:
+        return _DEMO[key]
+    # Try swapped order
+    for k in _DEMO:
+        if set(k) == {main_brand, competitor_brand}:
+            return _DEMO[k]
+    return None
 
+
+def run(main_brand: str, competitor_brand: str) -> dict:
+    # Use preset text only in DEMO_MODE AND a preset exists
+    if DEMO_MODE:
+        preset = _get_preset(main_brand, competitor_brand)
+        if preset:
+            return {"output": preset, "chunks": [], "demo_mode": True}
+
+    # For all other cases (real API, or no preset): call LLM with RAG context
     queries = [
         f"{BRAND_DISPLAY_NAMES[main_brand]} vs {BRAND_DISPLAY_NAMES[competitor_brand]} 品牌定位对比",
         f"{BRAND_DISPLAY_NAMES[competitor_brand]} 产品策略 内容营销 竞争优势",

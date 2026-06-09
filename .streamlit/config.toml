@@ -1,7 +1,21 @@
+# Streamlit Cloud Configuration
+# https://streamlit.io/cloud
+
 [server]
 headless = true
+port = 8501
 
 [browser]
+serverAddress = "0.0.0.0"
 gatherUsageStats = false
-serverAddress = "localhost"
-serverPort = 8501
+
+[theme]
+primaryColor = "#2F5597"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EAF2F8"
+textColor = "#1F4E79"
+font = "sans serif"
+
+[client]
+showErrorDetails = true
+toolbarMode = "minimal"

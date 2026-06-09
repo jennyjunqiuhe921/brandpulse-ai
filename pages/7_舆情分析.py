@@ -5,22 +5,37 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.sidebar import render as render_sidebar
 import modules.sentiment_analysis as sentiment_mod
-from prompts.sentiment_prompt import SAMPLE_COMMENTS
+from utils.result_banner import maybe_show_banner
+from prompts.sentiment_prompt import get_sample_comments
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="AI舆情分析 — BrandPulse AI", page_icon="📰", layout="wide")
+st.set_page_config(page_title="AI舆情分析 — PinSight AI", page_icon="📰", layout="wide")
 brand = render_sidebar()
 
-st.title("📰 AI 舆情分析")
-st.caption("基于公开评论样本，识别正负向情感、风险等级与官方回应建议")
+st.markdown(
+    """
+<div class="page-header">
+  <h1 class="page-title">舆情分析</h1>
+  <p class="page-desc">基于公开评论样本识别正负向情感、核心关注点、风险等级与官方回应建议</p>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+<div style="background:#FDFAF5;border:1px solid #DDD4C4;border-left:3px solid #C4522A;border-radius:6px;padding:12px 16px;margin:0 0 18px;font-size:13px;color:#5C4F42;line-height:1.7">
+  <strong style="color:#1A1A1A">输入</strong>：用户评论样本（可从「数据采集」模块一键导入，或手动粘贴）<br>
+  <strong style="color:#1A1A1A">输出</strong>：整体情感分布 · 正/负向核心主题 · 风险等级 · 官方回应建议<br>
+  分析基于所提供样本，不代表全网舆情全貌，商业决策前需结合更大规模数据。
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
 
 brand_name = BRAND_DISPLAY_NAMES[brand]
 
-st.info(
-    "**输入**：用户评论、新闻摘要或社媒内容样本\n"
-    "**输出**：情感分布、核心关注点、风险等级、官方回应建议\n\n"
-    "⚠️ 分析结论基于所提供的样本，不代表全网舆情。商业决策前需更大规模数据采集。"
-)
 
 # ── 数据来源选择 ───────────────────────────────────────────────────
 collected = st.session_state.get("collected_sentiment_text", "")
@@ -39,7 +54,7 @@ if collected and data_source.startswith("使用采集数据"):
     comments_input = collected
     st.text_area("采集数据预览", value=comments_input, height=200, disabled=True)
 elif data_source == "使用内置演示样本":
-    comments = SAMPLE_COMMENTS.get(brand, "")
+    comments = get_sample_comments(brand)
     st.text_area("样本数据预览（可编辑）", value=comments, height=200, key="comments_display")
     comments_input = st.session_state.get("comments_display", comments)
 else:
@@ -63,10 +78,11 @@ if st.button("🚀 运行舆情分析", type="primary"):
 if "sentiment_result" in st.session_state:
     res = st.session_state["sentiment_result"]
     st.markdown("---")
+    maybe_show_banner(res)
     st.markdown(res["output"])
 
     with st.expander("📋 分析所用样本内容", expanded=False):
-        st.text(res["comments_used"])
+        st.text(res.get("comments_used", "（暂无样本内容）"))
 
     with st.expander("📚 知识库背景引用", expanded=False):
         for i, c in enumerate(res["chunks"], 1):

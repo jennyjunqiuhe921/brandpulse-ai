@@ -53,3 +53,40 @@ def retrieve(brand_key: str, query: str, n_results: int = 5) -> list[dict]:
 
 def collection_count(brand_key: str) -> int:
     return get_collection(brand_key).count()
+
+
+def get_sources(brand_key: str) -> list[dict]:
+    """Return unique sources in the collection with their chunk counts.
+    Returns [{"source": str, "chunks": int}, ...] sorted by source name."""
+    coll = get_collection(brand_key)
+    if coll.count() == 0:
+        return []
+    result = coll.get(include=["metadatas"])
+    counts: dict[str, int] = {}
+    for m in result["metadatas"]:
+        src = m.get("source", "(unknown)")
+        counts[src] = counts.get(src, 0) + 1
+    return [{"source": s, "chunks": c} for s, c in sorted(counts.items())]
+
+
+def delete_source(brand_key: str, source: str) -> int:
+    """Delete all chunks from a specific source. Returns number of chunks removed."""
+    coll = get_collection(brand_key)
+    result = coll.get(include=["metadatas"])
+    ids_to_delete = [
+        id_ for id_, meta in zip(result["ids"], result["metadatas"])
+        if meta.get("source") == source
+    ]
+    if ids_to_delete:
+        coll.delete(ids=ids_to_delete)
+    return len(ids_to_delete)
+
+
+def clear_collection(brand_key: str) -> int:
+    """Delete ALL chunks from a brand's collection. Returns count removed."""
+    coll = get_collection(brand_key)
+    count = coll.count()
+    if count > 0:
+        result = coll.get(include=[])
+        coll.delete(ids=result["ids"])
+    return count

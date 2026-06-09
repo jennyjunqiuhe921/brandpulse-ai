@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 SYSTEM_TEMPLATE = """你是一名 GEO（生成式引擎优化/AI搜索可见度）分析专家。
 
 任务：针对品牌 {brand_name}，模拟真实用户向 AI 搜索提问，分析该品牌在 AI 回答中的可见度和准确性。
@@ -44,7 +46,8 @@ SYSTEM_TEMPLATE = """你是一名 GEO（生成式引擎优化/AI搜索可见度�
 本分析旨在优化真实准确的公开内容，严禁用于任何形式的虚假信息传播或操纵AI输出。
 """
 
-GEO_QUESTIONS = {
+# ── Pre-written questions for built-in demo brands ───────────────────────────
+_PRESET_QUESTIONS: dict[str, list[str]] = {
     "heytea": [
         "推荐几个高端新式茶饮品牌？",
         "奶盖茶哪个品牌最值得尝试？",
@@ -76,3 +79,40 @@ GEO_QUESTIONS = {
         "有去海外开店的中国茶饮品牌吗？",
     ],
 }
+
+# Keep backward-compatible name
+GEO_QUESTIONS = _PRESET_QUESTIONS
+
+
+def get_geo_questions(brand_key: str) -> list[str]:
+    """Return GEO questions for any brand.
+
+    For the 3 built-in tea brands, returns the curated preset list.
+    For all other brands, generates 6 universal questions templated
+    with the brand's name, industry and focus — no LLM call needed.
+    """
+    if brand_key in _PRESET_QUESTIONS:
+        return _PRESET_QUESTIONS[brand_key]
+
+    # Dynamic fallback for any brand
+    from config.brand_manager import get_brand
+    b = get_brand(brand_key) or {}
+    name     = b.get("name", brand_key)
+    industry = b.get("industry", "")
+    focus    = b.get("focus", "")
+
+    industry_hint = f"{industry}行业中" if industry else ""
+    focus_hint    = focus.split("，")[0].split(",")[0].strip() if focus else ""
+
+    questions = [
+        f"{industry_hint}有哪些知名品牌值得推荐？",
+        f"{name}是一个什么样的品牌？",
+        f"{name}的核心产品或服务有哪些？",
+        f"{name}和同类竞品相比有什么差异化优势？",
+        f"想了解{name}，在哪里能找到权威信息？",
+        f"{name}适合哪类人群或使用场景？",
+    ]
+    if focus_hint:
+        questions.append(f"在{focus_hint}方面，{name}的表现如何？")
+
+    return questions

@@ -1,11 +1,11 @@
 from core.rag_engine import retrieve
 from core.llm_client import chat, build_rag_context
-from prompts.geo_analysis_prompt import SYSTEM_TEMPLATE, GEO_QUESTIONS
+from prompts.geo_analysis_prompt import SYSTEM_TEMPLATE, get_geo_questions
 from config.settings import BRAND_DISPLAY_NAMES
 
 
 def run(brand_key: str, custom_questions: list = None) -> dict:
-    questions = custom_questions or GEO_QUESTIONS.get(brand_key, GEO_QUESTIONS["heytea"])
+    questions = custom_questions or get_geo_questions(brand_key)
 
     chunks = retrieve(brand_key, "品牌定位 产品特色 品牌知名度 竞品", n_results=6)
     context = build_rag_context(chunks)

@@ -5,30 +5,33 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.sidebar import render as render_sidebar
 import modules.content_generator as content_mod
+from utils.result_banner import maybe_show_banner
 from prompts.content_generation_prompt import PLATFORM_GUIDES
 
-st.set_page_config(page_title="内容生成工厂 — BrandPulse AI", page_icon="✍️", layout="wide")
+st.set_page_config(page_title="内容生成工厂 — PinSight AI", page_icon="✍️", layout="wide")
 brand = render_sidebar()
 
-st.title("✍️ 内容生成工厂")
-st.caption("任务卡4：多平台内容矩阵生成")
+st.markdown(
+    """
+<div class="page-header">
+  <h1 class="page-title">内容工坊</h1>
+  <p class="page-desc">一键生成小红书、抖音、公众号等多平台内容矩阵，所有输出经人工复核后可直接使用</p>
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
-PRODUCT_DEFAULTS = {
-    "heytea": "多肉葡萄",
-    "nayuki": "霸气玉油柑",
-    "chapanda": "杨枝甘露",
-}
 
 col1, col2 = st.columns(2)
 with col1:
     product_name = st.text_input(
         "产品名称 *",
-        value=PRODUCT_DEFAULTS.get(brand, ""),
-        placeholder="输入要推广的产品",
+        value="",
+        placeholder="输入要推广的产品或服务名称",
     )
     goal = st.text_input(
         "推广目标",
-        value="夏日新品上线，提升年轻消费者种草转化",
+        value="",
         placeholder="例如：新品上市、节日限定、品牌活动",
     )
 
@@ -36,7 +39,6 @@ with col2:
     tone_key = st.selectbox(
         "品牌语气",
         options=["酷/有态度", "温柔/精致", "亲民/接地气"],
-        index={"heytea": 0, "nayuki": 1, "chapanda": 2}.get(brand, 0),
     )
     platforms = st.multiselect(
         "目标平台（可多选）",
@@ -59,17 +61,31 @@ if st.button("🚀 生成内容矩阵", type="primary", disabled=not platforms o
 if "content_result" in st.session_state:
     res = st.session_state["content_result"]
     st.markdown("---")
+    maybe_show_banner(res)
 
     generated_platforms = res.get("platforms", platforms)
-    sections = res["output"].split("---")
+    raw_output = res["output"]
 
-    if len(sections) > 1 and len(generated_platforms) > 0:
-        tabs = st.tabs([f"📄 {p}" for p in generated_platforms])
-        for i, (tab, section) in enumerate(zip(tabs, sections)):
-            with tab:
-                st.markdown(section.strip())
+    # Split by ### headers (more reliable than ---)
+    import re as _re
+    header_pattern = _re.compile(r"(?=^###\s)", _re.MULTILINE)
+    raw_sections = [s.strip() for s in header_pattern.split(raw_output) if s.strip()]
+
+    # Fall back to --- split if no ### found
+    if not raw_sections:
+        raw_sections = [s.strip() for s in raw_output.split("---") if s.strip()]
+
+    if len(raw_sections) >= 1 and len(generated_platforms) > 0:
+        # Match sections to platforms (best-effort by position)
+        tab_labels = [f"📄 {p}" for p in generated_platforms]
+        with st.container():
+            tabs = st.tabs(tab_labels)
+            for i, tab in enumerate(tabs):
+                with tab:
+                    content = raw_sections[i] if i < len(raw_sections) else ""
+                    st.markdown(content if content else "（该平台内容暂无，请重新生成）")
     else:
-        st.markdown(res["output"])
+        st.markdown(raw_output)
 
     st.markdown("---")
 
@@ -108,7 +124,7 @@ if "content_result" in st.session_state:
         if st.button("🛡️ 一键送往合规审查", type="primary", use_container_width=True):
             st.session_state["content_for_compliance"] = res["output"]
             st.session_state["auto_run_compliance"] = False
-            st.success("✅ 已送往「合规审查」模块，切换页面即可审查")
+            st.switch_page("pages/8_合规卫士.py")
 
     with st.expander("📋 查看完整输出", expanded=False):
         st.text_area("完整文本（可复制）", value=res["output"], height=300)

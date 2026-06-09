@@ -222,11 +222,97 @@ def collect_brand_sentiment(brand_key: str, platform: str = "全渠道", days: i
     return data
 
 
-def collect_industry_trends(category: str = "全部") -> list[dict]:
-    """返回行业动态模拟采集结果"""
+def collect_industry_trends(category: str = "全部", brand_key: str = "") -> list[dict]:
+    """返回行业动态模拟采集结果。
+    茶饮三品牌返回预置数据；其他品牌根据行业动态生成通用内容。
+    """
+    # 茶饮品牌使用预置数据
+    if brand_key in ("heytea", "nayuki", "chapanda"):
+        if category == "全部":
+            return _INDUSTRY_TRENDS
+        return [t for t in _INDUSTRY_TRENDS if t["category"] == category] or _INDUSTRY_TRENDS
+
+    # 其他品牌：根据品牌行业生成通用行业动态
+    try:
+        from config.brand_manager import get_brand as _get_brand
+        b = _get_brand(brand_key) or {}
+    except Exception:
+        b = {}
+
+    brand_name = b.get("name", brand_key)
+    industry   = b.get("industry", "其他")
+    focus      = b.get("focus", "品牌增长")
+
+    today = datetime.now()
+
+    generic_trends = [
+        {
+            "id": f"{brand_key}_ind_001",
+            "title": f"{industry}行业2025年度复盘：数字化转型成核心增长驱动力",
+            "source": "36氪·行业年度报告",
+            "time": (today - timedelta(days=60)).strftime("%Y-%m-%d"),
+            "category": "行业报告",
+            "summary": f"2025年{industry}行业整体保持稳健增长，头部品牌通过数字化运营和精细化用户管理获得明显优势。AI工具在内容生产、用户洞察和投放优化方面的应用显著提升效率。{brand_name}所处赛道的核心趋势包括：{focus}。",
+            "comments": [
+                {"user": "行业分析师", "time": (today - timedelta(days=60)).strftime("%Y-%m-%d %H:%M"), "content": f"{industry}行业正在经历从流量驱动到品牌价值驱动的转型，精细运营比粗放扩张更有复利效应", "likes": 1876},
+                {"user": "品牌运营总监", "time": (today - timedelta(days=59)).strftime("%Y-%m-%d %H:%M"), "content": "数字化不是选项，是标配。谁先把数据资产建起来，谁就有定价权", "likes": 1234},
+            ],
+        },
+        {
+            "id": f"{brand_key}_ind_002",
+            "title": f"{industry}头部品牌竞争格局：差异化定位成关键突围路径",
+            "source": "虎嗅·品牌竞争专题",
+            "time": (today - timedelta(days=45)).strftime("%Y-%m-%d"),
+            "category": "竞品动向",
+            "summary": f"{industry}赛道竞争持续加剧，同质化产品面临价格战压力。头部品牌通过强化品牌个性、深耕目标人群和构建差异化体验形成护城河。{brand_name}在{focus}方向的布局正是应对竞争的核心策略。",
+            "comments": [
+                {"user": "战略咨询顾问", "time": (today - timedelta(days=45)).strftime("%Y-%m-%d %H:%M"), "content": "差异化不是口号，是要真正找到竞争对手无法轻易复制的核心能力", "likes": 1567},
+                {"user": "投资机构分析师", "time": (today - timedelta(days=44)).strftime("%Y-%m-%d %H:%M"), "content": f"{industry}赛道的品牌壁垒越来越体现在用户心智上，而不是渠道规模上", "likes": 934},
+            ],
+        },
+        {
+            "id": f"{brand_key}_ind_003",
+            "title": f"AI+内容营销重塑{industry}品牌传播：小红书、抖音双平台策略成标配",
+            "source": "数英·营销趋势报告",
+            "time": (today - timedelta(days=30)).strftime("%Y-%m-%d"),
+            "category": "营销趋势",
+            "summary": f"2025年AI生成内容（AIGC）在{industry}品牌营销中普及率大幅提升，头部品牌已将AI工具纳入日常内容生产流程，效率提升3-5倍。小红书种草+抖音转化的双平台策略成为{industry}行业标配打法。KOC微影响力账号的ROI普遍优于头部KOL。",
+            "comments": [
+                {"user": "内容营销专家", "time": (today - timedelta(days=30)).strftime("%Y-%m-%d %H:%M"), "content": "AIGC降低了内容生产门槛，但品牌的审美和调性把控能力变得更重要", "likes": 2108},
+                {"user": "社媒运营负责人", "time": (today - timedelta(days=29)).strftime("%Y-%m-%d %H:%M"), "content": "KOC的内容更真实可信，转化率比大V高，但需要更精细的筛选和管理机制", "likes": 1345},
+            ],
+        },
+        {
+            "id": f"{brand_key}_ind_004",
+            "title": f"{industry}消费者洞察：Z世代成核心购买力，价值认同驱动复购",
+            "source": "尼尔森·消费者行为研究",
+            "time": (today - timedelta(days=20)).strftime("%Y-%m-%d"),
+            "category": "消费洞察",
+            "summary": f"Z世代（1995-2009年出生）已成为{industry}行业的核心消费群体，他们的购买决策更注重品牌价值观认同、社交货币属性和使用体验，对价格敏感度低于千禧一代但对品质要求更高。品牌真实性和可持续理念成为重要加分项。",
+            "comments": [
+                {"user": "消费行为研究员", "time": (today - timedelta(days=20)).strftime("%Y-%m-%d %H:%M"), "content": "Z世代不是被广告说服的，而是被价值观感召的。品牌要做的是找到共同语言", "likes": 1789},
+                {"user": "用户增长专家", "time": (today - timedelta(days=19)).strftime("%Y-%m-%d %H:%M"), "content": "复购率才是真正的健康指标，首购靠营销，复购靠产品和体验", "likes": 1234},
+            ],
+        },
+        {
+            "id": f"{brand_key}_ind_005",
+            "title": f"{industry}品牌合规新挑战：广告法、数据安全与ESG披露要求趋严",
+            "source": "法治日报·合规专题",
+            "time": (today - timedelta(days=10)).strftime("%Y-%m-%d"),
+            "category": "品类趋势",
+            "summary": f"2025-2026年{industry}行业面临更严格的合规要求：广告法对夸大宣传的处罚力度加大；个人信息保护法对用户数据收集使用的限制增多；ESG信息披露要求逐步向中小企业延伸。合规成本上升但也是建立品牌信任的契机。",
+            "comments": [
+                {"user": "法律合规顾问", "time": (today - timedelta(days=10)).strftime("%Y-%m-%d %H:%M"), "content": "合规不应该是被动应对监管，而是主动建立品牌可信度的机会", "likes": 892},
+                {"user": "品牌公关总监", "time": (today - timedelta(days=9)).strftime("%Y-%m-%d %H:%M"), "content": "消费者越来越关注品牌的社会责任，ESG不是大企业的专利，中小品牌也需要有自己的叙事", "likes": 678},
+            ],
+        },
+    ]
+
     if category == "全部":
-        return _INDUSTRY_TRENDS
-    return [t for t in _INDUSTRY_TRENDS if t["category"] == category] or _INDUSTRY_TRENDS
+        return generic_trends
+    cat_map = {"行业报告": 0, "竞品动向": 1, "营销趋势": 2, "消费洞察": 3, "品类趋势": 4}
+    idx = cat_map.get(category)
+    return [generic_trends[idx]] if idx is not None else generic_trends
 
 
 def flatten_comments_for_sentiment(topics: list[dict]) -> str:

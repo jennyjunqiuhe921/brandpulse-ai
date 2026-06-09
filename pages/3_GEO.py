@@ -5,22 +5,36 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.sidebar import render as render_sidebar
 import modules.geo_analysis as geo_mod
-from prompts.geo_analysis_prompt import GEO_QUESTIONS
+from utils.result_banner import maybe_show_banner
+from prompts.geo_analysis_prompt import get_geo_questions
 
-st.set_page_config(page_title="GEO分析 — BrandPulse AI", page_icon="🌐", layout="wide")
+st.set_page_config(page_title="GEO分析 — PinSight AI", page_icon="🌐", layout="wide")
 brand = render_sidebar()
 
-st.title("🌐 GEO / AI 搜索可见度分析")
-st.caption("任务卡2：分析品牌在 AI 搜索场景中的可见度、准确性与内容补强建议")
-
-st.info(
-    "**GEO（Generative Engine Optimization）**：模拟用户向 AI 搜索提问，"
-    "分析品牌被提及的频率、信息准确性与竞品差距，并给出合规内容补强建议。"
-    "\n\n⚠️ 本分析坚持「真实、准确、可信」原则，严禁用于刷屏、灌水或虚假评价。"
+st.markdown(
+    """
+<div class="page-header">
+  <h1 class="page-title">GEO 分析</h1>
+  <p class="page-desc">模拟真实用户向 AI 搜索提问，评估品牌在 AI 回答中的可见度与内容补强方向</p>
+</div>
+""",
+    unsafe_allow_html=True,
 )
 
+st.markdown(
+    """
+<div style="background:#FDFAF5;border:1px solid #DDD4C4;border-left:3px solid #C4522A;border-radius:6px;padding:12px 16px;margin:0 0 18px;font-size:13px;color:#5C4F42;line-height:1.7">
+  <strong style="color:#1A1A1A">什么是 GEO？</strong> 模拟真实用户向 ChatGPT、Perplexity 等 AI 引擎提问，分析品牌是否被准确提及、与竞品的差距，并给出合规的内容补强建议。<br>
+  ⚠️ 本分析坚持「真实、准确、可信」原则，<strong>严禁</strong>用于刷屏、灌水或虚假评价。
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+
+
 st.subheader("测试问题设置")
-default_questions = GEO_QUESTIONS.get(brand, GEO_QUESTIONS["heytea"])
+default_questions = get_geo_questions(brand)
 
 with st.expander("✏️ 查看/编辑测试问题（可修改）", expanded=True):
     questions_text = st.text_area(
@@ -32,8 +46,8 @@ with st.expander("✏️ 查看/编辑测试问题（可修改）", expanded=Tru
 questions = [q.strip() for q in questions_text.strip().split("\n") if q.strip()]
 st.caption(f"当前共 {len(questions)} 个测试问题")
 
-if len(questions) < 8:
-    st.warning("建议至少设置 8 个测试问题以获得更全面的分析")
+if len(questions) < 4:
+    st.warning("建议至少设置 4 个测试问题以获得更全面的分析")
 
 if st.button("🚀 运行 GEO 分析", type="primary"):
     with st.spinner("正在进行 GEO 可见度分析...（约 30-60 秒）"):
@@ -46,10 +60,12 @@ if st.button("🚀 运行 GEO 分析", type="primary"):
 if "geo_result" in st.session_state:
     res = st.session_state["geo_result"]
     st.markdown("---")
+    maybe_show_banner(res)
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("测试问题数量", len(res["questions"]))
+        q_count = len(res.get("questions") or questions)
+        st.metric("测试问题数量", q_count)
     with col2:
         st.metric("知识库引用块", len(res["chunks"]))
     with col3:

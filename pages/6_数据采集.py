@@ -1,4 +1,4 @@
-"""BrandPulse AI — 数据采集模块（舆情 + 行业动态）"""
+"""PinSight AI — 数据采集模块（舆情 + 行业动态）"""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -6,27 +6,37 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 from utils.sidebar import render as render_sidebar
 from config.settings import BRAND_DISPLAY_NAMES
+from config.brand_manager import get_brand
 from core.data_collector import (
     collect_brand_sentiment,
     collect_industry_trends,
     flatten_comments_for_sentiment,
 )
 
-st.set_page_config(page_title="数据采集 — BrandPulse AI", page_icon="📡", layout="wide")
+st.set_page_config(page_title="数据采集 — PinSight AI", page_icon="📡", layout="wide")
 brand = render_sidebar()
-
-st.markdown("## 📡 数据采集中心")
-st.caption("采集品牌舆情与行业动态，结果可直接送往舆情分析或合规审查模块")
 
 st.markdown(
     """
-<div style="background:#f8f9fa;border-radius:10px;padding:14px 20px;margin-bottom:8px;font-size:14px">
+<div class="page-header">
+  <h1 class="page-title">数据采集</h1>
+  <p class="page-desc">采集品牌舆情与行业动态，结果可一键流转至舆情分析或合规审查模块</p>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+st.markdown("## 📡 数据采集中心")
+
+st.markdown(
+    """
+<div style="background:#FDFAF5;border:1px solid #DDD4C4;border-radius:6px;padding:12px 16px;margin-bottom:10px;font-size:13px;color:#5C4F42">
 <b>📊 数据工作流</b> &nbsp;&nbsp;
-<span style="background:#e3f2fd;border-radius:4px;padding:3px 8px">📡 数据采集</span>
+<span style="background:rgba(43,108,176,0.08);border:1px solid rgba(43,108,176,0.2);border-radius:4px;padding:3px 8px;color:#2B6CB0">📡 数据采集</span>
 &nbsp;→&nbsp;
-<span style="background:#e8f5e9;border-radius:4px;padding:3px 8px">📰 舆情分析</span>
+<span style="background:rgba(61,122,90,0.09);border:1px solid rgba(61,122,90,0.2);border-radius:4px;padding:3px 8px;color:#3D7A5A">📰 舆情分析</span>
 &nbsp;/&nbsp;
-<span style="background:#fff3e0;border-radius:4px;padding:3px 8px">🛡️ 合规审查</span>
+<span style="background:rgba(181,134,13,0.1);border:1px solid rgba(181,134,13,0.2);border-radius:4px;padding:3px 8px;color:#B5860D">🛡️ 合规审查</span>
 &nbsp;&nbsp;·&nbsp;&nbsp;采集结果可一键流转至下游模块，无需手动复制
 </div>
 """,
@@ -99,7 +109,7 @@ with tab_brand:
                 flat = flatten_comments_for_sentiment(results)
                 st.session_state["collected_sentiment_text"] = flat
                 st.session_state["collected_sentiment_source"] = "采集数据"
-                st.success("✅ 已送往「舆情分析」模块，切换页面即可分析")
+                st.switch_page("pages/7_舆情分析.py")
         with send_col2:
             if st.button("📤 送往合规审查模块", use_container_width=True):
                 sample_content = "\n".join(
@@ -109,7 +119,7 @@ with tab_brand:
                     if c.get("sentiment") == "正向"
                 )[:800]
                 st.session_state["content_for_compliance"] = sample_content
-                st.success("✅ 已送往「合规审查」模块，切换页面即可审查")
+                st.switch_page("pages/8_合规卫士.py")
     else:
         st.info("配置采集参数后点击「开始采集」，获取品牌最新舆情数据（演示模式）")
 
@@ -117,7 +127,10 @@ with tab_brand:
 # TAB 2 — 行业动态采集
 # ══════════════════════════════════════════════════════════════════
 with tab_industry:
-    st.markdown("#### 新式茶饮行业动态 & 热门话题")
+    _b = get_brand(brand)
+    _industry = _b.get("industry", "") if _b else ""
+    _ind_label = f"{_industry}行业动态" if _industry else "行业动态"
+    st.markdown(f"#### {_ind_label} & 热门话题")
 
     col_cat, col_run = st.columns([4, 1])
     with col_cat:
@@ -129,12 +142,17 @@ with tab_industry:
         st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
         run_ind = st.button("🔍 开始采集", key="run_industry", use_container_width=True, type="primary")
 
+    # Clear cached trends when brand changes
+    if st.session_state.get("industry_trend_brand") != brand:
+        st.session_state.pop("industry_trend_data", None)
+
     if run_ind or st.session_state.get("industry_trend_data"):
         if run_ind:
             with st.spinner("正在采集行业动态…（演示模式）"):
                 import time; time.sleep(1.0)
-            trends = collect_industry_trends(category)
+            trends = collect_industry_trends(category, brand_key=brand)
             st.session_state["industry_trend_data"] = trends
+            st.session_state["industry_trend_brand"] = brand
         else:
             trends = st.session_state.get("industry_trend_data", [])
 
@@ -165,11 +183,11 @@ with tab_industry:
                 )
                 st.session_state["collected_sentiment_text"] = flat
                 st.session_state["collected_sentiment_source"] = "行业动态"
-                st.success("✅ 已送往「舆情分析」模块")
+                st.switch_page("pages/7_舆情分析.py")
         with ind_send2:
             if st.button("📤 送往合规审查", key="ind_to_comp", use_container_width=True):
                 sample = "\n".join(t["summary"] for t in trends[:3])
                 st.session_state["content_for_compliance"] = sample
-                st.success("✅ 已送往「合规审查」模块")
+                st.switch_page("pages/8_合规卫士.py")
     else:
         st.info("选择话题分类后点击「开始采集」，获取行业最新动态（演示模式）")

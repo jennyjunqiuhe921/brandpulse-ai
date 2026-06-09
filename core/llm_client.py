@@ -1004,6 +1004,39 @@ _DEMO_COMPLIANCE = """## 合规审查报告
 本审查由AI辅助完成，仅供参考，正式发布前须由品牌授权人员及法务部门进行最终人工复核。"""
 
 
+def get_demo_snapshot(brand_key: str) -> dict:
+    """
+    Return pre-written demo outputs for all modules keyed by session_state key.
+    Used to pre-populate pages so users see example content on first visit.
+    Brand detection uses brand_key directly (no LLM call, no API needed).
+    """
+    b = brand_key  # shorthand
+
+    # Map raw demo text dicts → per-module session_state shape
+    def _r(text, **extra): return {"output": text, "chunks": [], "_is_demo_preview": True, **extra}
+
+    brand_text   = _DEMO_BRAND_MAP.get(b, _DEMO_BRAND_HEYTEA)
+    product_text = _DEMO_PRODUCT_MAP.get(b, _DEMO_PRODUCT_HEYTEA)
+    geo_text     = _DEMO_GEO_MAP.get(b, _DEMO_GEO_HEYTEA)
+    content_text = _DEMO_CONTENT_MAP.get(b, _DEMO_CONTENT_HEYTEA)
+    mp_text      = _DEMO_POSITIONING_MAP.get(b, _DEMO_POSITIONING_HEYTEA)
+    sentiment_text = _DEMO_SENTIMENT_MAP.get(b, _DEMO_SENTIMENT_HEYTEA)
+
+    from prompts.geo_analysis_prompt import get_geo_questions
+    geo_questions = get_geo_questions(b)
+
+    return {
+        "brand_result":       _r(brand_text),
+        "product_result":     _r(product_text),
+        "geo_result":         _r(geo_text, questions=geo_questions),
+        "content_result":     _r(content_text),
+        "mp_result":          _r(mp_text),
+        "compliance_result":  _r(_DEMO_COMPLIANCE),
+        "sentiment_result":   _r(sentiment_text, comments_used="（示例预览，实际运行时显示真实样本评论）"),
+        "comp_result":        _r(brand_text),   # competitor page uses brand context
+    }
+
+
 _DEMO_REFCHECK = """## RefCheck 合规标注报告
 
 ### 逐条核查结果
