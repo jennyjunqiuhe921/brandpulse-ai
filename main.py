@@ -1,19 +1,20 @@
-"""BrandPulse AI — Streamlit entry point (st.navigation API)."""
+"""PinSight AI — Streamlit entry point (st.navigation)."""
 import streamlit as st
 
+# st.navigation replaces auto-discovered pages, giving us full control:
+# - removes "应用程序" (app.py itself) from the sidebar
+# - sets explicit Chinese page titles (prevents Chrome auto-translate)
+# - controls display order
+
 pg = st.navigation(
-    {
-        "主要的": [
-            st.Page("pages/1_🏠_Home.py",               title="家",       icon="🏠", default=True),
-            st.Page("pages/2_🔍_Brand_Analysis.py",     title="品牌分析",  icon="🔍"),
-            st.Page("pages/3_🌐_GEO_Analysis.py",       title="地理分析",  icon="🌐"),
-            st.Page("pages/4_✍️_Content_Studio.py",     title="内容工作室", icon="✍️"),
-            st.Page("pages/5_📊_Market_Positioning.py", title="市场定位",  icon="📊"),
-            st.Page("pages/6_📡_数据采集.py",            title="数据采集",  icon="📡"),
-            st.Page("pages/7_📰_Sentiment_Analysis.py", title="情感分析",  icon="📰"),
-            st.Page("pages/8_🛡️_Compliance_Guard.py",  title="合规卫士",  icon="🛡️"),
-            st.Page("pages/9_🔍_竞品分析.py",            title="竞品分析",  icon="🔍"),
-        ]
-    }
+    [
+        st.Page("pages/0_品牌管理.py",  title="品牌管理",  icon="🏢"),
+        st.Page("pages/3_GEO.py",       title="GEO分析",   icon="🌐"),
+        st.Page("pages/4_内容工坊.py",  title="内容工坊",  icon="✍️"),
+        st.Page("pages/6_数据采集.py",  title="数据采集",  icon="📡"),
+        st.Page("pages/7_舆情分析.py",  title="舆情分析",  icon="📰"),
+        st.Page("pages/8_合规卫士.py",  title="合规卫士",  icon="🛡️"),
+    ],
+    position="hidden",   # hide Streamlit's built-in nav; we render nav in sidebar.py
 )
 pg.run()
