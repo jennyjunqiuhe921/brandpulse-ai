@@ -119,15 +119,11 @@ if "content_result" in st.session_state:
     st.caption("⚠️ 以上推广建议为 AI 辅助生成，需结合品牌实际预算和资源由市场团队复核调整")
 
     # A1 · 展示四区块分类说明（追加在内容后面的分类章节）
-    import re as _re2
-    # 找到四区块分类说明部分单独渲染
+    # 找到四区块分类说明部分单独渲染，无则静默跳过
     split_marker = "---\n\n### AI 输出内容分类"
     if split_marker in raw_output:
-        main_part, classification_part = raw_output.split(split_marker, 1)
-        classification_md = "---\n\n### AI 输出内容分类" + classification_part
-        render_four_blocks(classification_md)
-    else:
-        render_four_blocks("")   # 静默（内容本身已在tabs中展示）
+        _, classification_part = raw_output.split(split_marker, 1)
+        render_four_blocks("---\n\n### AI 输出内容分类" + classification_part)
 
     # A4 · 人工复核门控
     reviewed = review_gate("content")

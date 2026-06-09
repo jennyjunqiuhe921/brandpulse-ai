@@ -67,6 +67,8 @@ def render_four_blocks(output_text: str) -> None:
     解析 AI 输出文本，将【公开事实】【AI推断】【人工判断】【待验证事项】
     标记的内容以带色彩的卡片展示，未标记部分以普通 markdown 渲染。
     """
+    if not output_text or not output_text.strip():
+        return
     parts = _BLOCK_PATTERN.split(output_text)
 
     # parts 交替出现：[普通文本, 区块名, 区块内容, 普通文本, 区块名, ...]
@@ -185,9 +187,5 @@ def review_gate(page_key: str) -> bool:
     st.session_state[state_key] = checked
 
     if not checked:
-        st.warning(
-            "⚠️ **导出 / 归档前请先完成人工复核**  \n"
-            "勾选上方确认框后，导出按钮将解锁。",
-            icon="🔒",
-        )
+        st.warning("⚠️ **导出 / 归档前请先完成人工复核**，勾选上方确认框后导出按钮将解锁。")
     return checked
