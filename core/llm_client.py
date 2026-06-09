@@ -1015,7 +1015,13 @@ def get_demo_snapshot(brand_key: str) -> dict:
     # Map raw demo text dicts → per-module session_state shape
     def _r(text, **extra): return {"output": text, "chunks": [], "_is_demo_preview": True, **extra}
 
-    brand_text   = _DEMO_BRAND_MAP.get(b, _DEMO_BRAND_HEYTEA)
+    # 只对有专属 demo 数据的品牌填充预览，其他品牌返回空字典
+    # 避免非 demo 品牌（用户自建品牌）显示喜茶的 fallback 数据
+    _HAS_DEMO = set(_DEMO_BRAND_MAP.keys())
+    if b not in _HAS_DEMO:
+        return {}
+
+    brand_text   = _DEMO_BRAND_MAP[b]
     product_text = _DEMO_PRODUCT_MAP.get(b, _DEMO_PRODUCT_HEYTEA)
     geo_text     = _DEMO_GEO_MAP.get(b, _DEMO_GEO_HEYTEA)
     content_text = _DEMO_CONTENT_MAP.get(b, _DEMO_CONTENT_HEYTEA)
