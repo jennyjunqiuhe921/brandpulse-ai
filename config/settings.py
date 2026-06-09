@@ -1,15 +1,36 @@
 import os
 from dotenv import load_dotenv
 
+# 尝试加载本地 .env 文件（本地开发时使用）
 load_dotenv()
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
+# 兼容 Streamlit Cloud 的 secrets
+# 在 Streamlit Cloud 上，这些值会在 Settings → Secrets 中配置
+try:
+    import streamlit as st
+    secrets = st.secrets
+except Exception:
+    secrets = {}
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "anthropic/claude-sonnet-4-5")
-CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+def _get_env(key: str, default: str = "") -> str:
+    """优先从环境变量读取，然后从 Streamlit secrets 读取"""
+    val = os.getenv(key)
+    if val:
+        return val
+    # st.secrets.get() 在无 secrets 文件时会抛 StreamlitSecretNotFoundError
+    # 必须用 try/except 而不是直接 .get()
+    try:
+        return secrets[key] or default
+    except Exception:
+        return default
+
+ANTHROPIC_API_KEY = _get_env("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL = _get_env("CLAUDE_MODEL", "claude-sonnet-4-6")
+
+OPENAI_API_KEY = _get_env("OPENAI_API_KEY", "")
+OPENAI_BASE_URL = _get_env("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
+OPENAI_MODEL = _get_env("OPENAI_MODEL", "anthropic/claude-sonnet-4-5")
+CHROMA_DB_PATH = _get_env("CHROMA_DB_PATH", "./chroma_db")
 
 # RAG chunking
 CHUNK_SIZE = 800
