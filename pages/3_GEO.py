@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.sidebar import render as render_sidebar
 import modules.geo_analysis as geo_mod
 from utils.result_banner import maybe_show_banner
+from utils.prd_components import render_four_blocks, render_source_meta, render_disclaimer, review_gate
 from prompts.geo_analysis_prompt import get_geo_questions
 
 st.set_page_config(page_title="GEO分析 — PinSight AI", page_icon="🌐", layout="wide")
@@ -52,8 +53,12 @@ if len(questions) < 4:
 if st.button("🚀 运行 GEO 分析", type="primary"):
     with st.spinner("正在进行 GEO 可见度分析...（约 30-60 秒）"):
         try:
+            from datetime import datetime
             result = geo_mod.run(brand, custom_questions=questions)
+            result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
             st.session_state["geo_result"] = result
+            # 新结果时清除上次复核状态
+            st.session_state["reviewed_geo"] = False
         except Exception as e:
             st.error(f"分析失败：{e}")
 
@@ -72,15 +77,19 @@ if "geo_result" in st.session_state:
         st.metric("分析状态", "✅ 完成")
 
     st.markdown("---")
-    st.markdown(res["output"])
+    # A1 · 四大区块渲染
+    render_four_blocks(res["output"])
 
-    st.markdown("---")
-    with st.expander("📚 知识库引用来源", expanded=False):
-        for i, c in enumerate(res["chunks"], 1):
-            st.markdown(f"**[{i}] 来源：`{c['source']}`**")
-            st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])
+    # A2 · 信息溯源
+    render_source_meta(res["chunks"], query_time=res.get("_query_time"))
+
+    # A4 · 人工复核门控
+    reviewed = review_gate("geo")
 
     st.info(
         "💡 **下一步**：将内容补强建议中的具体措施交由品牌方核实后，"
         "在官网/FAQ/媒体稿中补充对应内容，不得用于虚假宣传。"
     )
+
+    # A3 · 标准免责声明（页面底部）
+    render_disclaimer()

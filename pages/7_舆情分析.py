@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.sidebar import render as render_sidebar
 import modules.sentiment_analysis as sentiment_mod
 from utils.result_banner import maybe_show_banner
+from utils.prd_components import render_four_blocks, render_source_meta, render_disclaimer, review_gate
 from prompts.sentiment_prompt import get_sample_comments
 from config.settings import BRAND_DISPLAY_NAMES
 
@@ -70,8 +71,11 @@ if st.button("🚀 运行舆情分析", type="primary"):
     else:
         with st.spinner("正在进行 AI 舆情分析...（约 20-35 秒）"):
             try:
+                from datetime import datetime
                 result = sentiment_mod.run(brand, comments=comments_input)
+                result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 st.session_state["sentiment_result"] = result
+                st.session_state["reviewed_sentiment"] = False
             except Exception as e:
                 st.error(f"分析失败：{e}")
 
@@ -79,12 +83,18 @@ if "sentiment_result" in st.session_state:
     res = st.session_state["sentiment_result"]
     st.markdown("---")
     maybe_show_banner(res)
-    st.markdown(res["output"])
+
+    # A1 · 四大区块渲染
+    render_four_blocks(res["output"])
 
     with st.expander("📋 分析所用样本内容", expanded=False):
         st.text(res.get("comments_used", "（暂无样本内容）"))
 
-    with st.expander("📚 知识库背景引用", expanded=False):
-        for i, c in enumerate(res["chunks"], 1):
-            st.markdown(f"**[{i}] 来源：`{c['source']}`**")
-            st.text(c["text"][:200] + "..." if len(c["text"]) > 200 else c["text"])
+    # A2 · 信息溯源
+    render_source_meta(res["chunks"], query_time=res.get("_query_time"))
+
+    # A4 · 人工复核门控
+    review_gate("sentiment")
+
+    # A3 · 标准免责声明
+    render_disclaimer()

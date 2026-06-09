@@ -5,6 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
 from utils.sidebar import render as render_sidebar
+from utils.prd_components import render_disclaimer
 from config.settings import BRAND_DISPLAY_NAMES
 from config.brand_manager import get_brand
 from core.data_collector import (
@@ -191,3 +192,6 @@ with tab_industry:
                 st.switch_page("pages/8_合规卫士.py")
     else:
         st.info("选择话题分类后点击「开始采集」，获取行业最新动态（演示模式）")
+
+# A3 · 标准免责声明
+render_disclaimer()

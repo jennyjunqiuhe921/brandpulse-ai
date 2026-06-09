@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.sidebar import render as render_sidebar
 import modules.compliance_checker as compliance_mod
 from utils.result_banner import maybe_show_banner
+from utils.prd_components import render_four_blocks, render_source_meta, render_disclaimer, review_gate
 from config.settings import BRAND_DISPLAY_NAMES
 
 st.set_page_config(page_title="合规审查 — PinSight AI", page_icon="🛡️", layout="wide")
@@ -82,8 +83,11 @@ auto_run = st.session_state.pop("auto_run_compliance", False)
 if st.button("🚀 运行合规审查", type="primary", disabled=not content_input.strip()) or (auto_run and content_input.strip()):
     with st.spinner("正在进行合规审查...（约 15-25 秒）"):
         try:
+            from datetime import datetime
             result = compliance_mod.run(content_input, brand)
+            result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
             st.session_state["compliance_result"] = result
+            st.session_state["reviewed_compliance"] = False
         except Exception as e:
             st.error(f"审查失败：{e}")
 
@@ -91,15 +95,17 @@ if "compliance_result" in st.session_state:
     res = st.session_state["compliance_result"]
     st.markdown("---")
     maybe_show_banner(res)
-    st.markdown(res["output"])
 
-    with st.expander("📚 品牌事实核查依据（知识库）", expanded=False):
-        for i, c in enumerate(res["chunks"], 1):
-            st.markdown(f"**[{i}] 来源：`{c['source']}`**")
-            st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])
+    # A1 · 四大区块渲染
+    render_four_blocks(res["output"])
 
-    st.markdown("---")
-    st.caption(
-        "**免责声明**：本审查由 AI 辅助完成，所有输出仅供参考，"
-        "不构成法律意见。正式发布前请咨询品牌合规部门或法律顾问。"
-    )
+    # A2 · 信息溯源
+    render_source_meta(res["chunks"], query_time=res.get("_query_time"))
+
+    # A4 · 人工复核门控（合规卫士：高风险时额外提示）
+    reviewed = review_gate("compliance")
+    if reviewed:
+        st.success("✅ 已完成复核，内容可进行下一步处理")
+
+    # A3 · 标准免责声明
+    render_disclaimer()

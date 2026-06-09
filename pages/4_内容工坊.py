@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.sidebar import render as render_sidebar
 import modules.content_generator as content_mod
 from utils.result_banner import maybe_show_banner
+from utils.prd_components import render_four_blocks, render_disclaimer, review_gate
 from prompts.content_generation_prompt import PLATFORM_GUIDES
 
 st.set_page_config(page_title="内容生成工厂 — PinSight AI", page_icon="✍️", layout="wide")
@@ -55,6 +56,7 @@ if st.button("🚀 生成内容矩阵", type="primary", disabled=not platforms o
             result = content_mod.run(brand, product_name, platforms, tone_key, goal)
             st.session_state["content_result"] = result
             st.session_state["content_for_compliance"] = result["output"]
+            st.session_state["reviewed_content"] = False
         except Exception as e:
             st.error(f"生成失败：{e}")
 
@@ -116,12 +118,34 @@ if "content_result" in st.session_state:
 
     st.caption("⚠️ 以上推广建议为 AI 辅助生成，需结合品牌实际预算和资源由市场团队复核调整")
 
+    # A1 · 展示四区块分类说明（追加在内容后面的分类章节）
+    import re as _re2
+    # 找到四区块分类说明部分单独渲染
+    split_marker = "---\n\n### AI 输出内容分类"
+    if split_marker in raw_output:
+        main_part, classification_part = raw_output.split(split_marker, 1)
+        classification_md = "---\n\n### AI 输出内容分类" + classification_part
+        render_four_blocks(classification_md)
+    else:
+        render_four_blocks("")   # 静默（内容本身已在tabs中展示）
+
+    # A4 · 人工复核门控
+    reviewed = review_gate("content")
+
     st.markdown("---")
-    col_a, col_b, col_c = st.columns([2, 2, 3])
+    col_a, col_b = st.columns([2, 2])
     with col_a:
-        st.success("✅ 内容生成完成，请人工复核后使用")
+        if reviewed:
+            st.success("✅ 已完成人工复核")
+        else:
+            st.info("🔒 完成复核后可送往合规审查")
     with col_b:
-        if st.button("🛡️ 一键送往合规审查", type="primary", use_container_width=True):
+        if st.button(
+            "🛡️ 一键送往合规审查",
+            type="primary",
+            use_container_width=True,
+            disabled=not reviewed,
+        ):
             st.session_state["content_for_compliance"] = res["output"]
             st.session_state["auto_run_compliance"] = False
             st.switch_page("pages/8_合规卫士.py")
@@ -136,3 +160,6 @@ if "content_result" in st.session_state:
 - 标注 `[品牌信息]` 的部分来自知识库，需核实信息是否仍然准确
 - 建议在「合规审查」模块对生成内容进行进一步合规扫描
 """)
+
+    # A3 · 标准免责声明
+    render_disclaimer()

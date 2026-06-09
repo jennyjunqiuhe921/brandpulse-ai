@@ -4,6 +4,7 @@ import io
 import streamlit as st
 from utils.sidebar import render as render_sidebar
 from utils.result_banner import maybe_show_banner
+from utils.prd_components import render_four_blocks, render_source_meta, render_disclaimer
 from config.settings import BRAND_DISPLAY_NAMES
 from utils.followup_chat import render as render_chat
 from config.brand_manager import (
@@ -691,15 +692,12 @@ with tab_comp:
             res = st.session_state["comp_result"]
             maybe_show_banner(res)
             st.markdown("---")
-            st.markdown(res["output"])
-            if res.get("chunks"):
-                with st.expander("📚 知识库引用来源", expanded=False):
-                    for i, c in enumerate(res["chunks"], 1):
-                        st.markdown(f"**[{i}] 来源：`{c['source']}`**")
-                        st.text(c["text"][:300] + "..." if len(c["text"]) > 300 else c["text"])
+            render_four_blocks(res["output"])
+            render_source_meta(res.get("chunks", []))
             st.markdown("---")
             send_col, _ = st.columns([2, 5])
             with send_col:
                 if st.button("📤 送往合规审查", key="comp_to_compliance", use_container_width=True):
                     st.session_state["content_for_compliance"] = res["output"]
                     st.switch_page("pages/8_合规卫士.py")
+            render_disclaimer()
