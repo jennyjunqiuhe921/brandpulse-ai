@@ -74,10 +74,16 @@ if st.button("🚀 运行舆情分析", type="primary"):
                 from datetime import datetime
                 result = sentiment_mod.run(brand, comments=comments_input)
                 result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                result["_brand"] = brand
                 st.session_state["sentiment_result"] = result
                 st.session_state["reviewed_sentiment"] = False
             except Exception as e:
                 st.error(f"分析失败：{e}")
+
+# 品牌切换后自动清除旧结果
+if st.session_state.get("sentiment_result", {}).get("_brand") != brand:
+    st.session_state.pop("sentiment_result", None)
+    st.session_state["reviewed_sentiment"] = False
 
 if "sentiment_result" in st.session_state:
     res = st.session_state["sentiment_result"]

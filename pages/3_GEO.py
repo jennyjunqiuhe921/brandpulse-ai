@@ -56,11 +56,16 @@ if st.button("🚀 运行 GEO 分析", type="primary"):
             from datetime import datetime
             result = geo_mod.run(brand, custom_questions=questions)
             result["_query_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+            result["_brand"] = brand
             st.session_state["geo_result"] = result
-            # 新结果时清除上次复核状态
             st.session_state["reviewed_geo"] = False
         except Exception as e:
             st.error(f"分析失败：{e}")
+
+# 品牌切换后自动清除旧结果
+if st.session_state.get("geo_result", {}).get("_brand") != brand:
+    st.session_state.pop("geo_result", None)
+    st.session_state["reviewed_geo"] = False
 
 if "geo_result" in st.session_state:
     res = st.session_state["geo_result"]
