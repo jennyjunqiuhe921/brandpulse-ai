@@ -1,7 +1,10 @@
 """ChromaDB RAG engine — brand-namespaced retrieval."""
 import chromadb
 from chromadb.utils import embedding_functions
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
 from config.settings import CHROMA_DB_PATH, BRAND_COLLECTIONS, CHUNK_SIZE, CHUNK_OVERLAP
 
 _client = None
