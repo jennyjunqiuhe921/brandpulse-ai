@@ -30,6 +30,12 @@ import modules.competitor_analysis as comp_mod
 st.set_page_config(page_title="品牌管理 · PinSight AI", layout="wide")
 selected_brand = render_sidebar()
 
+# 品牌切换时清除所有分析结果缓存，防止串台显示
+if st.session_state.get("_bm_last_brand") != selected_brand:
+    for _k in ("brand_result", "product_result", "mp_result", "comp_result", "comp_pair"):
+        st.session_state.pop(_k, None)
+    st.session_state["_bm_last_brand"] = selected_brand
+
 # ── Page header ───────────────────────────────────────────────────────────────
 st.markdown(
     """
