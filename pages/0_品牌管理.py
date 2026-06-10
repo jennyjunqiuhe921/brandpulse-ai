@@ -663,7 +663,7 @@ with tab_comp:
         col_brand_c, col_vs_c, col_comp_c = st.columns([2, 0.3, 2])
         with col_brand_c:
             st.markdown("**主品牌**")
-            st.markdown(f"### {brand_label}")   # use brand_label set at page top
+            st.markdown(f"### {brand_label}")
         with col_vs_c:
             st.markdown(
                 "<div style='text-align:center;padding-top:28px;font-size:20px;color:#888'>vs</div>",
@@ -683,17 +683,22 @@ with tab_comp:
             with st.spinner(f"正在对标分析 {brand_label} vs {BRAND_DISPLAY_NAMES[competitor]}…（约 20-35 秒）"):
                 try:
                     result = comp_mod.run(selected_brand, competitor)
+                    result["_brand"] = selected_brand
                     st.session_state["comp_result"] = result
                     st.session_state["comp_pair"] = (selected_brand, competitor)
                 except Exception as e:
                     st.error(f"分析失败：{e}")
 
+        # 主品牌切换时立即清除旧竞品分析（双重保险：_brand 字段 + comp_pair）
+        if st.session_state.get("comp_result", {}).get("_brand") != selected_brand:
+            st.session_state.pop("comp_result", None)
+            st.session_state.pop("comp_pair", None)
+
         if "comp_result" in st.session_state:
             pair = st.session_state.get("comp_pair", (None, None))
-            if pair != (selected_brand, competitor):
-                stored_main = BRAND_DISPLAY_NAMES.get(pair[0], pair[0]) if pair[0] else "?"
+            if pair[1] != competitor:
                 stored_comp = BRAND_DISPLAY_NAMES.get(pair[1], pair[1]) if pair[1] else "?"
-                st.info(f"当前显示的是「{stored_main} vs {stored_comp}」的分析，如需更新请重新运行")
+                st.info(f"当前显示的是与「{stored_comp}」的分析，如需更新请重新运行")
 
             res = st.session_state["comp_result"]
             maybe_show_banner(res)

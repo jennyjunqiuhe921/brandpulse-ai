@@ -1039,7 +1039,7 @@ def get_demo_snapshot(brand_key: str) -> dict:
         "mp_result":          _r(mp_text),
         "compliance_result":  _r(_DEMO_COMPLIANCE),
         "sentiment_result":   _r(sentiment_text, comments_used="（示例预览，实际运行时显示真实样本评论）"),
-        "comp_result":        _r(brand_text),   # competitor page uses brand context
+        "comp_result":        _r(brand_text, _brand=b),   # competitor page uses brand context
     }
 
 
