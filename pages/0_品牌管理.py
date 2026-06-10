@@ -6,9 +6,11 @@ from utils.sidebar import render as render_sidebar
 from utils.result_banner import maybe_show_banner
 from utils.prd_components import render_four_blocks, render_source_meta, render_disclaimer
 from config.settings import BRAND_DISPLAY_NAMES
+from prompts.geo_analysis_prompt import parse_keywords
 from utils.followup_chat import render as render_chat
 from config.brand_manager import (
     INDUSTRY_OPTIONS,
+    TONE_OPTIONS,
     load_all_brands,
     get_brand,
     create_brand,
@@ -171,6 +173,25 @@ with tab_list:
                 )
                 new_desc  = st.text_area("品牌描述", value=b.get("description", ""), height=80)
                 new_focus = st.text_input("分析重点（逗号分隔）", value=b.get("focus", ""))
+                # F2 · 品牌调性枚举
+                _tone_opts = ["（未设置）"] + TONE_OPTIONS
+                _cur_tone = b.get("tone", "")
+                new_tone = st.selectbox(
+                    "品牌调性（联动内容生成风格）", _tone_opts,
+                    index=_tone_opts.index(_cur_tone) if _cur_tone in _tone_opts else 0,
+                )
+                # F1 · 品牌词库 / 禁用词库（逗号或换行分隔）
+                fc1, fc2 = st.columns(2)
+                with fc1:
+                    new_brand_words = st.text_area(
+                        "品牌词库（优先融入文案）",
+                        value="\n".join(b.get("brand_words", [])), height=100,
+                        placeholder="如：灵感之茶\n悦己时刻")
+                with fc2:
+                    new_forbidden = st.text_area(
+                        "禁用词库（文案严禁出现）",
+                        value="\n".join(b.get("forbidden_words", [])), height=100,
+                        placeholder="如：最便宜\n第一")
                 new_color = st.color_picker("品牌主色", value=b.get("color", "#1A1A1A"))
                 c1, c2 = st.columns(2)
                 save   = c1.form_submit_button("保存", use_container_width=True, type="primary")
@@ -182,7 +203,10 @@ with tab_list:
                 else:
                     update_brand(edit_id, name=new_name.strip(), industry=new_industry,
                                  description=new_desc.strip(), focus=new_focus.strip(),
-                                 color=new_color)
+                                 color=new_color,
+                                 tone="" if new_tone == "（未设置）" else new_tone,
+                                 brand_words=parse_keywords(new_brand_words),
+                                 forbidden_words=parse_keywords(new_forbidden))
                     st.session_state["bm_edit_id"] = None
                     st.success("已保存更改！")
                     st.rerun()
@@ -210,6 +234,12 @@ with tab_new:
         industry    = st.selectbox("行业分类 *", INDUSTRY_OPTIONS)
         description = st.text_area("品牌简介", placeholder="品牌定位、核心产品线、目标客群……", height=100)
         focus       = st.text_input("分析重点（逗号分隔）", placeholder="例：年轻化、无糖健康、渠道扩张")
+        tone        = st.selectbox("品牌调性（联动内容生成风格）", ["（未设置）"] + TONE_OPTIONS)
+        nc1, nc2 = st.columns(2)
+        with nc1:
+            cw_brand_words = st.text_area("品牌词库（选填）", height=80, placeholder="每行一个，如：灵感之茶")
+        with nc2:
+            cw_forbidden = st.text_area("禁用词库（选填）", height=80, placeholder="每行一个，如：最便宜")
         color       = st.color_picker("品牌主色（侧边栏标识色）", value="#1A1A1A")
         submitted   = st.form_submit_button("➕ 保存并创建品牌", type="primary", use_container_width=True)
 
@@ -219,7 +249,10 @@ with tab_new:
         else:
             try:
                 new_id = create_brand(name.strip(), industry, description.strip(),
-                                      focus.strip(), color)
+                                      focus.strip(), color,
+                                      tone="" if tone == "（未设置）" else tone,
+                                      brand_words=parse_keywords(cw_brand_words),
+                                      forbidden_words=parse_keywords(cw_forbidden))
                 st.success(f"品牌「{name.strip()}」已创建！")
                 st.info("💡 切换到该品牌后，点「📚 知识库」标签上传文档。")
                 st.rerun()
@@ -270,16 +303,32 @@ with tab_kb:
 
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
-    # ── Existing sources ──────────────────────────────────────────────────
+    # ── Existing sources（F3 · 文件详情：文件名 / 大小 / 上传时间）──────────────
     if sources:
         st.markdown("**已有文件来源**")
+
+        def _fmt_size(n):
+            try:
+                n = int(n)
+            except Exception:
+                return "—"
+            if n <= 0:
+                return "—"
+            for unit in ("B", "KB", "MB"):
+                if n < 1024:
+                    return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+                n /= 1024
+            return f"{n:.1f} GB"
+
         for src in sources:
             col_src, col_del = st.columns([6, 1])
             with col_src:
+                _size = _fmt_size(src.get("size", 0))
+                _added = src.get("added_at") or "—"
                 st.markdown(
                     f'<div class="kb-source-row">'
                     f'<span class="kb-source-name">📄 {src["source"]}</span>'
-                    f'<span class="kb-source-meta">{src["chunks"]} 块</span>'
+                    f'<span class="kb-source-meta">{src["chunks"]} 块 · {_size} · 上传于 {_added}</span>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )

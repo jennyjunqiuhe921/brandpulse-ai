@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # ── 平台创作指引 ──────────────────────────────────────────────────────────────
 # B6：覆盖社媒 + 电商详情页 + 朋友圈 + 外卖平台
 PLATFORM_GUIDES = {
@@ -24,11 +26,14 @@ def build_system(
     versions_per_platform: int = 3,
     word_limit: str = "",
     region: str = "",
+    brand_words: list | None = None,
+    forbidden_words: list | None = None,
 ) -> str:
     """构造内容生成 system prompt。
 
     versions_per_platform: B3 — 每个平台输出的差异化版本数（3-5）
     word_limit / region:   B1 高级模式可选约束，留空则不加约束
+    brand_words/forbidden_words: F1 — 品牌词库（优先融入）/ 禁用词库（严禁出现）
     """
     n = max(2, min(int(versions_per_platform or 3), 5))
 
@@ -37,6 +42,12 @@ def build_system(
         extra_constraints.append(f"- 字数限制：{word_limit}")
     if region:
         extra_constraints.append(f"- 地域限定：内容需贴合「{region}」地区用户语境与表达习惯")
+    if brand_words:
+        extra_constraints.append(
+            f"- 品牌词库（请在合适处自然融入以下品牌专有词/主张，至少覆盖部分）：{ '、'.join(brand_words) }")
+    if forbidden_words:
+        extra_constraints.append(
+            f"- 禁用词库（严禁在任何文案中出现以下词汇）：{ '、'.join(forbidden_words) }")
     extra_block = ("\n" + "\n".join(extra_constraints)) if extra_constraints else ""
 
     return f"""你是 {brand_name} 的品牌内容创作专家，深度理解品牌调性。

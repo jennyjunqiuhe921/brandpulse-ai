@@ -37,10 +37,15 @@ def ingest_text(brand_key: str, text: str, source: str) -> int:
 
     collection = get_collection(brand_key)
     ids = [f"{source}_{i}" for i in range(len(chunks))]
+    # F3 · 记录文件元数据：字节大小 + 上传时间
+    import datetime as _dt
+    size_bytes = len(text.encode("utf-8"))
+    added_at = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     collection.upsert(
         documents=chunks,
         ids=ids,
-        metadatas=[{"source": source, "brand": brand_key} for _ in chunks],
+        metadatas=[{"source": source, "brand": brand_key,
+                    "size": size_bytes, "added_at": added_at} for _ in chunks],
     )
     return len(chunks)
 
@@ -65,11 +70,19 @@ def get_sources(brand_key: str) -> list[dict]:
     if coll.count() == 0:
         return []
     result = coll.get(include=["metadatas"])
-    counts: dict[str, int] = {}
+    agg: dict[str, dict] = {}
     for m in result["metadatas"]:
         src = m.get("source", "(unknown)")
-        counts[src] = counts.get(src, 0) + 1
-    return [{"source": s, "chunks": c} for s, c in sorted(counts.items())]
+        if src not in agg:
+            agg[src] = {"source": src, "chunks": 0, "size": m.get("size", 0),
+                        "added_at": m.get("added_at", "")}
+        agg[src]["chunks"] += 1
+        # size/added_at 同源一致，取已有值即可
+        if not agg[src]["size"]:
+            agg[src]["size"] = m.get("size", 0)
+        if not agg[src]["added_at"]:
+            agg[src]["added_at"] = m.get("added_at", "")
+    return [agg[s] for s in sorted(agg.keys())]
 
 
 def delete_source(brand_key: str, source: str) -> int:

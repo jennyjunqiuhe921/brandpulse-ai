@@ -29,6 +29,15 @@ def run(
     brand_focus = BRAND_FOCUS[brand_key]
     tone = TONE_MAP.get(tone_key, tone_key)
 
+    # F1/F2 · 读取品牌词库、禁用词库与品牌调性
+    from config.brand_manager import get_brand
+    _b = get_brand(brand_key) or {}
+    brand_words = _b.get("brand_words", [])
+    forbidden_words = _b.get("forbidden_words", [])
+    brand_tone_enum = _b.get("tone", "")
+    if brand_tone_enum:
+        tone = f"{brand_tone_enum}；{tone}"
+
     platform_instructions = "\n".join(
         f"**{p}**：{PLATFORM_GUIDES.get(p, '')}" for p in platforms
     )
@@ -40,6 +49,8 @@ def run(
         versions_per_platform=versions_per_platform,
         word_limit=word_limit,
         region=region,
+        brand_words=brand_words,
+        forbidden_words=forbidden_words,
     )
 
     n_ver = max(2, min(int(versions_per_platform or 3), 5))

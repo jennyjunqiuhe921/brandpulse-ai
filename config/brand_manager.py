@@ -15,6 +15,12 @@ INDUSTRY_OPTIONS = [
     "汽车出行", "金融服务", "文化娱乐", "其他",
 ]
 
+# F2 · 品牌调性枚举（联动影响内容生成风格）
+TONE_OPTIONS = [
+    "高端精致", "活泼年轻", "国潮文化", "专业严谨",
+    "温暖治愈", "酷潮态度", "亲民接地气", "简约极简",
+]
+
 
 def _brand_path(brand_id: str) -> Path:
     return BRANDS_DIR / f"{brand_id}.json"
@@ -57,7 +63,9 @@ def _safe_slug(name: str) -> str:
     return slug or "brand"  # fallback if name is entirely non-ASCII
 
 
-def create_brand(name: str, industry: str, description: str, focus: str, color: str = "#1A1A1A") -> str:
+def create_brand(name: str, industry: str, description: str, focus: str, color: str = "#1A1A1A",
+                 tone: str = "", brand_words: list | None = None,
+                 forbidden_words: list | None = None) -> str:
     """Create a new brand. Returns the new brand ID."""
     slug = _safe_slug(name)
     brand_id = f"{slug}_{uuid.uuid4().hex[:6]}"
@@ -69,6 +77,9 @@ def create_brand(name: str, industry: str, description: str, focus: str, color: 
         "focus": focus,
         "collection_name": f"pinsight_{brand_id}",
         "color": color,
+        "tone": tone,
+        "brand_words": brand_words or [],
+        "forbidden_words": forbidden_words or [],
         "is_demo": False,
         "created_at": datetime.now().isoformat(),
     }
@@ -84,7 +95,8 @@ def update_brand(brand_id: str, **kwargs):
     if data is None:
         raise ValueError(f"品牌不存在：{brand_id}")
     # Demo brands can be edited like any other brand
-    allowed = {"name", "industry", "description", "focus", "color"}
+    allowed = {"name", "industry", "description", "focus", "color",
+               "tone", "brand_words", "forbidden_words"}
     for k, v in kwargs.items():
         if k in allowed and v is not None:
             data[k] = v
