@@ -7,10 +7,39 @@ import os
 import json
 from pathlib import Path
 
+from sqlalchemy import inspect, text
+
 from db.engine import engine, get_session, Base
 from db import models  # noqa: F401  确保模型注册到 Base
-from db.models import Tenant, User, Brand, ROLE_ADMIN
+from db.models import (
+    Tenant, User, Brand, Message, ROLE_ADMIN,
+    MSG_SYSTEM, MSG_TASK, MSG_RISK,
+)
 from auth.security import hash_password
+
+# 轻量迁移：为已存在的表补加新列（SQLite/Postgres 均支持 ADD COLUMN）
+_NEW_COLUMNS = {
+    "tenants": [("ai_daily_quota", "INTEGER", "1000")],
+    "content_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "geo_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "sentiment_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "collect_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+}
+
+
+def _ensure_columns() -> None:
+    """为现有表补加新增列，幂等。"""
+    insp = inspect(engine)
+    existing_tables = set(insp.get_table_names())
+    with engine.begin() as conn:
+        for table, cols in _NEW_COLUMNS.items():
+            if table not in existing_tables:
+                continue  # create_all 会建新表，无需迁移
+            have = {c["name"] for c in insp.get_columns(table)}
+            for name, coltype, default in cols:
+                if name not in have:
+                    conn.execute(text(
+                        f"ALTER TABLE {table} ADD COLUMN {name} {coltype} DEFAULT {default}"))
 
 _BRANDS_DIR = Path(__file__).parent.parent / "brands"
 
@@ -20,6 +49,7 @@ _DEFAULT_ADMIN_PASS = os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123")
 
 def init_db() -> None:
     Base.metadata.create_all(engine)
+    _ensure_columns()
     with get_session() as s:
         # 1. 默认租户
         tenant = s.query(Tenant).first()
@@ -62,6 +92,20 @@ def init_db() -> None:
                     forbidden_words=d.get("forbidden_words", []),
                     is_demo=bool(d.get("is_demo", False)),
                 ))
+
+        # 4. 种子消息（仅当库内无消息时）
+        if s.query(Message).count() == 0:
+            s.add(Message(tenant_id=tenant.id, user_id=None, category=MSG_SYSTEM,
+                          title="欢迎使用智营AI · 一体化营销工作台",
+                          body="系统已就绪。审批、风险、超时任务等事件会自动推送至此。",
+                          level="info"))
+            s.add(Message(tenant_id=tenant.id, user_id=None, category=MSG_TASK,
+                          title="您有 2 项内容任务待处理",
+                          body="请在「内容工坊」查看草稿与待审批任务。", level="info"))
+            s.add(Message(tenant_id=tenant.id, user_id=None, category=MSG_RISK,
+                          title="舆情风险提醒（演示）",
+                          body="检测到 1 条 3 级负面舆情，建议尽快在「舆情分析」处置。",
+                          level="warn"))
 
 
 if __name__ == "__main__":

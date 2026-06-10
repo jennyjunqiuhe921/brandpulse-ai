@@ -22,6 +22,7 @@ class Tenant(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     industry: Mapped[str] = mapped_column(String(60), default="")
     plan: Mapped[str] = mapped_column(String(30), default="基础执行版")
+    ai_daily_quota: Mapped[int] = mapped_column(Integer, default=1000)  # AI 单日调用额度
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -70,6 +71,13 @@ class Brand(Base):
 
 
 # ── 通用任务基字段（用 mixin 风格手写到每表）────────────────────────────────
+# 任务通用字段常量（S1 任务通用规则）
+PRIORITY_URGENT = "紧急"
+PRIORITY_NORMAL = "普通"
+PRIORITY_LOW = "低"
+PRIORITIES = [PRIORITY_URGENT, PRIORITY_NORMAL, PRIORITY_LOW]
+
+
 class ContentTask(Base):
     __tablename__ = "content_tasks"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
@@ -81,6 +89,10 @@ class ContentTask(Base):
     status: Mapped[str] = mapped_column(String(20), default="草稿")
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
     output: Mapped[str] = mapped_column(Text, default="")
+    # S1 任务通用字段
+    priority: Mapped[str] = mapped_column(String(10), default=PRIORITY_NORMAL)
+    task_tags: Mapped[list] = mapped_column(JSON, default=list)
+    due_date: Mapped[str] = mapped_column(String(20), default="")
     created_at: Mapped[str] = mapped_column(String(20), default="")
     updated_at: Mapped[str] = mapped_column(String(20), default="")
 
@@ -96,6 +108,9 @@ class GeoTask(Base):
     status: Mapped[str] = mapped_column(String(20), default="已完成")
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
     summary: Mapped[str] = mapped_column(Text, default="")
+    priority: Mapped[str] = mapped_column(String(10), default=PRIORITY_NORMAL)
+    task_tags: Mapped[list] = mapped_column(JSON, default=list)
+    due_date: Mapped[str] = mapped_column(String(20), default="")
     created_at: Mapped[str] = mapped_column(String(20), default="")
 
 
@@ -110,6 +125,9 @@ class SentimentTask(Base):
     source: Mapped[str] = mapped_column(String(60), default="")
     summary: Mapped[str] = mapped_column(Text, default="")
     tags: Mapped[list] = mapped_column(JSON, default=list)
+    priority: Mapped[str] = mapped_column(String(10), default=PRIORITY_NORMAL)
+    task_tags: Mapped[list] = mapped_column(JSON, default=list)
+    due_date: Mapped[str] = mapped_column(String(20), default="")
     created_at: Mapped[str] = mapped_column(String(20), default="")
 
 
@@ -124,6 +142,9 @@ class CollectTask(Base):
     config: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="已完成")
     result_count: Mapped[int] = mapped_column(Integer, default=0)
+    priority: Mapped[str] = mapped_column(String(10), default=PRIORITY_NORMAL)
+    task_tags: Mapped[list] = mapped_column(JSON, default=list)
+    due_date: Mapped[str] = mapped_column(String(20), default="")
     created_at: Mapped[str] = mapped_column(String(20), default="")
 
 
@@ -136,4 +157,45 @@ class AuditLog(Base):
     username: Mapped[str] = mapped_column(String(60), default="")
     action: Mapped[str] = mapped_column(String(60), default="")
     target: Mapped[str] = mapped_column(String(200), default="")
+    ts: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# ── 全局消息中心（S1-2）──────────────────────────────────────────────────────
+# 消息分类
+MSG_APPROVAL = "审批通知"
+MSG_TASK = "任务提醒"
+MSG_RISK = "风险告警"
+MSG_COMPETITOR = "竞品异动"
+MSG_GEO = "GEO指标异常"
+MSG_REPORT = "报表推送"
+MSG_SYSTEM = "系统公告"
+MSG_TYPES = [MSG_APPROVAL, MSG_TASK, MSG_RISK, MSG_COMPETITOR, MSG_GEO, MSG_REPORT, MSG_SYSTEM]
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)  # None=全员
+    category: Mapped[str] = mapped_column(String(20), default=MSG_SYSTEM, index=True)
+    title: Mapped[str] = mapped_column(String(200), default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    level: Mapped[str] = mapped_column(String(10), default="info")  # info/warn/danger
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    link: Mapped[str] = mapped_column(String(120), default="")  # 跳转页面
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# ── AI 网关调用日志（S1-5）──────────────────────────────────────────────────
+class AiCallLog(Base):
+    __tablename__ = "ai_call_logs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    module: Mapped[str] = mapped_column(String(40), default="")       # 文案/GEO/舆情/选品/竞品...
+    prompt_category: Mapped[str] = mapped_column(String(40), default="")
+    model: Mapped[str] = mapped_column(String(60), default="")
+    tokens: Mapped[int] = mapped_column(Integer, default=0)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    success: Mapped[bool] = mapped_column(Boolean, default=True)
     ts: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

@@ -766,6 +766,7 @@ _NAV_PAGES = [
     ("📰", "舆情分析",  "7_舆情分析.py"),
     ("🛡️", "合规卫士",  "8_合规卫士.py"),
     ("✅", "合规自查",  "9_合规自查.py"),
+    ("🔔", "消息中心",  "10_消息中心.py"),
 ]
 
 
@@ -880,6 +881,14 @@ def render() -> str:
             unsafe_allow_html=True,
         )
 
+    # ── 顶部导航栏 + 底部状态栏（S1-1 标准页面范式）──────────────────────────────
+    try:
+        from utils.ui import render_top_bar, render_status_bar
+        render_top_bar(BRAND_DISPLAY_NAMES.get(selected, selected))
+        render_status_bar()  # 固定定位，显示在每个页面底部
+    except Exception:
+        pass
+
     # ── Demo 模式软提示横条（页面顶部，不干扰操作）──────────────────────────────
     if DEMO_MODE:
         st.markdown(
@@ -891,3 +900,12 @@ def render() -> str:
         )
 
     return selected
+
+
+def render_footer() -> None:
+    """页面底部状态栏（S1-1）。建议在每页末尾调用。"""
+    try:
+        from utils.ui import render_status_bar
+        render_status_bar()
+    except Exception:
+        pass

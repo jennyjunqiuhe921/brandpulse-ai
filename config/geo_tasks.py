@@ -14,18 +14,23 @@ def _to_dict(t: GeoTask) -> dict:
     return {
         "id": t.id, "brand": t.brand, "period": t.period, "region": t.region,
         "status": t.status, "meta": t.meta or {}, "summary": t.summary or "",
+        "priority": getattr(t, "priority", "普通") or "普通",
+        "task_tags": getattr(t, "task_tags", []) or [],
+        "due_date": getattr(t, "due_date", "") or "",
         "created_at": t.created_at or "",
     }
 
 
 def add_record(brand_key: str, period: str, region: str, meta: dict,
-               summary: str = "", status: str = "已完成") -> str:
+               summary: str = "", status: str = "已完成",
+               priority: str = "普通", task_tags: list | None = None, due_date: str = "") -> str:
     tid = "geo_" + uuid.uuid4().hex[:8]
     with get_session() as s:
         s.add(GeoTask(
             id=tid, tenant_id=ctx.tenant_id(), owner_id=ctx.user_id(),
             brand=brand_key, period=period, region=region, status=status,
             meta=meta or {}, summary=summary or "",
+            priority=priority, task_tags=task_tags or [], due_date=due_date,
             created_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
         ))
     return tid

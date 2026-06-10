@@ -14,18 +14,24 @@ def _to_dict(t: CollectTask) -> dict:
     return {
         "id": t.id, "brand": t.brand, "platform": t.platform, "schedule": t.schedule,
         "config": t.config or {}, "status": t.status,
-        "result_count": t.result_count, "created_at": t.created_at or "",
+        "result_count": t.result_count,
+        "priority": getattr(t, "priority", "普通") or "普通",
+        "task_tags": getattr(t, "task_tags", []) or [],
+        "due_date": getattr(t, "due_date", "") or "",
+        "created_at": t.created_at or "",
     }
 
 
 def add_task(brand_key: str, platform: str, schedule: str, config: dict,
-             status: str = "已完成", result_count: int = 0) -> str:
+             status: str = "已完成", result_count: int = 0,
+             priority: str = "普通", task_tags: list | None = None, due_date: str = "") -> str:
     tid = "col_" + uuid.uuid4().hex[:8]
     with get_session() as s:
         s.add(CollectTask(
             id=tid, tenant_id=ctx.tenant_id(), owner_id=ctx.user_id(),
             brand=brand_key, platform=platform, schedule=schedule,
             config=config or {}, status=status, result_count=result_count,
+            priority=priority, task_tags=task_tags or [], due_date=due_date,
             created_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
         ))
     return tid

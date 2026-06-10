@@ -17,6 +17,7 @@ _pages = [
     st.Page("pages/7_舆情分析.py",  title="舆情分析",  icon="📰"),
     st.Page("pages/8_合规卫士.py",  title="合规卫士",  icon="🛡️"),
     st.Page("pages/9_合规自查.py",  title="合规自查",  icon="✅"),
+    st.Page("pages/10_消息中心.py", title="消息中心",  icon="🔔"),
 ]
 # 仅企业领导可见账号管理
 if current_role() == ROLE_ADMIN:

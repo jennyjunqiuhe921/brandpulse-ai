@@ -28,7 +28,16 @@ def _get_openai_client():
     return _openai_client
 
 
-def chat(system: str, user: str, max_tokens: int = 2048) -> str:
+# S1-5 AI 网关：调用标签（由 ai_gateway.gateway_chat 设置，用于日志归类）
+_current_tag = {"module": "", "prompt_category": ""}
+
+
+def set_call_tag(module: str = "", prompt_category: str = "") -> None:
+    _current_tag["module"] = module
+    _current_tag["prompt_category"] = prompt_category
+
+
+def _do_chat(system: str, user: str, max_tokens: int) -> str:
     if DEMO_MODE:
         return _demo_response(system, user)
 
@@ -53,6 +62,31 @@ def chat(system: str, user: str, max_tokens: int = 2048) -> str:
         messages=[{"role": "user", "content": user}],
     )
     return response.content[0].text
+
+
+def chat(system: str, user: str, max_tokens: int = 2048) -> str:
+    """对外统一入口：执行调用并写入 AI 网关日志（尽力而为，不阻断主流程）。"""
+    import time
+    t0 = time.time()
+    ok = True
+    try:
+        return _do_chat(system, user, max_tokens)
+    except Exception:
+        ok = False
+        raise
+    finally:
+        try:
+            from core import ai_gateway
+            model = "demo" if DEMO_MODE else (OPENAI_MODEL if OPENAI_API_KEY else CLAUDE_MODEL)
+            ai_gateway.record_call(
+                module=_current_tag.get("module", ""),
+                prompt_category=_current_tag.get("prompt_category", ""),
+                model=model, latency_ms=int((time.time() - t0) * 1000), success=ok,
+            )
+        except Exception:
+            pass
+        _current_tag["module"] = ""
+        _current_tag["prompt_category"] = ""
 
 
 def build_rag_context(chunks: list[dict]) -> str:

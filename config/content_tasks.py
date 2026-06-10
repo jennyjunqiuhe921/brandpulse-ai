@@ -20,11 +20,15 @@ def _to_dict(t: ContentTask) -> dict:
         "id": t.id, "brand": t.brand, "title": t.title,
         "platforms": t.platforms or [], "status": t.status,
         "meta": t.meta or {}, "output": t.output or "",
+        "priority": getattr(t, "priority", "普通") or "普通",
+        "task_tags": getattr(t, "task_tags", []) or [],
+        "due_date": getattr(t, "due_date", "") or "",
         "created_at": t.created_at or "", "updated_at": t.updated_at or "",
     }
 
 
-def add_task(brand_key: str, title: str, platforms: list, meta: dict, output: str = "") -> str:
+def add_task(brand_key: str, title: str, platforms: list, meta: dict, output: str = "",
+             priority: str = "普通", task_tags: list | None = None, due_date: str = "") -> str:
     tid = "ct_" + uuid.uuid4().hex[:8]
     now = _now()
     with get_session() as s:
@@ -32,6 +36,7 @@ def add_task(brand_key: str, title: str, platforms: list, meta: dict, output: st
             id=tid, tenant_id=ctx.tenant_id(), owner_id=ctx.user_id(),
             brand=brand_key, title=title or "(未命名文案)", platforms=platforms or [],
             status="草稿", meta=meta or {}, output=output or "",
+            priority=priority, task_tags=task_tags or [], due_date=due_date,
             created_at=now, updated_at=now,
         ))
     return tid

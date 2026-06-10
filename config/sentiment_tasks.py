@@ -12,18 +12,24 @@ def _to_dict(t: SentimentTask) -> dict:
     return {
         "id": t.id, "brand": t.brand, "risk_level": t.risk_level,
         "risk_label": t.risk_label, "source": t.source, "summary": t.summary or "",
-        "tags": t.tags or [], "created_at": t.created_at or "",
+        "tags": t.tags or [],
+        "priority": getattr(t, "priority", "普通") or "普通",
+        "task_tags": getattr(t, "task_tags", []) or [],
+        "due_date": getattr(t, "due_date", "") or "",
+        "created_at": t.created_at or "",
     }
 
 
 def add_record(brand_key: str, risk_level: int, risk_label: str, source: str,
-               summary: str, tags: list | None = None) -> str:
+               summary: str, tags: list | None = None,
+               priority: str = "普通", task_tags: list | None = None, due_date: str = "") -> str:
     tid = "sent_" + uuid.uuid4().hex[:8]
     with get_session() as s:
         s.add(SentimentTask(
             id=tid, tenant_id=ctx.tenant_id(), owner_id=ctx.user_id(),
             brand=brand_key, risk_level=int(risk_level), risk_label=risk_label,
             source=source, summary=summary, tags=tags or [],
+            priority=priority, task_tags=task_tags or [], due_date=due_date,
             created_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
         ))
     return tid
