@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PinSight_AI - AI品牌与市场增长工作台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 头部 */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #1F4E79;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        
+        /* 功能卡片 */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            color: #1F4E79;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .feature-tag {
+            display: inline-block;
+            background: #EAF2F8;
+            color: #2F5597;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+        
+        .feature-tag.premium {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* 工作流程 */
+        .workflow {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .workflow h2 {
+            color: #1F4E79;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .workflow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+        
+        .step-title {
+            color: #1F4E79;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .step-desc {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+        }
+        
+        /* 案例展示 */
+        .case-study {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .case-study h2 {
+            color: #1F4E79;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .brand-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .brand-tab {
+            padding: 12px 30px;
+            border: 2px solid #EAF2F8;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-size: 1em;
+        }
+        
+        .brand-tab:hover, .brand-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .brand-content {
+            display: none;
+        }
+        
+        .brand-content.active {
+            display: block;
+        }
+        
+        .analysis-item {
+            background: #F8FAFC;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .analysis-item h4 {
+            color: #1F4E79;
+            margin-bottom: 10px;
+        }
+        
+        .analysis-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        /* 数据展示 */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .metric-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* CTA */
+        .cta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+        
+        .cta h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+        
+        .cta p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: transform 0.3s;
+        }
+        
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            opacity: 0.8;
+        }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .workflow-steps {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🏢 PinSight_AI</h1>
+            <p>AI品牌与市场增长工作台 · 帮助企业轻松获客</p>
+            <span class="badge">✨ Demo 版本演示</span>
+        </div>
+        
+        <!-- 核心数据 -->
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-value">6+</div>
+                <div class="metric-label">核心功能模块</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">5min</div>
+                <div class="metric-label">快速品牌分析</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">3x</div>
+                <div class="metric-label">内容产出效率</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">100%</div>
+                <div class="metric-label">合规检查覆盖</div>
+            </div>
+        </div>
+        
+        <!-- 工作流程 -->
+        <div class="workflow">
+            <h2>🚀 如何使用</h2>
+            <div class="workflow-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">选择品牌</div>
+                    <div class="step-desc">输入企业信息</div>
+                </div>
+                <span class="arrow">→</span>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">AI 分析</div>
+                    <div class="step-desc">自动深度分析</div>
+                </div>
+                <span class="arrow">→</span>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">生成内容</div>
+                    <div class="step-desc">一键生成文案</div>
+                </div>
+                <span class="arrow">→</span>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">合规审查</div>
+                    <div class="step-desc">智能风险检测</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 功能卡片 -->
+        <div class="features">
+            <div class="feature-card" onclick="openModal('brand')">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">品牌分析</div>
+                <div class="feature-desc">
+                    深度分析品牌定位、调性、目标客户与竞争优势，自动生成品牌诊断报告
+                </div>
+                <span class="feature-tag">核心功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('product')">
+                <div class="feature-icon">📦</div>
+                <div class="feature-title">产品分析</div>
+                <div class="feature-desc">
+                    分析产品卖点、用户痛点、竞品对比，自动生成产品价值主张
+                </div>
+                <span class="feature-tag">核心功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('market')">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">市场定位</div>
+                <div class="feature-desc">
+                    STP/SWOT分析，精准定位目标客群与差异化竞争策略
+                </div>
+                <span class="feature-tag">核心功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('geo')">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">GEO分析</div>
+                <div class="feature-desc">
+                    AI搜索可见度分析，优化品牌在ChatGPT等AI搜索中的表现
+                </div>
+                <span class="feature-tag premium">增强功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('content')">
+                <div class="feature-icon">✍️</div>
+                <div class="feature-title">内容工坊</div>
+                <div class="feature-desc">
+                    一键生成小红书、抖音、公众号等多平台营销文案
+                </div>
+                <span class="feature-tag">核心功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('sentiment')">
+                <div class="feature-icon">📰</div>
+                <div class="feature-title">舆情分析</div>
+                <div class="feature-desc">
+                    实时监测品牌口碑，识别风险等级与用户关注点
+                </div>
+                <span class="feature-tag premium">增强功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('compliance')">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">合规卫士</div>
+                <div class="feature-desc">
+                    自动检测虚假宣传、绝对化用语、版权风险等合规问题
+                </div>
+                <span class="feature-tag">核心功能</span>
+            </div>
+            
+            <div class="feature-card" onclick="openModal('competitor')">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-title">竞品分析</div>
+                <div class="feature-desc">
+                    多维度对比竞品策略，洞察市场机会与威胁
+                </div>
+                <span class="feature-tag premium">增强功能</span>
+            </div>
+        </div>
+        
+        <!-- 案例展示 -->
+        <div class="case-study">
+            <h2>💼 案例演示：喜茶品牌分析</h2>
+            
+            <div class="brand-tabs">
+                <button class="brand-tab active" onclick="showBrand('analysis')">品牌分析</button>
+                <button class="brand-tab" onclick="showBrand('copywriting')">内容生成</button>
+                <button class="brand-tab" onclick="showBrand('geo')">GEO优化</button>
+            </div>
+            
+            <div id="analysis" class="brand-content active">
+                <div class="analysis-item">
+                    <h4>📍 品牌定位</h4>
+                    <p>高端新茶饮品牌，主打"灵感之茶"，定位年轻都市白领，追求品质生活方式的消费者群体</p>
+                </div>
+                <div class="analysis-item">
+                    <h4>🎨 品牌调性</h4>
+                    <p>简约时尚、高端精致、年轻活力、跨界创新</p>
+                </div>
+                <div class="analysis-item">
+                    <h4>👥 目标客群</h4>
+                    <p>22-35岁都市白领、年轻中产、追求品质的Z世代</p>
+                </div>
+                <div class="analysis-item">
+                    <h4>💪 竞争优势</h4>
+                    <p>产品创新力强、品牌设计独特、数字化运营成熟、跨界联名频繁</p>
+                </div>
+            </div>
+            
+            <div id="copywriting" class="brand-content">
+                <div class="analysis-item">
+                    <h4>📱 小红书文案</h4>
+                    <p>✨ 喝一口就是春天的味道！喜茶新品「多肉青提」也太好喝了吧～<br>清新的青提果香搭配绵密芝士，一口沦陷！拍照也是绝绝子📸</p>
+                </div>
+                <div class="analysis-item">
+                    <h4>🎬 短视频脚本</h4>
+                    <p>开场：特写镜头展示产品颜值<br>中段：展示制作过程，添加配料<br>结尾：模特品鉴，表情满足，配合BGM高潮</p>
+                </div>
+                <div class="analysis-item">
+                    <h4>📢 推广标语</h4>
+                    <p>"灵感之茶，遇见美好" / "一口喜茶，满满灵感"</p>
+                </div>
+            </div>
+            
+            <div id="geo" class="brand-content">
+                <div class="analysis-item">
+                    <h4>🔍 AI搜索可见度评分</h4>
+                    <p>8.5/10 — 品牌在AI搜索中曝光度较高，但产品信息有待完善</p>
+                </div>
+                <div class="analysis-item">
+                    <h4>📝 优化建议</h4>
+                    <p>1. 建议在官网增加FAQ页面，解答常见问题<br>2. 建议发布更多产品成分、工艺介绍文章<br>3. 建议在权威媒体发布品牌故事内容</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CTA -->
+        <div class="cta">
+            <h2>想让团队也用上这个工具？</h2>
+            <p>部署到云端，团队成员随时随地访问</p>
+            <a href="DEPLOY_TO_STREAMLIT_CLOUD.md" class="cta-button">📖 查看部署指南</a>
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>PinSight_AI · AI品牌与市场增长工作台</p>
+            <p style="margin-top: 10px;">基于 AI + RAG 技术构建</p>
+        </div>
+    </div>
+    
+    <!-- 弹窗 -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 品牌标签切换
+        function showBrand(id) {
+            document.querySelectorAll('.brand-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.brand-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // 弹窗内容
+        const modalContent = {
+            brand: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">🔍 品牌分析</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">输入</h4>
+                <p style="color: #666; margin-bottom: 15px;">企业官网、官方介绍、官方社媒内容</p>
+                <h4 style="color: #667eea; margin-bottom: 10px;">输出</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>品牌定位分析</li>
+                    <li>品牌关键词提取</li>
+                    <li>品牌调性评估</li>
+                    <li>目标客户画像</li>
+                    <li>品牌优势与风险提示</li>
+                </ul>
+                <h4 style="color: #667eea; margin: 20px 0 10px;">技术亮点</h4>
+                <p style="color: #666;">基于 RAG 技术，实时检索最新品牌信息，AI 智能分析，确保分析结果准确且具有时效性</p>
+            `,
+            product: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">📦 产品分析</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">输入</h4>
+                <p style="color: #666; margin-bottom: 15px;">选定品牌的一个代表性产品或产品线</p>
+                <h4 style="color: #667eea; margin-bottom: 10px;">输出</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>产品功能拆解</li>
+                    <li>用户痛点匹配</li>
+                    <li>核心卖点提炼</li>
+                    <li>使用场景分析</li>
+                    <li>竞品参考对比</li>
+                </ul>
+            `,
+            market: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">🎯 市场定位</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">输入</h4>
+                <p style="color: #666; margin-bottom: 15px;">品牌信息、产品信息、目标消费者和渠道信息</p>
+                <h4 style="color: #667eea; margin-bottom: 10px;">输出</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>目标客群分析</li>
+                    <li>细分市场定位</li>
+                    <li>STP分析框架</li>
+                    <li>SWOT分析</li>
+                    <li>差异化定位建议</li>
+                    <li>渠道建议</li>
+                </ul>
+            `,
+            geo: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">🌐 GEO/AI搜索可见度分析</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">什么是GEO？</h4>
+                <p style="color: #666; margin-bottom: 15px;">Generative Engine Optimization - 优化品牌在AI搜索（如ChatGPT、Claude）中的可见度</p>
+                <h4 style="color: #667eea; margin-bottom: 10px;">分析维度</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>AI回答中品牌出现频率</li>
+                    <li>品牌描述准确性</li>
+                    <li>竞品对比分析</li>
+                    <li>内容补强建议</li>
+                </ul>
+                <h4 style="color: #ff6b6b; margin-top: 15px;">⚠️ 合规要求</h4>
+                <p style="color: #666;">只优化真实信息，不使用刷屏、灌水、伪造等手段</p>
+            `,
+            content: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">✍️ 内容工坊</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">支持的平台</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>📱 小红书文案</li>
+                    <li>🎬 抖音/短视频脚本</li>
+                    <li>📝 公众号推文</li>
+                    <li>📣 海报标题</li>
+                    <li>👥 KOL/KOC brief</li>
+                </ul>
+                <h4 style="color: #667eea; margin: 20px 0 10px;">输入参数</h4>
+                <p style="color: #666;">产品名称、目标用户、平台类型、品牌语气、推广目标</p>
+                <h4 style="color: #667eea; margin: 20px 0 10px;">自动合规</h4>
+                <p style="color: #666;">生成内容自动通过合规审查，确保符合平台规范</p>
+            `,
+            sentiment: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">📰 舆情分析</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">数据来源</h4>
+                <p style="color: #666; margin-bottom: 15px;">公开评论、新闻摘要、社媒样本</p>
+                <h4 style="color: #667eea; margin-bottom: 10px;">分析维度</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>正负面倾向识别</li>
+                    <li>核心关注点归纳</li>
+                    <li>风险等级评估</li>
+                    <li>典型疑虑挖掘</li>
+                    <li>回应建议生成</li>
+                </ul>
+            `,
+            compliance: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">🛡️ 合规卫士</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">检测类型</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>❌ 绝对化用语（最好、第一、顶级）</li>
+                    <li>❌ 虚假宣传风险</li>
+                    <li>❌ 贬低竞品表述</li>
+                    <li>❌ 版权侵权风险</li>
+                    <li>❌ 隐私泄露风险</li>
+                    <li>❌ 品牌语气偏差</li>
+                </ul>
+                <h4 style="color: #667eea; margin: 20px 0 10px;">输出</h4>
+                <p style="color: #666;">详细的合规报告 + 具体的修改建议</p>
+            `,
+            competitor: `
+                <h2 style="color: #1F4E79; margin-bottom: 20px;">🔄 竞品分析</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">分析范围</h4>
+                <p style="color: #666; margin-bottom: 15px;">选择1-2个可比品牌或替代选择</p>
+                <h4 style="color: #667eea; margin-bottom: 10px;">对比维度</h4>
+                <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                    <li>品牌定位对比</li>
+                    <li>产品卖点差异</li>
+                    <li>渠道表达策略</li>
+                    <li>内容营销方式</li>
+                    <li>市场表现评估</li>
+                </ul>
+            `
+        };
+        
+        function openModal(feature) {
+            document.getElementById('modal-body').innerHTML = modalContent[feature];
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        // 点击弹窗外部关闭
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -22,8 +22,8 @@ CHANNELS = ["全渠道", "小红书/微博", "大众点评", "美团", "抖音",
 st.markdown(
     """
 <div class="page-header">
-  <h1 class="page-title">舆情分析</h1>
-  <p class="page-desc">五级风险预警 · 行业专属风险标签 · 标准化回应话术库，识别情感、关注点与危机信号</p>
+  <h1 class="page-title">舆情中心</h1>
+  <p class="page-desc">监测研判 + 工单处置一体：五级风险预警 · 回应话术库 · 分级工单 · 负面案例库</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -31,7 +31,7 @@ st.markdown(
 
 brand_name = BRAND_DISPLAY_NAMES[brand]
 
-tab_analyze, tab_history = st.tabs(["📰 舆情分析", "📜 历史记录"])
+tab_analyze, tab_tickets, tab_history = st.tabs(["📰 舆情分析", "🎫 工单处置", "📜 历史记录"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — 舆情分析
@@ -144,6 +144,10 @@ with tab_analyze:
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 2 — 历史记录（D3）
 # ══════════════════════════════════════════════════════════════════════════════
+with tab_tickets:
+    from utils.ticket_view import render as render_tickets
+    render_tickets(brand)
+
 with tab_history:
     st.caption("舆情分析历史记录（含时间戳、摘要、风险等级、来源渠道）。仅显示当前品牌。")
     hc1, hc2 = st.columns(2)

@@ -41,7 +41,7 @@ if st.session_state.get("_geo_last_brand") != brand:
         st.session_state.pop("geo_result", None)
         st.session_state.pop("reviewed_geo", None)
 
-tab_geo, tab_history = st.tabs(["🌐 GEO 分析", "📜 监测历史"])
+tab_geo, tab_compare, tab_history = st.tabs(["🌐 GEO 分析", "📈 复测评估", "📜 监测历史"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — GEO 分析
@@ -135,8 +135,7 @@ with tab_geo:
 
     # S2-3 · 复测完成后给出快捷入口
     if st.session_state.get("_geo_new_compare"):
-        st.success("✅ 本轮已关联基准，可前往「GEO 复测评估」查看前后对比与效果评级。")
-        st.page_link("pages/13_GEO复测评估.py", label="📈 打开 GEO 复测评估", icon="📈")
+        st.success("✅ 本轮已关联基准，请切到上方「📈 复测评估」标签查看前后对比与效果评级。")
 
     # 品牌切换后旧结果保护
     if st.session_state.get("geo_result", {}).get("_brand") != brand:
@@ -171,7 +170,14 @@ with tab_geo:
         render_disclaimer()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 2 — 监测历史（C4）
+# TAB 2 — 复测评估（S2-3，并入 GEO 页）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_compare:
+    from utils.geo_compare_view import render as render_geo_compare
+    render_geo_compare(brand)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3 — 监测历史（C4）
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_history:
     st.caption("GEO 监测任务历史记录（含时间戳、周期、地域与状态）。仅显示当前品牌。")

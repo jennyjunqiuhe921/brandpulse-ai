@@ -756,23 +756,34 @@ NAV_ITEMS = [
 ]
 
 
-_NAV_PAGES = [
-    ("🏠", "工作台",    "1_工作台.py"),
-    ("🏢", "品牌管理",  "0_品牌管理.py"),
-    ("🌐", "GEO分析",   "3_GEO.py"),
-    ("📈", "GEO复测评估", "13_GEO复测评估.py"),
-    ("✍️", "内容工坊",  "4_内容工坊.py"),
-    ("📦", "资产库",    "2_资产库.py"),
-    ("📡", "数据采集",  "6_数据采集.py"),
-    ("📰", "舆情分析",  "7_舆情分析.py"),
-    ("🎫", "舆情工单",  "15_舆情工单.py"),
-    ("🛒", "智能选品",  "16_智能选品.py"),
-    ("🔭", "竞品情报",  "17_竞品情报.py"),
-    ("🛡️", "合规卫士",  "8_合规卫士.py"),
-    ("✅", "合规自查",  "9_合规自查.py"),
-    ("📝", "我的审批",  "12_我的审批.py"),
-    ("🔔", "消息中心",  "10_消息中心.py"),
-    ("👤", "个人中心",  "14_个人中心.py"),
+# 分组导航：(分组标题, [(icon, label, page_file), ...])
+_NAV_GROUPS = [
+    ("概览", [
+        ("🏠", "工作台",    "1_工作台.py"),
+        ("🔔", "消息中心",  "10_消息中心.py"),
+    ]),
+    ("品牌与资产", [
+        ("🏢", "品牌管理",  "0_品牌管理.py"),
+        ("📦", "资产库",    "2_资产库.py"),
+    ]),
+    ("洞察分析", [
+        ("📡", "数据采集",  "6_数据采集.py"),
+        ("📰", "舆情中心",  "7_舆情分析.py"),
+        ("🌐", "GEO",       "3_GEO.py"),
+        ("🔭", "竞品情报",  "17_竞品情报.py"),
+    ]),
+    ("创作与选品", [
+        ("✍️", "内容工坊",  "4_内容工坊.py"),
+        ("🛒", "智能选品",  "16_智能选品.py"),
+    ]),
+    ("合规与审批", [
+        ("✅", "合规自查",  "9_合规自查.py"),
+        ("🛡️", "合规卫士",  "8_合规卫士.py"),
+        ("📝", "我的审批",  "12_我的审批.py"),
+    ]),
+    ("个人", [
+        ("👤", "个人中心",  "14_个人中心.py"),
+    ]),
 ]
 
 
@@ -793,21 +804,22 @@ def render() -> str:
             unsafe_allow_html=True,
         )
 
-        # ── Navigation links ──────────────────────────────────────────────
-        st.markdown(
-            '<div class="sidebar-section-label">功能模块</div>',
-            unsafe_allow_html=True,
-        )
-        for icon, label, page_file in _NAV_PAGES:
-            st.page_link(f"pages/{page_file}", label=f"{icon} {label}")
-        # 账号管理：仅企业领导可见
+        # ── Navigation links（分组导航）─────────────────────────────────────
         try:
             from auth.login import is_admin
-            if is_admin():
+            _admin = is_admin()
+        except Exception:
+            _admin = False
+
+        for _section, _items in _NAV_GROUPS:
+            st.markdown(f'<div class="sidebar-section-label">{_section}</div>',
+                        unsafe_allow_html=True)
+            for icon, label, page_file in _items:
+                st.page_link(f"pages/{page_file}", label=f"{icon} {label}")
+            # 管理项并入「合规与审批」分组，仅企业领导可见
+            if _section == "合规与审批" and _admin:
                 st.page_link("pages/11_审批中心.py", label="🗂️ 审批中心")
                 st.page_link("pages/5_账号管理.py", label="👥 账号管理")
-        except Exception:
-            pass
 
         # ── Brand selector ────────────────────────────────────────────────
         st.markdown(
