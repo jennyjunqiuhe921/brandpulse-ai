@@ -101,7 +101,7 @@ brand_data  = get_brand(selected_brand)
 brand_label = brand_data["name"] if brand_data else selected_brand
 
 tab_list, tab_new, tab_kb, tab_brand_analysis, tab_product, tab_mp, tab_comp = st.tabs([
-    "品牌列表", "新增品牌", "知识 库", "品牌分析", "产品分析", "市场定位", "竞品分析"
+    "品牌列表", "新增品牌", "知识 库", "品牌分析", "产品分析", "市场定位", "竞品快速对比"
 ])
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -695,6 +695,16 @@ with tab_mp:
 # TAB 7 — competitor analysis
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_comp:
+    # 方案A：本 tab 定位为「一次性快速对比快照」；常态化监控请用竞品情报仓库
+    st.markdown(
+        '<div style="background:#EEF4FB;border:1px solid #C9DDF0;border-left:3px solid #2B6CB0;'
+        'border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#1E4E8C">'
+        '🔭 <b>这里是「快速对比快照」</b>：拿主品牌与单个竞品做一次性 AI 对标解读。<br>'
+        '如需 <b>7×24 常态化竞品监控</b>（六维情报 / 异动预警 / 历史归档 / 多品牌对标），'
+        '请使用左侧菜单的 <b>竞品情报仓库</b>。</div>',
+        unsafe_allow_html=True)
+    st.page_link("pages/17_竞品情报.py", label="🔭 打开竞品情报仓库（常态化监控）", icon="🔭")
+
     # 原生组件替代 unsafe_allow_html，避免相邻元素 stale DOM
     st.info("分析维度：品牌定位 · 产品卖点 · 内容策略 · AI/GEO 可见度 · 策略建议　|　"
             "结论标注 ✅ 官方事实 / ⚠️ AI推断，禁止对竞品作任何负面评价。")
