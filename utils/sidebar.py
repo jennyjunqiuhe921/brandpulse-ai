@@ -774,19 +774,30 @@ def render() -> str:
             '<div class="sidebar-section-label" style="margin-top:8px">分析品牌</div>',
             unsafe_allow_html=True,
         )
-        brand_options = list(BRAND_DISPLAY_NAMES.keys())
-        if "brand" not in st.session_state or st.session_state["brand"] not in brand_options:
-            st.session_state["brand"] = brand_options[0] if brand_options else "heytea"
-        prev_brand = st.session_state.get("_active_brand", st.session_state["brand"])
+        brand_options = list(BRAND_DISPLAY_NAMES.keys()) or ["heytea"]
 
-        selected = st.radio(
+        # 跨页面持久化：用「普通 key」brand_perm 作为唯一真相源（它在 st.navigation
+        # 切页时不会被清空），每次渲染前强制把它同步进 radio 的 widget key，
+        # 避免 Streamlit 多页应用里带 key 的 widget 状态切页后被重置回默认值。
+        if st.session_state.get("brand_perm") not in brand_options:
+            st.session_state["brand_perm"] = brand_options[0]
+        # 在 widget 实例化前写入其 key（允许），消除跨页 stale/clobber
+        st.session_state["brand_widget"] = st.session_state["brand_perm"]
+
+        def _on_brand_change():
+            st.session_state["brand_perm"] = st.session_state["brand_widget"]
+
+        st.radio(
             "选择分析品牌",
             brand_options,
-            key="brand",
+            key="brand_widget",
+            on_change=_on_brand_change,
             format_func=lambda k: BRAND_DISPLAY_NAMES[k],
             label_visibility="collapsed",
         )
+        selected = st.session_state["brand_perm"]
 
+        prev_brand = st.session_state.get("_active_brand", selected)
         if prev_brand != selected:
             for k in list(st.session_state.keys()):
                 if k.endswith("_result") or k.endswith("_data"):

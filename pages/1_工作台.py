@@ -33,8 +33,9 @@ st.caption("点击卡片即可切换当前分析品牌（与侧边栏同步）")
 
 
 def _switch_brand(bid: str):
-    # 回调内修改侧边栏 radio 的 key，切换后下次运行生效
-    st.session_state["brand"] = bid
+    # 写入跨页持久化的真相源 brand_perm（侧边栏据此同步 radio）
+    st.session_state["brand_perm"] = bid
+    st.session_state["brand_widget"] = bid
 
 
 _brands_all = load_all_brands()
