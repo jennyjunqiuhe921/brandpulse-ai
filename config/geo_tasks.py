@@ -54,6 +54,19 @@ def get_record(tid: str) -> dict | None:
         return _to_dict(t) if t else None
 
 
+def update_meta(tid: str, **kv) -> bool:
+    """合并更新某条记录的 meta（用于存对比基准/效果评级/人工批注）。"""
+    with get_session() as s:
+        t = s.query(GeoTask).filter(
+            GeoTask.id == tid, GeoTask.tenant_id == ctx.tenant_id()).first()
+        if not t:
+            return False
+        meta = dict(t.meta or {})
+        meta.update(kv)
+        t.meta = meta
+        return True
+
+
 def delete_record(tid: str) -> bool:
     with get_session() as s:
         t = s.query(GeoTask).filter(

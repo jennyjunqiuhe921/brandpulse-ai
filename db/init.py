@@ -15,6 +15,7 @@ from db.models import (
     Tenant, User, Brand, Message, ROLE_ADMIN, ROLE_STAFF,
     MSG_SYSTEM, MSG_TASK, MSG_RISK,
     ApprovalRequest, ApprovalStep, APR_PENDING, STEP_WAIT,
+    GeoTask,
 )
 from auth.security import hash_password
 
@@ -134,6 +135,21 @@ def init_db() -> None:
                                approver_label="市场主管", status=STEP_WAIT))
             s.add(ApprovalStep(request_id=rid, step_no=2, approver_role=ROLE_ADMIN,
                                approver_label="品牌负责人", status=STEP_WAIT))
+
+        # 6. 种子两轮 GEO 监测（演示复测对比：本轮指标整体优于基准）
+        if s.query(GeoTask).count() == 0:
+            s.add(GeoTask(
+                id="geo_demo_base", tenant_id=tenant.id, owner_id=None,
+                brand="heytea", period="每周", region="全国", status="已完成",
+                meta={"metrics": {"exposure": 52.0, "accuracy": 70.0,
+                                  "rank": 5, "competitor_gap": 28.0}},
+                summary="基准轮 · 8题 · 全国", created_at="2026-05-20 10:00"))
+            s.add(GeoTask(
+                id="geo_demo_cur", tenant_id=tenant.id, owner_id=None,
+                brand="heytea", period="每周", region="全国", status="已完成",
+                meta={"metrics": {"exposure": 66.0, "accuracy": 86.0,
+                                  "rank": 3, "competitor_gap": 18.0}},
+                summary="复测轮 · 8题 · 全国", created_at="2026-06-08 10:00"))
 
 
 if __name__ == "__main__":

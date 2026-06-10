@@ -11,6 +11,7 @@ _pages = [
     st.Page("pages/1_工作台.py",    title="工作台",    icon="🏠", default=True),
     st.Page("pages/0_品牌管理.py",  title="品牌管理",  icon="🏢"),
     st.Page("pages/3_GEO.py",       title="GEO分析",   icon="🌐"),
+    st.Page("pages/13_GEO复测评估.py", title="GEO复测评估", icon="📈"),
     st.Page("pages/4_内容工坊.py",  title="内容工坊",  icon="✍️"),
     st.Page("pages/2_资产库.py",    title="资产库",    icon="📦"),
     st.Page("pages/6_数据采集.py",  title="数据采集",  icon="📡"),

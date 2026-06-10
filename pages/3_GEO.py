@@ -81,6 +81,20 @@ with tab_geo:
                               help="单次：立即分析一次；每日/每周：记录为周期性监测任务")
     competitors = parse_keywords(competitors_text)[:2]
 
+    # ── S2-3 · 复测对比配置（关联历史任务 / 对比基准周期）──────────────────────────
+    _prior = geo_tasks.list_records(brand_key=brand)
+    link_base = False
+    base_id = None
+    if _prior:
+        link_base = st.checkbox("📈 本轮作为复测，关联历史任务作对比基准", key="geo_link_base")
+        if link_base:
+            base_id = st.selectbox(
+                "对比基准周期", [r["id"] for r in _prior],
+                format_func=lambda i: next(
+                    f"{r.get('created_at','')} · {r['period']} · {r['region']}"
+                    for r in _prior if r["id"] == i),
+                key="geo_base_id")
+
     # ── 测试问题 ────────────────────────────────────────────────────────────────
     with st.expander("③ 查看/编辑 AI 测试问题（可修改）", expanded=False):
         questions_text = st.text_area("每行一个问题（建议至少 4 个）", key="geo_questions_text", height=180)
@@ -103,13 +117,26 @@ with tab_geo:
                 result["_brand"] = brand
                 st.session_state["geo_result"] = result
                 st.session_state.pop("reviewed_geo", None)
-                # C4 · 记录监测历史
-                geo_tasks.add_record(
-                    brand, period, region, result.get("_meta", {}),
+                # C4 · 记录监测历史（S2-3：附结构化指标 + 对比基准）
+                from modules import geo_compare as _GC
+                _meta = dict(result.get("_meta", {}))
+                _meta["metrics"] = _GC.synth_metrics(
+                    brand + region, result["_query_time"])
+                if link_base and base_id:
+                    _meta["base_id"] = base_id
+                new_gid = geo_tasks.add_record(
+                    brand, period, region, _meta,
                     summary=f"{len(questions)}题 · 竞品 {len(competitors)} · {region}",
                 )
+                if link_base and base_id:
+                    st.session_state["_geo_new_compare"] = (new_gid, base_id)
             except Exception as e:
                 st.error(f"分析失败：{e}")
+
+    # S2-3 · 复测完成后给出快捷入口
+    if st.session_state.get("_geo_new_compare"):
+        st.success("✅ 本轮已关联基准，可前往「GEO 复测评估」查看前后对比与效果评级。")
+        st.page_link("pages/13_GEO复测评估.py", label="📈 打开 GEO 复测评估", icon="📈")
 
     # 品牌切换后旧结果保护
     if st.session_state.get("geo_result", {}).get("_brand") != brand:
