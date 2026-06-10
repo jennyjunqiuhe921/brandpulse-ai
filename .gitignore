@@ -11,3 +11,6 @@ data/content_tasks.json
 data/geo_tasks.json
 data/sentiment_tasks.json
 data/collect_tasks.json
+
+# 本地 SQLite 数据库
+data/app.db

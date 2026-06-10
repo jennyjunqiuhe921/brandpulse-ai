@@ -22,3 +22,8 @@ plotly>=5.22.0
 # ── Utilities ─────────────────────────────────────────────────────────────────
 tiktoken>=0.7.0
 requests>=2.32.0
+
+# ── Database & Auth（路线A：持久化存储 + 登录）──────────────────────────────────
+SQLAlchemy>=2.0.0
+bcrypt>=4.0.0
+psycopg2-binary>=2.9.0   # 线上 Postgres（本地默认 SQLite 无需此项也能跑）

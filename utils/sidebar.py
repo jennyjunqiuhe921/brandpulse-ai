@@ -793,6 +793,13 @@ def render() -> str:
         )
         for icon, label, page_file in _NAV_PAGES:
             st.page_link(f"pages/{page_file}", label=f"{icon} {label}")
+        # 账号管理：仅企业领导可见
+        try:
+            from auth.login import is_admin
+            if is_admin():
+                st.page_link("pages/5_账号管理.py", label="👥 账号管理")
+        except Exception:
+            pass
 
         # ── Brand selector ────────────────────────────────────────────────
         st.markdown(
@@ -857,6 +864,13 @@ def render() -> str:
                 '<div class="sidebar-status live">🟢 API 已连接 · 动态生成模式</div>',
                 unsafe_allow_html=True,
             )
+
+        # ── 账号 + 登出 ────────────────────────────────────────────────────
+        try:
+            from auth.login import render_account_widget
+            render_account_widget()
+        except Exception:
+            pass
 
         # ── Disclaimer ────────────────────────────────────────────────────
         st.markdown(
