@@ -186,6 +186,65 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+# ── 多级审批中心（S2-1）──────────────────────────────────────────────────────
+# 审批单状态（复用工作流引擎语义）
+APR_PENDING = "审批中"
+APR_APPROVED = "已通过"
+APR_REJECTED = "已驳回"
+APR_WITHDRAWN = "已撤回"
+
+# 步骤状态
+STEP_WAIT = "待处理"
+STEP_PASS = "已通过"
+STEP_REJECT = "已驳回"
+
+
+class ApprovalRequest(Base):
+    __tablename__ = "approval_requests"
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)  # 发起人
+    owner_name: Mapped[str] = mapped_column(String(60), default="")
+    biz_type: Mapped[str] = mapped_column(String(30), default="")   # 文案/GEO方案/舆情处置/选品方案...
+    biz_id: Mapped[str] = mapped_column(String(40), default="")     # 关联业务对象
+    brand: Mapped[str] = mapped_column(String(64), default="")
+    title: Mapped[str] = mapped_column(String(200), default="")
+    content: Mapped[str] = mapped_column(Text, default="")          # 当前送审内容快照
+    risk_level: Mapped[str] = mapped_column(String(10), default="低")  # 低/中/高
+    priority: Mapped[str] = mapped_column(String(10), default="普通")
+    status: Mapped[str] = mapped_column(String(20), default=APR_PENDING, index=True)
+    current_step: Mapped[int] = mapped_column(Integer, default=1)   # 当前待办步骤号
+    version: Mapped[int] = mapped_column(Integer, default=1)        # 修改重提递增
+    history: Mapped[list] = mapped_column(JSON, default=list)       # 历史版本内容快照
+    urged: Mapped[bool] = mapped_column(Boolean, default=False)     # 是否被催办
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+    updated_at: Mapped[str] = mapped_column(String(20), default="")
+
+
+class ApprovalStep(Base):
+    __tablename__ = "approval_steps"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    request_id: Mapped[str] = mapped_column(String(40), index=True)
+    step_no: Mapped[int] = mapped_column(Integer, default=1)
+    approver_role: Mapped[str] = mapped_column(String(30), default="")   # 指派角色
+    approver_label: Mapped[str] = mapped_column(String(60), default="")  # 展示名（如"市场主管"）
+    status: Mapped[str] = mapped_column(String(20), default=STEP_WAIT)
+    comment: Mapped[str] = mapped_column(Text, default="")
+    quote: Mapped[str] = mapped_column(Text, default="")  # 驳回时高亮的原文段落
+    decided_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    decided_at: Mapped[str] = mapped_column(String(20), default="")
+
+
+class ApprovalComment(Base):
+    __tablename__ = "approval_comments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    request_id: Mapped[str] = mapped_column(String(40), index=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    username: Mapped[str] = mapped_column(String(60), default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── AI 网关调用日志（S1-5）──────────────────────────────────────────────────
 class AiCallLog(Base):
     __tablename__ = "ai_call_logs"

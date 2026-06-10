@@ -766,6 +766,7 @@ _NAV_PAGES = [
     ("📰", "舆情分析",  "7_舆情分析.py"),
     ("🛡️", "合规卫士",  "8_合规卫士.py"),
     ("✅", "合规自查",  "9_合规自查.py"),
+    ("📝", "我的审批",  "12_我的审批.py"),
     ("🔔", "消息中心",  "10_消息中心.py"),
 ]
 
@@ -798,6 +799,7 @@ def render() -> str:
         try:
             from auth.login import is_admin
             if is_admin():
+                st.page_link("pages/11_审批中心.py", label="🗂️ 审批中心")
                 st.page_link("pages/5_账号管理.py", label="👥 账号管理")
         except Exception:
             pass

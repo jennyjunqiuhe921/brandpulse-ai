@@ -12,8 +12,9 @@ from sqlalchemy import inspect, text
 from db.engine import engine, get_session, Base
 from db import models  # noqa: F401  确保模型注册到 Base
 from db.models import (
-    Tenant, User, Brand, Message, ROLE_ADMIN,
+    Tenant, User, Brand, Message, ROLE_ADMIN, ROLE_STAFF,
     MSG_SYSTEM, MSG_TASK, MSG_RISK,
+    ApprovalRequest, ApprovalStep, APR_PENDING, STEP_WAIT,
 )
 from auth.security import hash_password
 
@@ -58,7 +59,7 @@ def init_db() -> None:
             s.add(tenant)
             s.flush()  # 拿到 tenant.id
 
-        # 2. 初始管理员
+        # 2. 初始管理员 + 演示市场专员
         if s.query(User).count() == 0:
             s.add(User(
                 tenant_id=tenant.id,
@@ -66,6 +67,13 @@ def init_db() -> None:
                 password_hash=hash_password(_DEFAULT_ADMIN_PASS),
                 name="管理员",
                 role=ROLE_ADMIN,
+            ))
+            s.add(User(
+                tenant_id=tenant.id,
+                username="staff1",
+                password_hash=hash_password("staff123"),
+                name="市场专员",
+                role=ROLE_STAFF,
             ))
 
         # 3. 导入演示品牌（仅当库内无品牌时）
@@ -106,6 +114,26 @@ def init_db() -> None:
                           title="舆情风险提醒（演示）",
                           body="检测到 1 条 3 级负面舆情，建议尽快在「舆情分析」处置。",
                           level="warn"))
+
+        # 5. 种子审批单（演示：市场专员发起、风险中=两级审批链）
+        if s.query(ApprovalRequest).count() == 0:
+            staff = s.query(User).filter(User.username == "staff1").first()
+            rid = "apr_demo0001"
+            s.add(ApprovalRequest(
+                id=rid, tenant_id=tenant.id,
+                owner_id=staff.id if staff else None, owner_name="市场专员",
+                biz_type="文案", biz_id="", brand="heytea",
+                title="多肉葡萄夏季推广文案（小红书）",
+                content="多肉葡萄上新🍇 整颗葡萄粒，真实果肉不将就。"
+                        "今夏限定，灵感下午茶就选这一杯。",
+                risk_level="中", priority="普通", status=APR_PENDING,
+                current_step=1, version=1, history=[],
+                created_at="2026-06-10 09:30", updated_at="2026-06-10 09:30",
+            ))
+            s.add(ApprovalStep(request_id=rid, step_no=1, approver_role=ROLE_ADMIN,
+                               approver_label="市场主管", status=STEP_WAIT))
+            s.add(ApprovalStep(request_id=rid, step_no=2, approver_role=ROLE_ADMIN,
+                               approver_label="品牌负责人", status=STEP_WAIT))
 
 
 if __name__ == "__main__":

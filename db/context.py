@@ -23,3 +23,20 @@ def user_id():
         return current_user_id()
     except Exception:
         return None
+
+
+def user_role() -> str:
+    try:
+        from auth.login import current_role
+        return current_role() or ""
+    except Exception:
+        return ""
+
+
+def user_name() -> str:
+    try:
+        from auth.login import current_user
+        u = current_user() or {}
+        return u.get("name") or u.get("username") or "—"
+    except Exception:
+        return "—"

@@ -17,10 +17,12 @@ _pages = [
     st.Page("pages/7_舆情分析.py",  title="舆情分析",  icon="📰"),
     st.Page("pages/8_合规卫士.py",  title="合规卫士",  icon="🛡️"),
     st.Page("pages/9_合规自查.py",  title="合规自查",  icon="✅"),
+    st.Page("pages/12_我的审批.py", title="我的审批",  icon="📝"),
     st.Page("pages/10_消息中心.py", title="消息中心",  icon="🔔"),
 ]
-# 仅企业领导可见账号管理
+# 仅企业领导可见的管理功能
 if current_role() == ROLE_ADMIN:
+    _pages.append(st.Page("pages/11_审批中心.py", title="审批中心", icon="🗂️"))
     _pages.append(st.Page("pages/5_账号管理.py", title="账号管理", icon="👥"))
 
 pg = st.navigation(_pages, position="hidden")
