@@ -20,6 +20,7 @@ _pages = [
     st.Page("pages/9_合规自查.py",  title="合规自查",  icon="✅"),
     st.Page("pages/12_我的审批.py", title="我的审批",  icon="📝"),
     st.Page("pages/10_消息中心.py", title="消息中心",  icon="🔔"),
+    st.Page("pages/14_个人中心.py", title="个人中心",  icon="👤"),
 ]
 # 仅企业领导可见的管理功能
 if current_role() == ROLE_ADMIN:

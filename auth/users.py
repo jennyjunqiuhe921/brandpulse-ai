@@ -74,3 +74,26 @@ def reset_password(user_id: int, new_password: str) -> bool:
             return False
         u.password_hash = hash_password(new_password)
         return True
+
+
+def update_profile(user_id: int, name: str) -> bool:
+    with get_session() as s:
+        u = s.query(User).filter(User.id == user_id).first()
+        if not u:
+            return False
+        u.name = name
+        return True
+
+
+def change_own_password(user_id: int, old_password: str, new_password: str) -> tuple[bool, str]:
+    from auth.security import verify_password
+    if not new_password or len(new_password) < 6:
+        return False, "新密码至少 6 位"
+    with get_session() as s:
+        u = s.query(User).filter(User.id == user_id).first()
+        if not u:
+            return False, "用户不存在"
+        if not verify_password(old_password, u.password_hash):
+            return False, "原密码不正确"
+        u.password_hash = hash_password(new_password)
+        return True, "密码已更新"
