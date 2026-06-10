@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 _DATA_DIR = Path(__file__).parent.parent / "data"
@@ -37,8 +37,12 @@ def _resolve_url() -> str:
 
 DATABASE_URL = _resolve_url()
 
-# SQLite 需要 check_same_thread=False 以配合 Streamlit 多线程
-_connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+# SQLite 需要 check_same_thread=False 以配合 Streamlit 多线程；
+# timeout 让并发访问等待锁释放而非立即报 "database is locked"
+_connect_args = (
+    {"check_same_thread": False, "timeout": 30}
+    if DATABASE_URL.startswith("sqlite") else {}
+)
 
 engine = create_engine(
     DATABASE_URL,
@@ -47,6 +51,21 @@ engine = create_engine(
     connect_args=_connect_args,
     pool_pre_ping=True,
 )
+
+
+# SQLite 并发健壮性：WAL 模式(读写不互斥) + busy_timeout(等待锁) + 外键
+if DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def _sqlite_pragmas(dbapi_conn, _rec):  # noqa: ANN001
+        cur = dbapi_conn.cursor()
+        try:
+            cur.execute("PRAGMA journal_mode=WAL")
+            cur.execute("PRAGMA busy_timeout=30000")
+            cur.execute("PRAGMA synchronous=NORMAL")
+        except Exception:
+            pass
+        finally:
+            cur.close()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
 
