@@ -95,6 +95,18 @@ header { visibility: hidden; }
     min-width: 220px !important;
     max-width: 220px !important;
 }
+/* 桌面端：侧边栏始终可见，禁止折叠到屏幕外（该 Streamlit 版本折叠后展开按钮
+   会被移出屏幕导致再也展不开）。隐藏折叠按钮，避免用户误触陷入卡死状态。 */
+@media (min-width: 641px) {
+    [data-testid="stSidebar"] {
+        transform: none !important;
+        visibility: visible !important;
+        margin-left: 0 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stBaseButton-headerNoPadding"] {
+        display: none !important;
+    }
+}
 
 [data-testid="stSidebar"] > div:first-child { padding: 0 !important; }
 [data-testid="stSidebarContent"] { padding: 0 !important; }
