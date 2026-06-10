@@ -807,9 +807,15 @@ def render() -> str:
         # ── API status ────────────────────────────────────────────────────
         if DEMO_MODE:
             st.markdown(
-                '<div class="sidebar-status demo">💡 演示模式 · 无 API Key<br>接入 Claude API 后将动态生成</div>',
+                '<div class="sidebar-status demo">💡 Demo 模式（使用预置数据）<br>'
+                '若要处理自有文件，请在设置中配置 API Key</div>',
                 unsafe_allow_html=True,
             )
+            # 每会话仅弹一次轻提示，不打扰操作
+            if not st.session_state.get("_demo_toast_shown"):
+                st.toast("当前处于 Demo 模式（使用预置数据），若要处理自有文件，请在设置中配置 API Key。",
+                         icon="💡")
+                st.session_state["_demo_toast_shown"] = True
         else:
             st.markdown(
                 '<div class="sidebar-status live">🟢 API 已连接 · 动态生成模式</div>',
@@ -821,6 +827,16 @@ def render() -> str:
             '<div style="padding:0 16px 24px 16px;font-size:10px;color:var(--text-muted,#4A5168);line-height:1.6">'
             "本工具仅供品牌研究参考，输出需人工复核后方可商业使用。"
             "</div>",
+            unsafe_allow_html=True,
+        )
+
+    # ── Demo 模式软提示横条（页面顶部，不干扰操作）──────────────────────────────
+    if DEMO_MODE:
+        st.markdown(
+            '<div style="background:#FFF7E6;border:1px solid #FFE0A3;border-radius:6px;'
+            'padding:8px 14px;margin:0 0 12px;font-size:12.5px;color:#8A6D3B">'
+            '💡 当前处于 <b>Demo 模式</b>（使用预置数据），若要处理自有文件，请在设置中配置 API Key。'
+            '</div>',
             unsafe_allow_html=True,
         )
 
