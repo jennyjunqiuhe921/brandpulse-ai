@@ -10,3 +10,4 @@ __pycache__/
 data/content_tasks.json
 data/geo_tasks.json
 data/sentiment_tasks.json
+data/collect_tasks.json
