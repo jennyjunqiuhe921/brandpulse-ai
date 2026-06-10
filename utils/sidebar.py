@@ -525,6 +525,19 @@ section[data-testid="stSidebar"] .block-container { padding: 0 !important; }
     font-weight: 600 !important;
 }
 
+/* ── 移动端：标签自动换行，全部铺开，无需横向滑动 ── */
+@media (max-width: 640px) {
+    .stTabs [data-baseweb="tab-list"] {
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+        row-gap: 2px !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 8px 12px !important;
+        font-size: 12.5px !important;
+    }
+}
+
 /* ── Expander ── */
 .streamlit-expanderHeader {
     background: var(--bg-elevated) !important;
