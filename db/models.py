@@ -186,6 +186,62 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+# ── 商品智能选品（S3-1）──────────────────────────────────────────────────────
+class SelectionTask(Base):
+    __tablename__ = "selection_tasks"
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    brand: Mapped[str] = mapped_column(String(64), default="")
+    name: Mapped[str] = mapped_column(String(200), default="")
+    industry: Mapped[str] = mapped_column(String(60), default="")
+    categories: Mapped[list] = mapped_column(JSON, default=list)
+    dimensions: Mapped[list] = mapped_column(JSON, default=list)   # 维度标签
+    regions: Mapped[list] = mapped_column(JSON, default=list)
+    goal: Mapped[str] = mapped_column(String(30), default="新品")  # 新品/迭代/区域款/竞品对标
+    competitors: Mapped[list] = mapped_column(JSON, default=list)
+    priority: Mapped[str] = mapped_column(String(10), default="普通")
+    task_tags: Mapped[list] = mapped_column(JSON, default=list)
+    due_date: Mapped[str] = mapped_column(String(20), default="")
+    status: Mapped[str] = mapped_column(String(20), default="已完成")  # 草稿/采集中/分析中/已完成/已归档/分析异常
+    score: Mapped[int] = mapped_column(Integer, default=0)         # 头名综合评分
+    result: Mapped[dict] = mapped_column(JSON, default=dict)       # 推荐清单/评分/风险
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+
+
+# ── 竞品情报仓库（S3-2）──────────────────────────────────────────────────────
+COMPETITOR_DIMENSIONS = ["品牌情报", "产品情报", "舆情情报", "GEO情报", "内容文案", "推广策略"]
+
+
+class Competitor(Base):
+    __tablename__ = "competitors"
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    name: Mapped[str] = mapped_column(String(120), default="")
+    industry: Mapped[str] = mapped_column(String(60), default="")
+    categories: Mapped[list] = mapped_column(JSON, default=list)
+    channels: Mapped[list] = mapped_column(JSON, default=list)
+    frequency: Mapped[str] = mapped_column(String(20), default="每日")  # 实时/每日/每周
+    dimensions: Mapped[list] = mapped_column(JSON, default=list)
+    tags: Mapped[list] = mapped_column(JSON, default=list)
+    alert_rules: Mapped[list] = mapped_column(JSON, default=list)  # 上新/调价/活动/负面/排名异动
+    status: Mapped[str] = mapped_column(String(20), default="正常监控")  # 正常监控/暂停/已归档
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+    updated_at: Mapped[str] = mapped_column(String(20), default="")
+
+
+class CompetitorIntel(Base):
+    __tablename__ = "competitor_intel"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    competitor_id: Mapped[str] = mapped_column(String(40), index=True)
+    dimension: Mapped[str] = mapped_column(String(20), default="")
+    content: Mapped[str] = mapped_column(Text, default="")
+    is_alert: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── 舆情工单（S2-4）──────────────────────────────────────────────────────────
 # 处置分级 → 响应时效（PRD 4.6 / 6.2）
 TICKET_SLA = {0: "无需响应", 1: "3 个工作日", 2: "24 小时", 3: "4 小时", 4: "1 小时"}
