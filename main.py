@@ -16,6 +16,7 @@ _pages = [
     st.Page("pages/2_资产库.py",    title="资产库",    icon="📦"),
     st.Page("pages/6_数据采集.py",  title="数据采集",  icon="📡"),
     st.Page("pages/7_舆情分析.py",  title="舆情分析",  icon="📰"),
+    st.Page("pages/15_舆情工单.py", title="舆情工单",  icon="🎫"),
     st.Page("pages/8_合规卫士.py",  title="合规卫士",  icon="🛡️"),
     st.Page("pages/9_合规自查.py",  title="合规自查",  icon="✅"),
     st.Page("pages/12_我的审批.py", title="我的审批",  icon="📝"),

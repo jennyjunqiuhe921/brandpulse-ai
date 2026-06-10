@@ -294,13 +294,17 @@ with tab_tasks:
     if not tasks:
         st.info("暂无文案任务。在「内容生成」标签页生成内容后点击「保存为文案任务」即可加入列表。")
     else:
+        from modules.content_score import heat_score, score_badge
+        from db import approvals as _A
         _status_badge = {"草稿": "📝", "待审批": "⏳", "已通过": "✅", "已归档": "📦"}
         for t in tasks:
             badge = _status_badge.get(t["status"], "•")
+            _hs = heat_score(t.get("output", ""), t.get("platforms"))
             with st.container(border=True):
                 hc1, hc2 = st.columns([4, 2])
                 with hc1:
-                    st.markdown(f"**{badge} {t['title']}** · `{t['status']}`")
+                    st.markdown(f"**{badge} {t['title']}** · `{t['status']}`　"
+                                + score_badge(_hs["score"]), unsafe_allow_html=True)
                     st.caption(f"平台：{' / '.join(t.get('platforms', [])) or '—'} ｜ 创建：{t.get('created_at','')}")
                 with hc2:
                     nxt = ct.STATUS_NEXT.get(t["status"])
@@ -318,6 +322,34 @@ with tab_tasks:
                         if st.button("删除", key=f"del_{t['id']}", use_container_width=True):
                             ct.delete_task(t["id"])
                             st.rerun()
-                with st.expander("查看内容", expanded=False):
+                # S2-2 · 提交审批（文案 → 审批中心）
+                if t["status"] in ("草稿", "已驳回"):
+                    arc1, arc2, arc3 = st.columns([1, 1, 2])
+                    with arc1:
+                        _risk = st.selectbox("风险", ["低", "中", "高"], key=f"rsk_{t['id']}",
+                                             label_visibility="collapsed")
+                    with arc2:
+                        if st.button("📤 提交审批", key=f"sub_{t['id']}", use_container_width=True):
+                            _A.submit("文案", t["id"], t["title"], t.get("output", ""),
+                                      brand=brand, risk_level=_risk,
+                                      priority=t.get("priority", "普通"))
+                            ct.set_status(t["id"], "待审批")
+                            st.success("已提交审批，可在「我的审批」跟踪进度")
+                            st.rerun()
+                if _hs["tips"]:
+                    st.caption("💡 热度优化建议：" + "；".join(_hs["tips"]))
+                # S2-2 · 多平台预览
+                with st.expander("📱 多平台预览", expanded=False):
+                    plats = t.get("platforms") or ["默认"]
+                    ptabs = st.tabs(plats)
+                    for _pt, _pl in zip(ptabs, plats):
+                        with _pt:
+                            st.markdown(
+                                f'<div style="border:1px solid #DDD4C4;border-radius:10px;'
+                                f'padding:12px 14px;background:#FDFAF5;max-width:420px;'
+                                f'white-space:pre-wrap;font-size:13px">'
+                                f'<b>{_pl} 样式预览</b><br><br>{t.get("output","")[:600]}</div>',
+                                unsafe_allow_html=True)
+                with st.expander("查看完整内容", expanded=False):
                     st.text_area("文案内容", value=t.get("output", ""), height=200,
                                  key=f"ta_{t['id']}", disabled=True)

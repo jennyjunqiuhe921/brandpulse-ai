@@ -186,6 +186,30 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+# ── 舆情工单（S2-4）──────────────────────────────────────────────────────────
+# 处置分级 → 响应时效（PRD 4.6 / 6.2）
+TICKET_SLA = {0: "无需响应", 1: "3 个工作日", 2: "24 小时", 3: "4 小时", 4: "1 小时"}
+TICKET_LEVEL_LABEL = {0: "0级·日常", 1: "1级·轻度", 2: "2级·中度", 3: "3级·严重", 4: "4级·重大"}
+
+
+class SentimentTicket(Base):
+    __tablename__ = "sentiment_tickets"
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand: Mapped[str] = mapped_column(String(64), default="")
+    source_id: Mapped[str] = mapped_column(String(40), default="")  # 关联舆情记录
+    title: Mapped[str] = mapped_column(String(200), default="")
+    level: Mapped[int] = mapped_column(Integer, default=2)          # 0-4
+    sla: Mapped[str] = mapped_column(String(30), default="")
+    segment_tags: Mapped[list] = mapped_column(JSON, default=list)  # 人群/地域/场景/情绪
+    response: Mapped[str] = mapped_column(Text, default="")         # 处置话术/记录
+    status: Mapped[str] = mapped_column(String(20), default="待处理")  # 待处理/处理中/已办结
+    is_case: Mapped[bool] = mapped_column(Boolean, default=False)   # 归入负面案例库
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+    closed_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── 多级审批中心（S2-1）──────────────────────────────────────────────────────
 # 审批单状态（复用工作流引擎语义）
 APR_PENDING = "审批中"
