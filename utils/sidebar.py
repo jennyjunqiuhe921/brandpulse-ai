@@ -822,6 +822,7 @@ def render() -> str:
             if _section == "合规与审批" and _admin:
                 st.page_link("pages/11_审批中心.py", label="🗂️ 审批中心")
                 st.page_link("pages/19_合规审计台账.py", label="📒 审计台账")
+                st.page_link("pages/20_企业管理.py", label="🏢 企业管理")
                 st.page_link("pages/5_账号管理.py", label="👥 账号管理")
 
         # ── Brand selector ────────────────────────────────────────────────

@@ -28,6 +28,7 @@ if current_role() == ROLE_ADMIN:
     _pages.append(st.Page("pages/18_管理驾驶舱.py", title="管理驾驶舱", icon="📊"))
     _pages.append(st.Page("pages/11_审批中心.py", title="审批中心", icon="🗂️"))
     _pages.append(st.Page("pages/19_合规审计台账.py", title="审计台账", icon="📒"))
+    _pages.append(st.Page("pages/20_企业管理.py", title="企业管理", icon="🏢"))
     _pages.append(st.Page("pages/5_账号管理.py", title="账号管理", icon="👥"))
 
 pg = st.navigation(_pages, position="hidden")
