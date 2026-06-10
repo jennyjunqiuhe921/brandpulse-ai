@@ -61,7 +61,16 @@ def submit(biz_type: str, biz_id: str, title: str, content: str, *,
     # 通知审批人（全员定向到管理层，用全员消息简化）
     msg_store.push(f"新审批待处理：{title}", f"{biz_type} · 风险{risk_level} · 由 {ctx.user_name()} 发起",
                    category=MSG_APPROVAL, level="warn", link="pages/11_审批中心.py")
+    _audit("发起审批", f"{biz_type}:{title}")
     return rid
+
+
+def _audit(action: str, target: str = "") -> None:
+    try:
+        from db import audit
+        audit.log(action, target)
+    except Exception:
+        pass
 
 
 def _req_dict(r: ApprovalRequest, steps: list[ApprovalStep]) -> dict:
@@ -139,6 +148,7 @@ def decide(rid: str, approve: bool, comment: str = "", quote: str = "") -> bool:
         step.decided_by = ctx.user_id()
         step.decided_at = now
         r.updated_at = now
+        _audit("审批决策", f"{'通过' if approve else '驳回'}:{r.title}")
         if not approve:
             step.status = STEP_REJECT
             r.status = APR_REJECTED

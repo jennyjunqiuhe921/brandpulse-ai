@@ -817,8 +817,11 @@ def render() -> str:
             for icon, label, page_file in _items:
                 st.page_link(f"pages/{page_file}", label=f"{icon} {label}")
             # 管理项并入「合规与审批」分组，仅企业领导可见
+            if _section == "概览" and _admin:
+                st.page_link("pages/18_管理驾驶舱.py", label="📊 管理驾驶舱")
             if _section == "合规与审批" and _admin:
                 st.page_link("pages/11_审批中心.py", label="🗂️ 审批中心")
+                st.page_link("pages/19_合规审计台账.py", label="📒 审计台账")
                 st.page_link("pages/5_账号管理.py", label="👥 账号管理")
 
         # ── Brand selector ────────────────────────────────────────────────
