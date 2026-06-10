@@ -37,10 +37,8 @@ st.markdown(
 
 brand_name = BRAND_DISPLAY_NAMES[brand]
 
-# 品牌切换时清除样本缓存，让文本框重新加载新品牌的演示数据
-if st.session_state.get("_sentiment_last_brand") != brand:
-    st.session_state.pop("comments_display", None)
-    st.session_state["_sentiment_last_brand"] = brand
+# 样本文本框用「品牌后缀 key」，每个品牌独立 widget 实例，
+# 切换品牌即换 widget_id → 强制 remount，彻底规避 pop+value= 的 stale DOM
 
 # ── 数据来源选择 ───────────────────────────────────────────────────
 collected = st.session_state.get("collected_sentiment_text", "")
@@ -59,9 +57,13 @@ if collected and data_source.startswith("使用采集数据"):
     comments_input = collected
     st.text_area("采集数据预览", value=comments_input, height=200, disabled=True)
 elif data_source == "使用内置演示样本":
-    comments = get_sample_comments(brand)
-    st.text_area("样本数据预览（可编辑）", value=comments, height=200, key="comments_display")
-    comments_input = st.session_state.get("comments_display", comments)
+    # 静态 key + 品牌切换时「预先写入」session_state（而非 pop+value=），
+    # 既保留同品牌内的用户编辑，又在换品牌时刷新样本，且不产生孤儿 widget。
+    if st.session_state.get("_sent_sample_brand") != brand:
+        st.session_state["comments_display"] = get_sample_comments(brand)
+        st.session_state["_sent_sample_brand"] = brand
+    st.text_area("样本数据预览（可编辑）", height=200, key="comments_display")
+    comments_input = st.session_state.get("comments_display", "")
 else:
     comments_input = st.text_area(
         "粘贴用户评论/舆情样本（每条一行）",

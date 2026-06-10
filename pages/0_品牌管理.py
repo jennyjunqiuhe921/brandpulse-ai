@@ -646,13 +646,9 @@ with tab_mp:
 # TAB 7 — competitor analysis
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_comp:
-    st.markdown(
-        '<div style="background:#FDFAF5;border:1px solid #DDD4C4;border-left:3px solid #C4522A;border-radius:6px;'
-        'padding:12px 16px;margin:0 0 18px;font-size:13px;color:#7B8299;line-height:1.65">'
-        '<strong style="color:#1C1510">分析维度</strong>：品牌定位 · 产品卖点 · 内容策略 · AI/GEO 可见度 · 策略建议<br>'
-        '结论标注 ✅ 官方事实 / ⚠️ AI推断，禁止对竞品作任何负面评价。</div>',
-        unsafe_allow_html=True,
-    )
+    # 原生组件替代 unsafe_allow_html，避免相邻元素 stale DOM
+    st.info("分析维度：品牌定位 · 产品卖点 · 内容策略 · AI/GEO 可见度 · 策略建议　|　"
+            "结论标注 ✅ 官方事实 / ⚠️ AI推断，禁止对竞品作任何负面评价。")
 
     competitors = {k: v for k, v in BRAND_DISPLAY_NAMES.items() if k != selected_brand}
     comp_keys = list(competitors.keys())
@@ -660,55 +656,65 @@ with tab_comp:
     if not comp_keys:
         st.info("至少需要两个品牌才能进行竞品分析，请先在「新增品牌」中添加更多品牌。")
     else:
-        col_brand_c, col_vs_c, col_comp_c = st.columns([2, 0.3, 2])
-        with col_brand_c:
-            st.markdown("**主品牌**")
-            st.markdown(f"### {brand_label}")
-        with col_vs_c:
-            st.markdown(
-                "<div style='text-align:center;padding-top:28px;font-size:20px;color:#888'>vs</div>",
-                unsafe_allow_html=True,
-            )
-        with col_comp_c:
-            st.markdown("**选择竞品**")
-            competitor = st.selectbox(
-                "竞品",
-                comp_keys,
-                format_func=lambda k: BRAND_DISPLAY_NAMES[k],
-                label_visibility="collapsed",
-                key="comp_select",
-            )
+        # 主品牌标题用原生 st.subheader（不含任何 HTML），且整块禁用 unsafe_allow_html，
+        # 从根上消除 tabs+columns 下相邻 HTML 块引发的旧品牌标题残留
+        with st.container():
+            col_brand_c, col_vs_c, col_comp_c = st.columns([2, 0.3, 2])
+            with col_brand_c:
+                st.caption("主品牌")
+                # 禁用 selectbox 渲染主品牌，「不设 key」——每次运行都用当前 options，
+                # 始终显示当前品牌（与能正常更新的 keyword 框同机制）。
+                # 切忌用品牌后缀 key：那会产生孤儿 widget 导致旧品牌标题 stale DOM 残留。
+                st.selectbox(
+                    "主品牌",
+                    [selected_brand],
+                    format_func=lambda k: BRAND_DISPLAY_NAMES.get(k, k),
+                    disabled=True,
+                    label_visibility="collapsed",
+                )
+            with col_vs_c:
+                st.write("")
+                st.markdown("**vs**")
+            with col_comp_c:
+                st.markdown("**选择竞品**")
+                competitor = st.selectbox(
+                    "竞品",
+                    comp_keys,
+                    format_func=lambda k: BRAND_DISPLAY_NAMES[k],
+                    label_visibility="collapsed",
+                    key="comp_select",
+                )
 
-        if st.button("🚀 运行竞品对标分析", type="primary", key="run_comp"):
-            with st.spinner(f"正在对标分析 {brand_label} vs {BRAND_DISPLAY_NAMES[competitor]}…（约 20-35 秒）"):
-                try:
-                    result = comp_mod.run(selected_brand, competitor)
-                    result["_brand"] = selected_brand
-                    st.session_state["comp_result"] = result
-                    st.session_state["comp_pair"] = (selected_brand, competitor)
-                except Exception as e:
-                    st.error(f"分析失败：{e}")
+            if st.button("🚀 运行竞品对标分析", type="primary", key="run_comp"):
+                with st.spinner(f"正在对标分析 {brand_label} vs {BRAND_DISPLAY_NAMES[competitor]}…（约 20-35 秒）"):
+                    try:
+                        result = comp_mod.run(selected_brand, competitor)
+                        result["_brand"] = selected_brand
+                        st.session_state["comp_result"] = result
+                        st.session_state["comp_pair"] = (selected_brand, competitor)
+                    except Exception as e:
+                        st.error(f"分析失败：{e}")
 
-        # 主品牌切换时立即清除旧竞品分析（双重保险：_brand 字段 + comp_pair）
-        if st.session_state.get("comp_result", {}).get("_brand") != selected_brand:
-            st.session_state.pop("comp_result", None)
-            st.session_state.pop("comp_pair", None)
+            # 主品牌切换时立即清除旧竞品分析（双重保险：_brand 字段 + comp_pair）
+            if st.session_state.get("comp_result", {}).get("_brand") != selected_brand:
+                st.session_state.pop("comp_result", None)
+                st.session_state.pop("comp_pair", None)
 
-        if "comp_result" in st.session_state:
-            pair = st.session_state.get("comp_pair", (None, None))
-            if pair[1] != competitor:
-                stored_comp = BRAND_DISPLAY_NAMES.get(pair[1], pair[1]) if pair[1] else "?"
-                st.info(f"当前显示的是与「{stored_comp}」的分析，如需更新请重新运行")
+            if "comp_result" in st.session_state:
+                pair = st.session_state.get("comp_pair", (None, None))
+                if pair[1] != competitor:
+                    stored_comp = BRAND_DISPLAY_NAMES.get(pair[1], pair[1]) if pair[1] else "?"
+                    st.info(f"当前显示的是与「{stored_comp}」的分析，如需更新请重新运行")
 
-            res = st.session_state["comp_result"]
-            maybe_show_banner(res)
-            st.markdown("---")
-            render_four_blocks(res["output"])
-            render_source_meta(res.get("chunks", []))
-            st.markdown("---")
-            send_col, _ = st.columns([2, 5])
-            with send_col:
-                if st.button("📤 送往合规审查", key="comp_to_compliance", use_container_width=True):
-                    st.session_state["content_for_compliance"] = res["output"]
-                    st.switch_page("pages/8_合规卫士.py")
-            render_disclaimer()
+                res = st.session_state["comp_result"]
+                maybe_show_banner(res)
+                st.markdown("---")
+                render_four_blocks(res["output"])
+                render_source_meta(res.get("chunks", []))
+                st.markdown("---")
+                send_col, _ = st.columns([2, 5])
+                with send_col:
+                    if st.button("📤 送往合规审查", key="comp_to_compliance", use_container_width=True):
+                        st.session_state["content_for_compliance"] = res["output"]
+                        st.switch_page("pages/8_合规卫士.py")
+                render_disclaimer()

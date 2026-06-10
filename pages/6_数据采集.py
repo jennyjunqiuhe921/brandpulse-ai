@@ -59,7 +59,9 @@ tab_brand, tab_industry = st.tabs(["🎯 品牌舆情采集", "📊 行业动态
 # TAB 1 — 品牌舆情采集
 # ══════════════════════════════════════════════════════════════════
 with tab_brand:
-    st.markdown(f"#### 当前品牌：{BRAND_DISPLAY_NAMES[brand]}")
+    # 禁用 text_input 显示当前品牌，「不设 key」用 value=，每次运行重置为当前品牌
+    # （与下方能正常更新的 keyword 框同机制；动态 markdown / 品牌后缀 key 都会 stale）
+    st.text_input("当前品牌", value=BRAND_DISPLAY_NAMES[brand], disabled=True)
 
     col_params, col_btn = st.columns([4, 1])
     with col_params:
