@@ -8,6 +8,7 @@ from utils.sidebar import render as render_sidebar
 import config.content_tasks as content_tasks
 import config.geo_tasks as geo_tasks
 import config.sentiment_tasks as sentiment_tasks
+from config.brand_manager import load_all_brands
 from config.settings import BRAND_DISPLAY_NAMES
 
 st.set_page_config(page_title="工作台 — PinSight AI", page_icon="🏠", layout="wide")
@@ -25,6 +26,28 @@ st.markdown(
 
 brand_name = BRAND_DISPLAY_NAMES.get(brand, brand)
 st.text_input("当前品牌", value=brand_name, disabled=True)
+
+# ── 我的品牌（手机端无需展开侧边栏即可查看/切换）──────────────────────────────
+st.subheader("🏷️ 我的品牌")
+st.caption("点击卡片即可切换当前分析品牌（与侧边栏同步）")
+
+
+def _switch_brand(bid: str):
+    # 回调内修改侧边栏 radio 的 key，切换后下次运行生效
+    st.session_state["brand"] = bid
+
+
+_brands_all = load_all_brands()
+if not _brands_all:
+    st.info("还没有品牌，请到「品牌管理」新增。")
+else:
+    _bcols = st.columns(2)
+    for _i, (_bid, _bdata) in enumerate(_brands_all.items()):
+        _is_cur = _bid == brand
+        _label = ("✅ " if _is_cur else "🏷️ ") + _bdata.get("name", _bid)
+        with _bcols[_i % 2]:
+            st.button(_label, key=f"wb_brand_{_bid}", on_click=_switch_brand,
+                      args=(_bid,), disabled=_is_cur, use_container_width=True)
 
 # ── 待处理任务 ────────────────────────────────────────────────────────────────
 all_tasks = content_tasks.list_tasks(brand_key=brand)
