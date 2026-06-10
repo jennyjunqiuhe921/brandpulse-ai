@@ -12,7 +12,7 @@ from utils.prd_components import render_four_blocks, render_source_meta, render_
 from prompts.geo_analysis_prompt import get_geo_questions, parse_keywords
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="GEO分析 — PinSight AI", page_icon="🌐", layout="wide")
+st.set_page_config(page_title="GEO分析 — PinSight AI", page_icon="🌐", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 # 监测地域选项（全国 + 主要省市，C3）

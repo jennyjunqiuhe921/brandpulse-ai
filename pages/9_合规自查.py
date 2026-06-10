@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.sidebar import render as render_sidebar
 from modules.compliance_precheck import precheck
 
-st.set_page_config(page_title="合规自查 — PinSight AI", page_icon="✅", layout="wide")
+st.set_page_config(page_title="合规自查 — PinSight AI", page_icon="✅", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 st.markdown(

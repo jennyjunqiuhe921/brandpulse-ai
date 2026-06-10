@@ -9,7 +9,7 @@ import config.content_tasks as content_tasks
 from prompts.content_generation_prompt import PLATFORM_GUIDES
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="资产库 — PinSight AI", page_icon="📦", layout="wide")
+st.set_page_config(page_title="资产库 — PinSight AI", page_icon="📦", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 st.markdown(

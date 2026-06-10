@@ -29,7 +29,7 @@ import modules.product_analysis as product_mod
 import modules.market_positioning as mp_mod
 import modules.competitor_analysis as comp_mod
 
-st.set_page_config(page_title="品牌管理 · PinSight AI", layout="wide")
+st.set_page_config(page_title="品牌管理 · PinSight AI", layout="wide", initial_sidebar_state="expanded")
 selected_brand = render_sidebar()
 
 # 品牌切换时清除所有分析结果缓存，防止串台显示

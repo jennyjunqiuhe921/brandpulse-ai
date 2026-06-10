@@ -11,7 +11,7 @@ import config.sentiment_tasks as sentiment_tasks
 from config.brand_manager import load_all_brands
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="工作台 — PinSight AI", page_icon="🏠", layout="wide")
+st.set_page_config(page_title="工作台 — PinSight AI", page_icon="🏠", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 st.markdown(

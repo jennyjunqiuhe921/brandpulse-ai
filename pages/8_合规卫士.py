@@ -9,7 +9,7 @@ from utils.result_banner import maybe_show_banner
 from utils.prd_components import render_four_blocks, render_source_meta, render_disclaimer, review_gate
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="合规审查 — PinSight AI", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="合规审查 — PinSight AI", page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 st.markdown(

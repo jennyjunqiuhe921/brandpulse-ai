@@ -14,7 +14,7 @@ from utils.prd_components import render_four_blocks, render_disclaimer, review_g
 from prompts.content_generation_prompt import PLATFORM_GUIDES, DEFAULT_PLATFORMS
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="内容生成工厂 — PinSight AI", page_icon="✍️", layout="wide")
+st.set_page_config(page_title="内容生成工厂 — PinSight AI", page_icon="✍️", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 # ── 表单字段默认值（widget key 统一管理，避免 value/session_state 双绑冲突）──────

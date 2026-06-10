@@ -13,7 +13,7 @@ from utils.prd_components import render_four_blocks, render_source_meta, render_
 from prompts.sentiment_prompt import get_sample_comments
 from config.settings import BRAND_DISPLAY_NAMES
 
-st.set_page_config(page_title="AI舆情分析 — PinSight AI", page_icon="📰", layout="wide")
+st.set_page_config(page_title="AI舆情分析 — PinSight AI", page_icon="📰", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 # D4 · 数据渠道（含 O2O 平台大众点评/美团）

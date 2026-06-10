@@ -17,7 +17,7 @@ from modules.collect_helpers import channel_risk, group_by_keywords, DEFAULT_NEG
 import config.collect_tasks as collect_tasks
 from prompts.geo_analysis_prompt import parse_keywords
 
-st.set_page_config(page_title="数据采集 — PinSight AI", page_icon="📡", layout="wide")
+st.set_page_config(page_title="数据采集 — PinSight AI", page_icon="📡", layout="wide", initial_sidebar_state="expanded")
 brand = render_sidebar()
 
 st.markdown(
