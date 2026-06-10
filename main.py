@@ -21,3 +21,5 @@ pg = st.navigation(
     position="hidden",   # hide Streamlit's built-in nav; we render nav in sidebar.py
 )
 pg.run()
+
+# deploy: force clean rebuild on Streamlit Cloud (python 3.11)
