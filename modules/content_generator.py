@@ -16,6 +16,10 @@ def run(
     platforms: list,
     tone_key: str,
     goal: str,
+    selling_points: str = "",
+    versions_per_platform: int = 3,
+    word_limit: str = "",
+    region: str = "",
     run_refcheck: bool = False,
 ) -> dict:
     chunks = retrieve(brand_key, f"{product_name} 产品特点 卖点 品牌调性", n_results=5)
@@ -29,17 +33,41 @@ def run(
         f"**{p}**：{PLATFORM_GUIDES.get(p, '')}" for p in platforms
     )
 
-    system = build_system(brand_name, tone, brand_focus)
+    system = build_system(
+        brand_name,
+        tone,
+        brand_focus,
+        versions_per_platform=versions_per_platform,
+        word_limit=word_limit,
+        region=region,
+    )
+
+    n_ver = max(2, min(int(versions_per_platform or 3), 5))
+    sp_block = f"核心卖点：{selling_points}\n" if selling_points else ""
 
     user_msg = f"""产品：{product_name}
-推广目标：{goal}
+{sp_block}推广目标：{goal}
 目标平台及要求：
 {platform_instructions}
 
 【品牌知识库内容】
 {context}
 
-请为以上每个平台生成完整的内容，用 --- 分隔。"""
+请为以上每个平台生成完整内容，每个平台 {n_ver} 个差异化版本，用 --- 分隔不同平台。"""
 
-    output = chat(system, user_msg, max_tokens=3000)
-    return {"output": output, "chunks": chunks, "platforms": platforms}
+    output = chat(system, user_msg, max_tokens=4000)
+    return {
+        "output": output,
+        "chunks": chunks,
+        "platforms": platforms,
+        "_meta": {
+            "product_name": product_name,
+            "selling_points": selling_points,
+            "goal": goal,
+            "tone_key": tone_key,
+            "platforms": platforms,
+            "versions_per_platform": versions_per_platform,
+            "word_limit": word_limit,
+            "region": region,
+        },
+    }

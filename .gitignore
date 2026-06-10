@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 *.egg-info/
 .venv/
+
+# runtime content task store
+data/content_tasks.json
