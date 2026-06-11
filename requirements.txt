@@ -1,9 +1,11 @@
 # ── Core ──────────────────────────────────────────────────────────────────────
 streamlit>=1.35.0
-protobuf>=4.25,<5   # 锁 4.x：protobuf 5/6 会与 chromadb/opentelemetry 生成代码冲突
 anthropic>=0.28.0
-chromadb>=0.5.3
 python-dotenv>=1.0.0
+# 注：chromadb（知识库向量库）从云端依赖中移除——它牵连 opentelemetry/grpc/protobuf
+# 一长串脆弱依赖，在 Streamlit Cloud 上反复触发 protobuf 版本冲突。知识库功能在
+# rag_engine 中已做惰性容错降级（缺 chromadb 时显示 0/不可用，不影响其余全部功能）。
+# 本地开发如需知识库：pip install chromadb 即可恢复。
 
 # ── Document Processing ────────────────────────────────────────────────────────
 pypdf>=4.2.0
