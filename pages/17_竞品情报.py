@@ -9,6 +9,9 @@ from db.models import COMPETITOR_DIMENSIONS
 
 render()
 
+from config.plan_features import require_feature
+require_feature("competitor")
+
 st.markdown('<div class="page-header"><h1>竞品情报仓库</h1>'
             '<p class="page-desc">常态化竞品监控：品牌/产品/舆情/GEO/内容/策略六维情报、'
             '综合对标、历史归档与异动预警。所有内容基于公开数据客观分析。</p></div>',

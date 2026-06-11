@@ -10,6 +10,8 @@ _LEVEL_COLOR = {"优秀": "#2E7D32", "良好": "#1E88E5", "一般": "#F9A825", "
 
 
 def render(brand: str) -> None:
+    from config.plan_features import require_feature
+    require_feature("full_geo")
     st.caption("监测→优化→复测→验效→迭代全闭环：选择本轮与基准任务，自动计算指标提升、"
                "量化效果评级与趋势。")
     records = geo_tasks.list_records(brand_key=brand)

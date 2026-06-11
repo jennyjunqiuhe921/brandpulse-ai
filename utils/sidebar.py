@@ -811,14 +811,26 @@ def render() -> str:
         except Exception:
             _admin = False
 
+        # 套餐功能门控：按当前租户套餐隐藏未授权菜单
+        try:
+            from config.plan_features import has_feature, current_plan
+            _plan = current_plan()
+        except Exception:
+            _plan, has_feature = "企业集团版", lambda k: True
+        _PAGE_FEATURE = {"16_智能选品.py": "selection_full", "17_竞品情报.py": "competitor"}
+
         for _section, _items in _NAV_GROUPS:
             st.markdown(f'<div class="sidebar-section-label">{_section}</div>',
                         unsafe_allow_html=True)
             for icon, label, page_file in _items:
+                feat = _PAGE_FEATURE.get(page_file)
+                if feat and not has_feature(feat):
+                    continue  # 套餐未授权，隐藏
                 st.page_link(f"pages/{page_file}", label=f"{icon} {label}")
             # 管理项并入「合规与审批」分组，仅企业领导可见
             if _section == "概览" and _admin:
                 st.page_link("pages/18_管理驾驶舱.py", label="📊 管理驾驶舱")
+                st.page_link("pages/21_冷启动向导.py", label="🚀 冷启动向导")
             if _section == "合规与审批" and _admin:
                 st.page_link("pages/11_审批中心.py", label="🗂️ 审批中心")
                 st.page_link("pages/19_合规审计台账.py", label="📒 审计台账")
@@ -888,6 +900,17 @@ def render() -> str:
                 '<div class="sidebar-status live">🟢 API 已连接 · 动态生成模式</div>',
                 unsafe_allow_html=True,
             )
+
+        # ── 套餐标识 ───────────────────────────────────────────────────────
+        try:
+            _pc = {"基础执行版": "#9C8E82", "标准管控版": "#2B6CB0", "企业集团版": "#3D7A5A"}
+            st.markdown(
+                f'<div style="margin:6px 14px 0;padding:4px 10px;border-radius:6px;'
+                f'background:{_pc.get(_plan,"#9C8E82")}1A;color:{_pc.get(_plan,"#9C8E82")};'
+                f'font-size:11px;text-align:center">📦 当前套餐：{_plan}</div>',
+                unsafe_allow_html=True)
+        except Exception:
+            pass
 
         # ── 账号 + 登出 ────────────────────────────────────────────────────
         try:

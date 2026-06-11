@@ -10,6 +10,9 @@ from utils.watermark import stamp_text_export
 
 brand = render()
 
+from config.plan_features import require_feature
+require_feature("selection_full")
+
 st.markdown('<div class="page-header"><h1>商品智能选品</h1>'
             '<p class="page-desc">多维数据驱动的新品/迭代/区域款/竞品对标选品：综合评分 = '
             '市场热度30 + 口碑30 + 差异化20 + 合规20。</p></div>', unsafe_allow_html=True)

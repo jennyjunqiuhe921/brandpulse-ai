@@ -21,7 +21,7 @@ if not is_admin():
     st.warning("企业管理面向企业领导/管理层。")
     st.stop()
 
-tab1, tab2, tab3 = st.tabs(["📂 全员任务总览", "🏢 组织架构", "⚙️ 企业设置"])
+tab1, tab2, tab3, tab4 = st.tabs(["📂 全员任务总览", "🏢 组织架构", "⚙️ 企业设置", "📦 套餐权益"])
 
 # ── S4-4 各模块管理视角：企业级任务列表（只读全员）──────────────────────────────
 with tab1:
@@ -95,3 +95,12 @@ with tab3:
     if st.button("💾 保存企业设置", type="primary"):
         audit.log("企业设置变更", f"名称={cfg['name']} 默认密级={cfg['secrecy_default']}")
         st.success("企业设置已保存")
+
+# ── S6-1 套餐权益矩阵 ────────────────────────────────────────────────────────
+with tab4:
+    from config.plan_features import current_plan, matrix_dataframe
+    plan = current_plan()
+    st.markdown(f"#### 当前套餐：**{plan}**")
+    st.caption("✅ = 该套餐包含；— = 需升级。升级请联系平台运营。")
+    st.dataframe(matrix_dataframe(), use_container_width=True, hide_index=True)
+    st.info("基础采集 / 文案 / 简易GEO / 基础舆情 / 基础选品 为各套餐共有，不在上表门控范围。")

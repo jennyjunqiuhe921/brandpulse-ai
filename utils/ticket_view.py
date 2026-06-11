@@ -10,6 +10,8 @@ SEGMENTS = ["年轻女性", "学生党", "一线城市", "下沉市场", "到店
 
 
 def render(brand: str) -> None:
+    from config.plan_features import require_feature
+    require_feature("sentiment_ticket")
     sub1, sub2, sub3 = st.tabs(["🎫 工单处置", "📚 负面案例库", "📊 传播概览"])
 
     with sub1:
