@@ -16,3 +16,6 @@ data/collect_tasks.json
 data/app.db
 data/app.db-wal
 data/app.db-shm
+
+# Streamlit secrets（含数据库密码，禁止提交）
+.streamlit/secrets.toml

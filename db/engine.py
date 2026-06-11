@@ -35,22 +35,31 @@ def _resolve_url() -> str:
     return f"sqlite:///{_DATA_DIR / 'app.db'}"
 
 
+def _sanitize_pg(url: str) -> str:
+    """清洗 Postgres 连接串：剥离 psycopg2 不识别的 Prisma 参数(pgbouncer)，
+    确保 sslmode=require（Supabase 需要）。"""
+    from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+    parts = urlsplit(url)
+    q = dict(parse_qsl(parts.query))
+    q.pop("pgbouncer", None)          # Prisma 专用，psycopg2 会报错
+    q.setdefault("sslmode", "require")  # Supabase 强制 SSL
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), parts.fragment))
+
+
 DATABASE_URL = _resolve_url()
+_IS_SQLITE = DATABASE_URL.startswith("sqlite")
+if not _IS_SQLITE and DATABASE_URL.startswith("postgres"):
+    DATABASE_URL = _sanitize_pg(DATABASE_URL)
 
-# SQLite 需要 check_same_thread=False 以配合 Streamlit 多线程；
-# timeout 让并发访问等待锁释放而非立即报 "database is locked"
-_connect_args = (
-    {"check_same_thread": False, "timeout": 30}
-    if DATABASE_URL.startswith("sqlite") else {}
-)
+# SQLite：check_same_thread=False 配合 Streamlit 多线程；timeout 等待锁释放
+_connect_args = {"check_same_thread": False, "timeout": 30} if _IS_SQLITE else {}
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,
-    future=True,
-    connect_args=_connect_args,
-    pool_pre_ping=True,
-)
+_engine_kwargs = dict(echo=False, future=True, connect_args=_connect_args, pool_pre_ping=True)
+if not _IS_SQLITE:
+    # 连接池友好设置（Supabase Session pooler）：回收空闲连接，避免被池化层断开
+    _engine_kwargs.update(pool_size=5, max_overflow=5, pool_recycle=1800)
+
+engine = create_engine(DATABASE_URL, **_engine_kwargs)
 
 
 # SQLite 并发健壮性：WAL 模式(读写不互斥) + busy_timeout(等待锁) + 外键
