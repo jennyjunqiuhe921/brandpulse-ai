@@ -1,11 +1,48 @@
 """ChromaDB RAG engine — brand-namespaced retrieval."""
 import chromadb
 from chromadb.utils import embedding_functions
-try:
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-except ImportError:
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
 from config.settings import CHROMA_DB_PATH, BRAND_COLLECTIONS, CHUNK_SIZE, CHUNK_OVERLAP
+
+
+def _split_text(text: str, chunk_size: int, overlap: int) -> list[str]:
+    """轻量文本切分（替代 langchain RecursiveCharacterTextSplitter，零额外依赖）。
+
+    优先按段落/句子边界切分，超长则按字符滑窗，块间保留 overlap 重叠。
+    """
+    if not text:
+        return []
+    seps = ["\n\n", "\n", "。", "！", "？", ".", "!", "?", " "]
+    chunks, buf = [], ""
+    # 先按最强分隔符切成片段，再贪心合并到接近 chunk_size
+    import re
+    pieces = re.split(r"(\n\n|\n|(?<=[。！？.!?]))", text)
+    for p in pieces:
+        if not p:
+            continue
+        if len(buf) + len(p) <= chunk_size:
+            buf += p
+        else:
+            if buf:
+                chunks.append(buf)
+            # 处理超长单片
+            if len(p) > chunk_size:
+                i = 0
+                while i < len(p):
+                    chunks.append(p[i:i + chunk_size])
+                    i += max(1, chunk_size - overlap)
+                buf = ""
+            else:
+                buf = p
+    if buf:
+        chunks.append(buf)
+    # 加入块间重叠
+    if overlap > 0 and len(chunks) > 1:
+        out = [chunks[0]]
+        for i in range(1, len(chunks)):
+            prev_tail = chunks[i - 1][-overlap:]
+            out.append(prev_tail + chunks[i])
+        chunks = out
+    return [c.strip() for c in chunks if c.strip()]
 
 _client = None
 
@@ -28,10 +65,7 @@ def get_collection(brand_key: str):
 
 def ingest_text(brand_key: str, text: str, source: str) -> int:
     """Split text and upsert into the brand's collection. Returns chunk count."""
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
-    )
-    chunks = splitter.split_text(text)
+    chunks = _split_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
     if not chunks:
         return 0
 
