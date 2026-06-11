@@ -65,8 +65,16 @@ def _do_chat(system: str, user: str, max_tokens: int) -> str:
 
 
 def chat(system: str, user: str, max_tokens: int = 2048) -> str:
-    """对外统一入口：执行调用并写入 AI 网关日志（尽力而为，不阻断主流程）。"""
+    """对外统一入口：限流闸门 + 执行调用 + 写入 AI 网关日志。"""
     import time
+    # 限流（仅真实 API 模式生效；超额抛 QuotaError，输入过长自动截断）
+    try:
+        from core import ai_gateway
+        user = ai_gateway.enforce_limits(user)
+    except Exception as e:
+        if e.__class__.__name__ == "QuotaError":
+            raise
+        # 限流自身异常不阻断主流程
     t0 = time.time()
     ok = True
     try:

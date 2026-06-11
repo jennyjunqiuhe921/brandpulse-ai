@@ -6,9 +6,14 @@
 设计为"尽力而为"：日志/限流失败绝不阻断主流程（除非显式额度拦截）。
 """
 from __future__ import annotations
+import os
 from datetime import datetime
 
 QuotaError = type("QuotaError", (RuntimeError,), {})
+
+# 限流配置（可用环境变量覆盖；设为 0 表示不限制）
+USER_DAILY_LIMIT = int(os.getenv("AI_USER_DAILY_LIMIT", "50"))   # 每账号每日 AI 调用上限
+MAX_INPUT_CHARS = int(os.getenv("AI_MAX_INPUT_CHARS", "24000"))  # 单次输入最大字符数
 
 
 def _today_str() -> str:
@@ -46,10 +51,58 @@ def quota_limit(tenant_id: int | None = None) -> int:
 
 
 def check_quota(tenant_id: int | None = None) -> tuple[bool, int, int]:
-    """返回 (是否可调用, 已用, 上限)。"""
+    """租户级：返回 (是否可调用, 已用, 上限)。"""
     used = usage_today(tenant_id)
     limit = quota_limit(tenant_id)
     return used < limit, used, limit
+
+
+def usage_today_user(user_id: int | None = None) -> int:
+    """当前用户今日 AI 调用次数。"""
+    try:
+        from sqlalchemy import func
+        from db.engine import get_session
+        from db.models import AiCallLog
+        from db import context as ctx
+        uid = user_id if user_id is not None else ctx.user_id()
+        if uid is None:
+            return 0
+        with get_session() as s:
+            return (s.query(func.count(AiCallLog.id))
+                    .filter(AiCallLog.user_id == uid)
+                    .filter(func.date(AiCallLog.ts) == _today_str())
+                    .scalar() or 0)
+    except Exception:
+        return 0
+
+
+def check_user_quota(user_id: int | None = None) -> tuple[bool, int, int]:
+    """账号级：返回 (是否可调用, 已用, 上限)。上限=0 表示不限制。"""
+    if USER_DAILY_LIMIT <= 0:
+        return True, 0, 0
+    used = usage_today_user(user_id)
+    return used < USER_DAILY_LIMIT, used, USER_DAILY_LIMIT
+
+
+def enforce_limits(user_text: str) -> str:
+    """调用前统一限流闸门（仅真实 API 模式生效）。
+    返回（可能被截断的）user_text；超额则抛 QuotaError。"""
+    from core import llm_client
+    if getattr(llm_client, "DEMO_MODE", True):
+        return user_text  # Demo 模式不限制，方便演示
+    # 账号级
+    ok_u, used_u, lim_u = check_user_quota()
+    if not ok_u:
+        raise QuotaError(f"今日个人 AI 调用已达上限（{used_u}/{lim_u} 次），"
+                         f"请明天再试，或联系管理员调整额度。")
+    # 租户级
+    ok_t, used_t, lim_t = check_quota()
+    if not ok_t:
+        raise QuotaError(f"企业今日 AI 额度已用尽（{used_t}/{lim_t} 次），请联系管理员扩容。")
+    # 输入长度
+    if MAX_INPUT_CHARS > 0 and len(user_text) > MAX_INPUT_CHARS:
+        return user_text[:MAX_INPUT_CHARS]
+    return user_text
 
 
 def record_call(module: str = "", prompt_category: str = "", model: str = "",
