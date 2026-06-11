@@ -17,7 +17,7 @@ from db.engine import Base
 
 # ── 租户（企业）──────────────────────────────────────────────────────────────
 class Tenant(Base):
-    __tablename__ = "tenants"
+    __tablename__ = "pin_tenants"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     industry: Mapped[str] = mapped_column(String(60), default="")
@@ -43,9 +43,9 @@ ROLE_LABELS = {
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "pin_users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("pin_tenants.id"), index=True)
     username: Mapped[str] = mapped_column(String(60), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(200), nullable=False)
     name: Mapped[str] = mapped_column(String(60), default="")
@@ -57,10 +57,10 @@ class User(Base):
 
 # ── 品牌（字符串主键，兼容现有 collection_name / 显示名逻辑）──────────────────
 class Brand(Base):
-    __tablename__ = "brands"
+    __tablename__ = "pin_brands"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("pin_tenants.id"), index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("pin_users.id"), nullable=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     industry: Mapped[str] = mapped_column(String(60), default="")
     description: Mapped[str] = mapped_column(Text, default="")
@@ -83,10 +83,10 @@ PRIORITIES = [PRIORITY_URGENT, PRIORITY_NORMAL, PRIORITY_LOW]
 
 
 class ContentTask(Base):
-    __tablename__ = "content_tasks"
+    __tablename__ = "pin_content_tasks"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("pin_tenants.id"), index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("pin_users.id"), nullable=True, index=True)
     brand: Mapped[str] = mapped_column(String(64), index=True)
     title: Mapped[str] = mapped_column(String(200), default="")
     platforms: Mapped[list] = mapped_column(JSON, default=list)
@@ -102,10 +102,10 @@ class ContentTask(Base):
 
 
 class GeoTask(Base):
-    __tablename__ = "geo_tasks"
+    __tablename__ = "pin_geo_tasks"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("pin_tenants.id"), index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("pin_users.id"), nullable=True, index=True)
     brand: Mapped[str] = mapped_column(String(64), index=True)
     period: Mapped[str] = mapped_column(String(20), default="单次")
     region: Mapped[str] = mapped_column(String(40), default="全国")
@@ -119,10 +119,10 @@ class GeoTask(Base):
 
 
 class SentimentTask(Base):
-    __tablename__ = "sentiment_tasks"
+    __tablename__ = "pin_sentiment_tasks"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("pin_tenants.id"), index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("pin_users.id"), nullable=True, index=True)
     brand: Mapped[str] = mapped_column(String(64), index=True)
     risk_level: Mapped[int] = mapped_column(Integer, default=1)
     risk_label: Mapped[str] = mapped_column(String(20), default="")
@@ -136,10 +136,10 @@ class SentimentTask(Base):
 
 
 class CollectTask(Base):
-    __tablename__ = "collect_tasks"
+    __tablename__ = "pin_collect_tasks"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("pin_tenants.id"), index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("pin_users.id"), nullable=True, index=True)
     brand: Mapped[str] = mapped_column(String(64), index=True)
     platform: Mapped[str] = mapped_column(String(40), default="")
     schedule: Mapped[str] = mapped_column(String(20), default="单次执行")
@@ -154,7 +154,7 @@ class CollectTask(Base):
 
 # ── 审计日志（只增不改，为商用合规铺路）──────────────────────────────────────
 class AuditLog(Base):
-    __tablename__ = "audit_logs"
+    __tablename__ = "pin_audit_logs"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     tenant_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -169,7 +169,7 @@ MODEL_TYPES = ["文本", "生图", "生视频"]
 
 
 class ModelConfig(Base):
-    __tablename__ = "model_configs"
+    __tablename__ = "pin_model_configs"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(80), nullable=False)
     model_type: Mapped[str] = mapped_column(String(20), default="文本")
@@ -185,7 +185,7 @@ PROMPT_CATEGORIES = ["文案生成", "GEO优化", "舆情分析", "通用校验"
 
 
 class PromptTemplate(Base):
-    __tablename__ = "prompt_templates"
+    __tablename__ = "pin_prompt_templates"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     category: Mapped[str] = mapped_column(String(20), default="文案生成", index=True)
@@ -211,7 +211,7 @@ MSG_TYPES = [MSG_APPROVAL, MSG_TASK, MSG_RISK, MSG_COMPETITOR, MSG_GEO, MSG_REPO
 
 
 class Message(Base):
-    __tablename__ = "messages"
+    __tablename__ = "pin_messages"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True)
     user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)  # None=全员
@@ -226,7 +226,7 @@ class Message(Base):
 
 # ── 商品智能选品（S3-1）──────────────────────────────────────────────────────
 class SelectionTask(Base):
-    __tablename__ = "selection_tasks"
+    __tablename__ = "pin_selection_tasks"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True)
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
@@ -252,7 +252,7 @@ COMPETITOR_DIMENSIONS = ["品牌情报", "产品情报", "舆情情报", "GEO情
 
 
 class Competitor(Base):
-    __tablename__ = "competitors"
+    __tablename__ = "pin_competitors"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True)
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -270,7 +270,7 @@ class Competitor(Base):
 
 
 class CompetitorIntel(Base):
-    __tablename__ = "competitor_intel"
+    __tablename__ = "pin_competitor_intel"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True)
     competitor_id: Mapped[str] = mapped_column(String(40), index=True)
@@ -287,7 +287,7 @@ TICKET_LEVEL_LABEL = {0: "0级·日常", 1: "1级·轻度", 2: "2级·中度", 3
 
 
 class SentimentTicket(Base):
-    __tablename__ = "sentiment_tickets"
+    __tablename__ = "pin_sentiment_tickets"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True)
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -318,7 +318,7 @@ STEP_REJECT = "已驳回"
 
 
 class ApprovalRequest(Base):
-    __tablename__ = "approval_requests"
+    __tablename__ = "pin_approval_requests"
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True)
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)  # 发起人
@@ -340,7 +340,7 @@ class ApprovalRequest(Base):
 
 
 class ApprovalStep(Base):
-    __tablename__ = "approval_steps"
+    __tablename__ = "pin_approval_steps"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     request_id: Mapped[str] = mapped_column(String(40), index=True)
     step_no: Mapped[int] = mapped_column(Integer, default=1)
@@ -354,7 +354,7 @@ class ApprovalStep(Base):
 
 
 class ApprovalComment(Base):
-    __tablename__ = "approval_comments"
+    __tablename__ = "pin_approval_comments"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     request_id: Mapped[str] = mapped_column(String(40), index=True)
     user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -365,7 +365,7 @@ class ApprovalComment(Base):
 
 # ── AI 网关调用日志（S1-5）──────────────────────────────────────────────────
 class AiCallLog(Base):
-    __tablename__ = "ai_call_logs"
+    __tablename__ = "pin_ai_call_logs"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     tenant_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

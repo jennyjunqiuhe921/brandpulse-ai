@@ -21,13 +21,13 @@ from auth.security import hash_password
 
 # 轻量迁移：为已存在的表补加新列（SQLite/Postgres 均支持 ADD COLUMN）
 _NEW_COLUMNS = {
-    "tenants": [("ai_daily_quota", "INTEGER", "1000"), ("max_users", "INTEGER", "10"),
+    "pin_tenants": [("ai_daily_quota", "INTEGER", "1000"), ("max_users", "INTEGER", "10"),
                 ("contact", "VARCHAR(60)", "''"), ("expire_at", "VARCHAR(20)", "''"),
                 ("status", "VARCHAR(20)", "'正常'")],
-    "content_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
-    "geo_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
-    "sentiment_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
-    "collect_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "pin_content_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "pin_geo_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "pin_sentiment_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "pin_collect_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
 }
 
 
