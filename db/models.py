@@ -23,6 +23,10 @@ class Tenant(Base):
     industry: Mapped[str] = mapped_column(String(60), default="")
     plan: Mapped[str] = mapped_column(String(30), default="基础执行版")
     ai_daily_quota: Mapped[int] = mapped_column(Integer, default=1000)  # AI 单日调用额度
+    max_users: Mapped[int] = mapped_column(Integer, default=10)
+    contact: Mapped[str] = mapped_column(String(60), default="")
+    expire_at: Mapped[str] = mapped_column(String(20), default="")
+    status: Mapped[str] = mapped_column(String(20), default="正常")  # 正常/冻结/已注销
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -158,6 +162,40 @@ class AuditLog(Base):
     action: Mapped[str] = mapped_column(String(60), default="")
     target: Mapped[str] = mapped_column(String(200), default="")
     ts: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# ── 运营侧：大模型配置中心（S5）─────────────────────────────────────────────
+MODEL_TYPES = ["文本", "生图", "生视频"]
+
+
+class ModelConfig(Base):
+    __tablename__ = "model_configs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    model_type: Mapped[str] = mapped_column(String(20), default="文本")
+    api_base: Mapped[str] = mapped_column(String(200), default="")
+    api_key_masked: Mapped[str] = mapped_column(String(80), default="")  # 仅存掩码，不存明文
+    status: Mapped[str] = mapped_column(String(20), default="未启用")  # 未启用/测试中/正常/已停用
+    note: Mapped[str] = mapped_column(String(200), default="")
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+
+
+# ── 运营侧：Prompt 统一管理中心（S5）────────────────────────────────────────
+PROMPT_CATEGORIES = ["文案生成", "GEO优化", "舆情分析", "通用校验", "选品分析", "竞品分析"]
+
+
+class PromptTemplate(Base):
+    __tablename__ = "prompt_templates"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    category: Mapped[str] = mapped_column(String(20), default="文案生成", index=True)
+    model_name: Mapped[str] = mapped_column(String(80), default="")
+    content: Mapped[str] = mapped_column(Text, default="")
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(20), default="草稿")  # 草稿/已启用
+    history: Mapped[list] = mapped_column(JSON, default=list)  # 历史版本快照
+    created_by: Mapped[str] = mapped_column(String(60), default="")
+    updated_at: Mapped[str] = mapped_column(String(20), default="")
 
 
 # ── 全局消息中心（S1-2）──────────────────────────────────────────────────────

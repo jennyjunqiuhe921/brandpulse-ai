@@ -12,16 +12,18 @@ from sqlalchemy import inspect, text
 from db.engine import engine, get_session, Base
 from db import models  # noqa: F401  确保模型注册到 Base
 from db.models import (
-    Tenant, User, Brand, Message, ROLE_ADMIN, ROLE_STAFF,
+    Tenant, User, Brand, Message, ROLE_ADMIN, ROLE_STAFF, ROLE_PLATFORM,
     MSG_SYSTEM, MSG_TASK, MSG_RISK,
     ApprovalRequest, ApprovalStep, APR_PENDING, STEP_WAIT,
-    GeoTask,
+    GeoTask, PromptTemplate, PROMPT_CATEGORIES,
 )
 from auth.security import hash_password
 
 # 轻量迁移：为已存在的表补加新列（SQLite/Postgres 均支持 ADD COLUMN）
 _NEW_COLUMNS = {
-    "tenants": [("ai_daily_quota", "INTEGER", "1000")],
+    "tenants": [("ai_daily_quota", "INTEGER", "1000"), ("max_users", "INTEGER", "10"),
+                ("contact", "VARCHAR(60)", "''"), ("expire_at", "VARCHAR(20)", "''"),
+                ("status", "VARCHAR(20)", "'正常'")],
     "content_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
     "geo_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
     "sentiment_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
@@ -75,6 +77,14 @@ def init_db() -> None:
                 password_hash=hash_password("staff123"),
                 name="市场专员",
                 role=ROLE_STAFF,
+            ))
+            # 平台运营管理员（运营后台专用，独立入口登录）
+            s.add(User(
+                tenant_id=tenant.id,
+                username="platform",
+                password_hash=hash_password("platform123"),
+                name="平台运营",
+                role=ROLE_PLATFORM,
             ))
 
         # 3. 导入演示品牌（仅当库内无品牌时）
@@ -150,6 +160,24 @@ def init_db() -> None:
                 meta={"metrics": {"exposure": 66.0, "accuracy": 86.0,
                                   "rank": 3, "competitor_gap": 18.0}},
                 summary="复测轮 · 8题 · 全国", created_at="2026-06-08 10:00"))
+
+        # 7. 默认 Prompt 模板（每分类一条已启用基线）
+        if s.query(PromptTemplate).count() == 0:
+            _base = {
+                "文案生成": "你是资深品牌文案，基于品牌调性与合规规则生成多平台营销文案，"
+                            "采用品牌锚定+场景分层+合规三层创作法。",
+                "GEO优化": "你是 GEO 生成式引擎优化专家，遵循 E-E-A-T 权威准则，"
+                           "分析品牌在 AI 问答中的曝光与准确性并给出合规优化方案。",
+                "舆情分析": "你是舆情分析专家，按五级风险标准研判情感与危机信号，输出处置话术。",
+                "通用校验": "你是合规审查助手，依据广告法识别绝对化用语与违规功效声明。",
+                "选品分析": "你是选品分析师，从市场热度/口碑/差异化/合规四维评分并给出推荐。",
+                "竞品分析": "你是竞品情报分析师，基于公开数据客观研判，禁止编造或抹黑。",
+            }
+            for cat in PROMPT_CATEGORIES:
+                s.add(PromptTemplate(
+                    name=f"{cat}默认模板", category=cat, model_name="默认文本模型",
+                    content=_base.get(cat, ""), version=1, status="已启用",
+                    history=[], created_by="system", updated_at="2026-06-01 00:00"))
 
 
 if __name__ == "__main__":
