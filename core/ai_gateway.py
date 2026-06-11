@@ -12,7 +12,7 @@ from datetime import datetime
 QuotaError = type("QuotaError", (RuntimeError,), {})
 
 # 限流配置（可用环境变量覆盖；设为 0 表示不限制）
-USER_DAILY_LIMIT = int(os.getenv("AI_USER_DAILY_LIMIT", "50"))   # 每账号每日 AI 调用上限
+USER_DAILY_LIMIT = int(os.getenv("AI_USER_DAILY_LIMIT", "20"))   # 每账号每日 AI 调用上限
 MAX_INPUT_CHARS = int(os.getenv("AI_MAX_INPUT_CHARS", "24000"))  # 单次输入最大字符数
 
 
