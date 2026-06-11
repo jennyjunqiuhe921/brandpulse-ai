@@ -39,7 +39,7 @@ def _render_login_form():
         """
 <div style="max-width:420px;margin:8vh auto 0;text-align:center">
   <div style="font-size:40px">🛰️</div>
-  <h1 style="font-family:'Noto Serif SC',serif;margin:6px 0 2px">智营AI · 运营管理后台</h1>
+  <h1 style="font-family:'Noto Serif SC',serif;margin:6px 0 2px;font-size:26px;white-space:nowrap">智营AI · 运营管理后台</h1>
   <p style="color:#9C8E82;margin:0 0 18px">平台运营专用入口 · 与品牌方系统物理隔离</p>
 </div>
 """,
