@@ -30,6 +30,9 @@ if not is_admin():
     st.warning("管理驾驶舱面向企业领导/管理层。")
     st.stop()
 
+st.info("📊 本页为**全公司聚合视图**，统计所有品牌的汇总数据，**不随左侧「分析品牌」切换**。"
+        "如需查看单一品牌明细，请到对应执行模块（内容工坊 / GEO / 舆情中心 等）。")
+
 
 def _syn(seed: str, lo: int, hi: int) -> int:
     return lo + int(hashlib.md5(seed.encode()).hexdigest(), 16) % (hi - lo + 1)
