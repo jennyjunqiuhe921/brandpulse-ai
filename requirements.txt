@@ -1,6 +1,6 @@
 # ── Core ──────────────────────────────────────────────────────────────────────
 streamlit>=1.35.0
-protobuf>=4.25
+protobuf>=4.25,<5   # 锁 4.x：protobuf 5/6 会与 chromadb/opentelemetry 生成代码冲突
 anthropic>=0.28.0
 chromadb>=0.5.3
 python-dotenv>=1.0.0

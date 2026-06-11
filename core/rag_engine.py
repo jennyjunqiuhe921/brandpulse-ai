@@ -1,7 +1,29 @@
-"""ChromaDB RAG engine — brand-namespaced retrieval."""
-import chromadb
-from chromadb.utils import embedding_functions
+"""ChromaDB RAG engine — brand-namespaced retrieval。
+
+chromadb 采用「惰性 + 容错」导入：它牵涉 opentelemetry/grpc/protobuf 一长串
+脆弱依赖，云端环境偶发导入失败。这里把导入推迟到真正用到时，并在失败时优雅降级
+（知识库功能不可用，但不拖垮整个应用）。"""
 from config.settings import CHROMA_DB_PATH, BRAND_COLLECTIONS, CHUNK_SIZE, CHUNK_OVERLAP
+
+_chromadb = None
+_ef = None
+CHROMA_OK = True
+
+
+def _load_chromadb():
+    """惰性加载 chromadb；失败则标记不可用并返回 None。"""
+    global _chromadb, _ef, CHROMA_OK
+    if _chromadb is not None or not CHROMA_OK:
+        return _chromadb
+    try:
+        import chromadb
+        from chromadb.utils import embedding_functions
+        _chromadb = chromadb
+        _ef = embedding_functions
+    except Exception:
+        CHROMA_OK = False
+        _chromadb = None
+    return _chromadb
 
 
 def _split_text(text: str, chunk_size: int, overlap: int) -> list[str]:
@@ -47,15 +69,19 @@ def _split_text(text: str, chunk_size: int, overlap: int) -> list[str]:
 _client = None
 
 
-def get_client() -> chromadb.PersistentClient:
+def get_client():
     global _client
+    cdb = _load_chromadb()
+    if cdb is None:
+        raise RuntimeError("chromadb 不可用（知识库功能已降级）")
     if _client is None:
-        _client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+        _client = cdb.PersistentClient(path=CHROMA_DB_PATH)
     return _client
 
 
 def get_collection(brand_key: str):
-    ef = embedding_functions.DefaultEmbeddingFunction()
+    _load_chromadb()
+    ef = _ef.DefaultEmbeddingFunction()
     return get_client().get_or_create_collection(
         name=BRAND_COLLECTIONS[brand_key],
         embedding_function=ef,
@@ -85,22 +111,33 @@ def ingest_text(brand_key: str, text: str, source: str) -> int:
 
 
 def retrieve(brand_key: str, query: str, n_results: int = 5) -> list[dict]:
-    """Return top-n relevant chunks with metadata."""
-    collection = get_collection(brand_key)
-    results = collection.query(query_texts=[query], n_results=n_results)
-    docs = results["documents"][0]
-    metas = results["metadatas"][0]
-    return [{"text": d, "source": m.get("source", "")} for d, m in zip(docs, metas)]
+    """Return top-n relevant chunks with metadata。chromadb 不可用时返回空。"""
+    try:
+        collection = get_collection(brand_key)
+        results = collection.query(query_texts=[query], n_results=n_results)
+        docs = results["documents"][0]
+        metas = results["metadatas"][0]
+        return [{"text": d, "source": m.get("source", "")} for d, m in zip(docs, metas)]
+    except Exception:
+        return []
 
 
 def collection_count(brand_key: str) -> int:
-    return get_collection(brand_key).count()
+    """知识库文档块数。chromadb 不可用时返回 0（不拖垮页面）。"""
+    try:
+        return get_collection(brand_key).count()
+    except Exception:
+        return 0
 
 
 def get_sources(brand_key: str) -> list[dict]:
     """Return unique sources in the collection with their chunk counts.
-    Returns [{"source": str, "chunks": int}, ...] sorted by source name."""
-    coll = get_collection(brand_key)
+    Returns [{"source": str, "chunks": int}, ...] sorted by source name。
+    chromadb 不可用时返回空。"""
+    try:
+        coll = get_collection(brand_key)
+    except Exception:
+        return []
     if coll.count() == 0:
         return []
     result = coll.get(include=["metadatas"])
