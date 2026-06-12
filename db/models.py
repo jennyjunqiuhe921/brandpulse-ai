@@ -224,6 +224,25 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+# ── GEO 多平台收录监测（G4）──────────────────────────────────────────────────
+# 国产主流 AI 搜索/问答平台
+GEO_AI_PLATFORMS = ["DeepSeek", "豆包", "腾讯元宝", "通义千问", "文心一言", "纳米AI", "KIMI", "智谱清言"]
+
+
+class GeoInclusion(Base):
+    __tablename__ = "pin_geo_inclusion"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand: Mapped[str] = mapped_column(String(64), index=True)
+    round_id: Mapped[str] = mapped_column(String(40), index=True)  # 同一轮检测分组
+    keyword: Mapped[str] = mapped_column(String(200), default="")
+    platform: Mapped[str] = mapped_column(String(30), default="")
+    included: Mapped[bool] = mapped_column(Boolean, default=False)
+    position: Mapped[int] = mapped_column(Integer, default=0)  # 1-10 命中名次，0=未收录
+    checked_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── 商品智能选品（S3-1）──────────────────────────────────────────────────────
 class SelectionTask(Base):
     __tablename__ = "pin_selection_tasks"
