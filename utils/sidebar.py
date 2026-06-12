@@ -76,6 +76,8 @@ footer { visibility: hidden; }
 header { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 [data-testid="stStatusWidget"] { display: none; }
+/* 隐藏 Streamlit 自动生成的 pages/ 默认导航（新版 1.58 会显示）——我们用自定义分组导航 */
+[data-testid="stSidebarNav"] { display: none !important; }
 
 /* ── Page load animation ── */
 @keyframes fadeUp {
