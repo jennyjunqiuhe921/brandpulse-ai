@@ -41,8 +41,8 @@ if st.session_state.get("_geo_last_brand") != brand:
         st.session_state.pop("geo_result", None)
         st.session_state.pop("reviewed_geo", None)
 
-tab_geo, tab_distill, tab_inclusion, tab_compare, tab_history = st.tabs(
-    ["🌐 GEO 分析", "🔑 关键词蒸馏", "📡 收录监测", "📈 复测评估", "📜 监测历史"])
+tab_geo, tab_distill, tab_batch, tab_inclusion, tab_compare, tab_history = st.tabs(
+    ["🌐 GEO 分析", "🔑 关键词蒸馏", "✍️ 批量创作", "📡 收录监测", "📈 复测评估", "📜 监测历史"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — GEO 分析
@@ -179,6 +179,13 @@ with tab_geo:
 with tab_distill:
     from utils.keyword_distill_view import render as render_distill
     render_distill(brand)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 批量创作 + SEO 埋词（G2）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_batch:
+    from utils.geo_batch_view import render as render_batch
+    render_batch(brand)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB · 多平台收录监测（G4）
