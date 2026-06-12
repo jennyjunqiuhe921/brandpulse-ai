@@ -841,7 +841,7 @@ def render() -> str:
 
         # ── Brand selector ────────────────────────────────────────────────
         st.markdown(
-            '<div class="sidebar-section-label" style="margin-top:8px">分析品牌</div>',
+            '<div class="sidebar-section-label" style="margin-top:8px">品牌 / 主体</div>',
             unsafe_allow_html=True,
         )
         brand_options = list(BRAND_DISPLAY_NAMES.keys()) or ["heytea"]

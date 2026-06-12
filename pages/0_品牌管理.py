@@ -223,14 +223,16 @@ with tab_new:
 <div style="background:#FDFAF5;border:1px solid #DDD4C4;border-left:3px solid #C4522A;border-radius:6px;padding:12px 16px;margin-bottom:18px">
   <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#1C1510">
     填写品牌信息，点击「➕ 保存并创建」完成新增</p>
+  <p style="margin:0 0 4px;font-size:12px;color:#5C4F42">
+    💡 这里的「品牌」= 你要优化的<b>业务主体</b>，可以是品牌、门店或业务（如：XX空调维修、张姐家政）。</p>
   <p style="margin:0;font-size:12px;color:#9C8E82">
-    创建后在侧边栏切换到该品牌，再到「📚 知识库」标签上传品牌文档。</p>
+    创建后在侧边栏切换到该主体，再到「📚 知识库」标签上传相关文档。</p>
 </div>
 """,
         unsafe_allow_html=True,
     )
     with st.form("create_form", clear_on_submit=True):
-        name        = st.text_input("品牌名称 *", placeholder="例：元气森林 Genki Forest")
+        name        = st.text_input("品牌 / 主体名称 *", placeholder="例：元气森林 / XX空调维修")
         industry    = st.selectbox("行业分类 *", INDUSTRY_OPTIONS)
         description = st.text_area("品牌简介", placeholder="品牌定位、核心产品线、目标客群……", height=100)
         focus       = st.text_input("分析重点（逗号分隔）", placeholder="例：年轻化、无糖健康、渠道扩张")
