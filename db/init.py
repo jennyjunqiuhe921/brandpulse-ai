@@ -187,7 +187,6 @@ def init_db(force: bool = False) -> None:
                     content=_base.get(cat, ""), version=1, status="已启用",
                     history=[], created_by="system", updated_at="2026-06-01 00:00"))
 
-    global _INITIALIZED
     _INITIALIZED = True
 
 
