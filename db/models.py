@@ -224,6 +224,31 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+# ── GEO 关键词蒸馏（G1）──────────────────────────────────────────────────────
+# 意图类型 → 推荐平台
+GEO_INTENT_PLATFORMS = {
+    "价格敏感型": ["抖音", "快手"],
+    "B2B选品型": ["知乎", "网页SEO"],
+    "决策参考型": ["小红书"],
+    "通用型": ["综合"],
+}
+
+
+class GeoKeyword(Base):
+    __tablename__ = "pin_geo_keywords"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand: Mapped[str] = mapped_column(String(64), index=True)
+    batch_id: Mapped[str] = mapped_column(String(40), index=True)
+    keyword: Mapped[str] = mapped_column(String(200), default="")
+    kw_type: Mapped[str] = mapped_column(String(10), default="通用词")   # 通用词/成交词
+    intent_type: Mapped[str] = mapped_column(String(20), default="通用型")
+    intent_score: Mapped[str] = mapped_column(String(4), default="中")   # 高/中/低
+    platform: Mapped[str] = mapped_column(String(40), default="综合")
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── GEO 多平台收录监测（G4）──────────────────────────────────────────────────
 # 国产主流 AI 搜索/问答平台
 GEO_AI_PLATFORMS = ["DeepSeek", "豆包", "腾讯元宝", "通义千问", "文心一言", "纳米AI", "KIMI", "智谱清言"]

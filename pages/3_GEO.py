@@ -41,8 +41,8 @@ if st.session_state.get("_geo_last_brand") != brand:
         st.session_state.pop("geo_result", None)
         st.session_state.pop("reviewed_geo", None)
 
-tab_geo, tab_compare, tab_inclusion, tab_history = st.tabs(
-    ["🌐 GEO 分析", "📈 复测评估", "📡 收录监测", "📜 监测历史"])
+tab_geo, tab_distill, tab_inclusion, tab_compare, tab_history = st.tabs(
+    ["🌐 GEO 分析", "🔑 关键词蒸馏", "📡 收录监测", "📈 复测评估", "📜 监测历史"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — GEO 分析
@@ -173,9 +173,12 @@ with tab_geo:
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 2 — 复测评估（S2-3，并入 GEO 页）
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_compare:
-    from utils.geo_compare_view import render as render_geo_compare
-    render_geo_compare(brand)
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 关键词蒸馏（G1）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_distill:
+    from utils.keyword_distill_view import render as render_distill
+    render_distill(brand)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB · 多平台收录监测（G4）
@@ -183,6 +186,10 @@ with tab_compare:
 with tab_inclusion:
     from utils.geo_inclusion_view import render as render_inclusion
     render_inclusion(brand)
+
+with tab_compare:
+    from utils.geo_compare_view import render as render_geo_compare
+    render_geo_compare(brand)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — 监测历史（C4）
