@@ -51,7 +51,15 @@ _DEFAULT_ADMIN_USER = os.getenv("DEFAULT_ADMIN_USER", "admin")
 _DEFAULT_ADMIN_PASS = os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123")
 
 
-def init_db() -> None:
+_INITIALIZED = False
+
+
+def init_db(force: bool = False) -> None:
+    # 进程级缓存：每次应用启动只真正初始化一次，避免每个新访客都重复
+    # create_all + 列检查 + 种子查询（对远端 Postgres 是多次往返，拖慢首屏）。
+    global _INITIALIZED
+    if _INITIALIZED and not force:
+        return
     Base.metadata.create_all(engine)
     _ensure_columns()
     with get_session() as s:
@@ -178,6 +186,9 @@ def init_db() -> None:
                     name=f"{cat}默认模板", category=cat, model_name="默认文本模型",
                     content=_base.get(cat, ""), version=1, status="已启用",
                     history=[], created_by="system", updated_at="2026-06-01 00:00"))
+
+    global _INITIALIZED
+    _INITIALIZED = True
 
 
 if __name__ == "__main__":
