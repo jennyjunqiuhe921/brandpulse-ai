@@ -31,7 +31,8 @@ st.markdown(
 
 brand_name = BRAND_DISPLAY_NAMES[brand]
 
-tab_analyze, tab_tickets, tab_history = st.tabs(["📰 舆情分析", "🎫 工单处置", "📜 历史记录"])
+tab_analyze, tab_tickets, tab_reputation, tab_pr, tab_history = st.tabs(
+    ["📰 舆情分析", "🎫 工单处置", "📊 口碑健康分", "💬 公关话术", "📜 历史记录"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — 舆情分析
@@ -147,6 +148,67 @@ with tab_analyze:
 with tab_tickets:
     from utils.ticket_view import render as render_tickets
     render_tickets(brand)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 月度口碑健康分（D5-1）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_reputation:
+    import pandas as pd
+    from modules.reputation_score import compute as _rep_compute
+    import config.sentiment_tasks as _st
+    st.caption("五维口碑健康模型（情感结构/负面占比/高危红标/传播热度/风险权重）→ 0-100 分 + "
+               "一句汇报评语。已剔除待验证舆情；完成消影/复盘的事件降权。")
+    _recs = _st.list_records(brand_key=brand)
+    _rep = _rep_compute(_recs)
+    if _rep["score"] is None:
+        st.info(_rep["comment"])
+    else:
+        sc = _rep["score"]
+        color = "#2E7D32" if sc >= 85 else ("#1E88E5" if sc >= 70 else ("#F9A825" if sc >= 55 else "#C62828"))
+        c = st.columns([1, 2])
+        with c[0]:
+            st.markdown(
+                f'<div style="text-align:center;border:1px solid #DDD4C4;border-radius:12px;'
+                f'padding:18px;background:#FDFAF5"><div style="font-size:13px;color:#9C8E82">'
+                f'月度口碑健康分</div><div style="font-size:52px;font-weight:800;color:{color}">{sc}'
+                f'</div><div style="font-size:12px;color:#9C8E82">/100</div></div>',
+                unsafe_allow_html=True)
+        with c[1]:
+            st.metric("有效样本", _rep["total"])
+            st.metric("负面舆情", _rep["negative"])
+            st.metric("高危红标", _rep["high_risk"])
+        st.info("📋 月度评语：" + _rep["comment"])
+        st.markdown("**五维拆解**")
+        st.bar_chart(pd.DataFrame({"得分": _rep["dims"]}))
+        st.caption("可直接复制评语用于管理层汇报 PPT。数据基于本主体舆情记录计算。")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 双口径公关话术（D5-2）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_pr:
+    from modules.pr_scripts import generate as _pr_gen, SCENARIOS as _PR_SCENES
+    st.caption("针对负面舆情生成两套话术：对外公域回复口径（正式礼貌合规）+ 内部市场处置口径"
+               "（定性/底线/补偿/策略/禁止话术）。话术仅供人工参考，系统不自动对外发布。")
+    sc = st.selectbox("场景模板", _PR_SCENES)
+    detail = st.text_area("事件简述（选填）", placeholder="如：顾客反映饮品中有异物，已在大众点评发图")
+    if st.button("💬 生成双口径话术", type="primary"):
+        res = _pr_gen(sc, brand, detail)
+        st.session_state["_pr_res"] = res
+    res = st.session_state.get("_pr_res")
+    if res:
+        cc1, cc2 = st.columns(2)
+        with cc1:
+            st.markdown("##### 📢 对外公开回复口径")
+            st.markdown(f'<div style="background:#EEF4FB;border:1px solid #C9DDF0;border-radius:8px;'
+                        f'padding:12px;white-space:pre-wrap;font-size:13px">{res["external"]}</div>',
+                        unsafe_allow_html=True)
+        with cc2:
+            st.markdown("##### 🛠 内部市场处置口径")
+            st.markdown(f'<div style="background:#FDFAF5;border:1px solid #DDD4C4;border-radius:8px;'
+                        f'padding:12px;white-space:pre-wrap;font-size:13px">{res["internal"]}</div>',
+                        unsafe_allow_html=True)
+        if sc == "食品安全":
+            st.warning("⚠️ 食品安全类：对外引导私域沟通，切勿公开争辩或作绝对化承诺；须经主管复核后使用。")
 
 with tab_history:
     st.caption("舆情分析历史记录（含时间戳、摘要、风险等级、来源渠道）。仅显示当前品牌。")
