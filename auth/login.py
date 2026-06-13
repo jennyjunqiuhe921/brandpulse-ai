@@ -10,7 +10,7 @@ from __future__ import annotations
 import streamlit as st
 
 from auth.users import authenticate
-from db.models import ROLE_ADMIN, ROLE_LABELS
+from db.models import ROLE_ADMIN, ROLE_PLATFORM, ROLE_LABELS
 import db.audit as audit
 
 _SESSION_KEY = "auth"
@@ -77,7 +77,10 @@ def _render_login_form():
             submitted = st.form_submit_button("登 录", type="primary", use_container_width=True)
         if submitted:
             user = authenticate(username, password)
-            if user:
+            if user and user.get("role") == ROLE_PLATFORM:
+                # 物理隔离：平台运营账号不得登录品牌端，只能走运营后台入口
+                st.error("该账号为平台运营账号，请使用运营管理后台入口登录（与品牌端隔离）。")
+            elif user:
                 st.session_state[_SESSION_KEY] = user
                 audit.log("登录", username=user["username"],
                           tenant_id=user["tenant_id"], user_id=user["id"])
