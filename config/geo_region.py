@@ -59,11 +59,13 @@ def list_rounds(brand: str) -> list[dict]:
     with get_session() as s:
         rows = s.query(GeoRegionRecord).filter(
             GeoRegionRecord.tenant_id == ctx.tenant_id(), GeoRegionRecord.brand == brand).all()
-    rounds = {}
+    rounds = {}  # round_id -> {checked_at, max_id}（max_id 作为插入顺序，分钟级时间戳相同也能确定先后）
     for r in rows:
-        rounds.setdefault(r.round_id, r.checked_at)
-    return sorted(({"round_id": k, "checked_at": v} for k, v in rounds.items()),
-                  key=lambda x: x["checked_at"], reverse=True)
+        cur = rounds.get(r.round_id)
+        if cur is None or r.id > cur["max_id"]:
+            rounds[r.round_id] = {"checked_at": r.checked_at, "max_id": r.id}
+    out = [{"round_id": k, "checked_at": v["checked_at"], "_o": v["max_id"]} for k, v in rounds.items()]
+    return sorted(out, key=lambda x: x["_o"], reverse=True)
 
 
 def _rows(brand: str, round_id: str):
@@ -114,7 +116,7 @@ def stats(brand: str, round_id: str | None = None, weights: dict | None = None) 
 def trend(brand: str, weights: dict | None = None) -> list[dict]:
     weights = weights or DEFAULT_WEIGHTS
     out = []
-    for r in sorted(list_rounds(brand), key=lambda x: x["checked_at"]):
+    for r in sorted(list_rounds(brand), key=lambda x: x.get("_o", 0)):
         st = stats(brand, r["round_id"], weights)
         out.append({"时间": r["checked_at"][:16], "全国均值": st.get("national_avg", 0)})
     return out

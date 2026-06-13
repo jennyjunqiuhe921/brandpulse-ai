@@ -66,11 +66,13 @@ def list_rounds(brand: str) -> list[dict]:
         rows = (s.query(GeoInclusion)
                 .filter(GeoInclusion.tenant_id == ctx.tenant_id(),
                         GeoInclusion.brand == brand).all())
-    rounds: dict[str, str] = {}
+    rounds: dict[str, dict] = {}  # max_id 兜底排序，分钟级时间戳相同也能定先后
     for r in rows:
-        rounds.setdefault(r.round_id, r.checked_at)
-    return sorted(({"round_id": k, "checked_at": v} for k, v in rounds.items()),
-                  key=lambda x: x["checked_at"], reverse=True)
+        cur = rounds.get(r.round_id)
+        if cur is None or r.id > cur["max_id"]:
+            rounds[r.round_id] = {"checked_at": r.checked_at, "max_id": r.id}
+    out = [{"round_id": k, "checked_at": v["checked_at"], "_o": v["max_id"]} for k, v in rounds.items()]
+    return sorted(out, key=lambda x: x["_o"], reverse=True)
 
 
 def _round_rows(brand: str, round_id: str | None):
