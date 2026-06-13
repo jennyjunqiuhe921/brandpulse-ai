@@ -24,8 +24,8 @@ REGION_OPTIONS = [
 st.markdown(
     """
 <div class="page-header">
-  <h1 class="page-title">GEO 分析</h1>
-  <p class="page-desc">模拟真实用户向 AI 搜索提问，评估品牌在 AI 回答中的可见度与内容补强方向（E-E-A-T 标准）</p>
+  <h1 class="page-title">GEO 工作台</h1>
+  <p class="page-desc">AI 搜索可见度 & 获客全链路：选词 → 创作 → 发布 → 监测 → 迭代（E-E-A-T 标准 · 合规无刷量）</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -36,42 +36,32 @@ if st.session_state.get("_geo_last_brand") != brand:
     st.session_state["geo_brand_words"] = "\n".join(BRAND_DISPLAY_NAMES[brand].split())
     st.session_state["geo_questions_text"] = "\n".join(get_geo_questions(brand))
     st.session_state["_geo_last_brand"] = brand
-    # 品牌切换清除上一品牌的结果
     if st.session_state.get("geo_result", {}).get("_brand") != brand:
         st.session_state.pop("geo_result", None)
         st.session_state.pop("reviewed_geo", None)
 
-(tab_geo, tab_distill, tab_batch, tab_publish, tab_inclusion, tab_region,
- tab_compare, tab_history) = st.tabs(
-    ["🌐 GEO 分析", "🔑 关键词蒸馏", "✍️ 批量创作", "📤 发布包", "📡 收录监测",
-     "🗺️ 区域指数", "📈 复测评估", "📜 监测历史"])
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 1 — GEO 分析
+# GEO 分析（现状诊断）—— 抽成函数，供「监测诊断」场景调用
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_geo:
+def _render_geo_analysis(brand):
     st.info("什么是 GEO？模拟真实用户向 ChatGPT、Perplexity 等 AI 引擎提问，分析品牌是否被准确"
             "提及、与竞品的差距，并给出合规的内容补强建议。⚠️ 严禁用于刷屏、灌水或虚假评价。")
 
-    # ── C1 · 结构化关键词组 ────────────────────────────────────────────────────
     st.subheader("① 结构化关键词组")
     st.caption("支持逗号（，/,）或换行分隔批量输入")
     kc1, kc2, kc3 = st.columns(3)
     with kc1:
-        st.text_area("品牌词", key="geo_brand_words", height=110,
-                     placeholder="如：喜茶, HEYTEA")
+        st.text_area("品牌词", key="geo_brand_words", height=110, placeholder="如：喜茶, HEYTEA")
     with kc2:
-        st.text_area("产品词", key="geo_product_words", height=110,
-                     placeholder="如：多肉葡萄\n芝士奶盖\n轻乳茶")
+        st.text_area("产品词", key="geo_product_words", height=110, placeholder="如：多肉葡萄\n芝士奶盖\n轻乳茶")
     with kc3:
-        st.text_area("品类词", key="geo_category_words", height=110,
-                     placeholder="如：新式茶饮, 奶盖茶, 高端茶饮")
+        st.text_area("品类词", key="geo_category_words", height=110, placeholder="如：新式茶饮, 奶盖茶, 高端茶饮")
 
     brand_words = parse_keywords(st.session_state.get("geo_brand_words", ""))
     product_words = parse_keywords(st.session_state.get("geo_product_words", ""))
     category_words = parse_keywords(st.session_state.get("geo_category_words", ""))
 
-    # ── C2/C3/C4 · 竞品 / 地域 / 周期 ──────────────────────────────────────────
     st.subheader("② 监测设置")
     sc1, sc2, sc3 = st.columns(3)
     with sc1:
@@ -84,7 +74,6 @@ with tab_geo:
                               help="单次：立即分析一次；每日/每周：记录为周期性监测任务")
     competitors = parse_keywords(competitors_text)[:2]
 
-    # ── S2-3 · 复测对比配置（关联历史任务 / 对比基准周期）──────────────────────────
     _prior = geo_tasks.list_records(brand_key=brand)
     link_base = False
     base_id = None
@@ -98,9 +87,8 @@ with tab_geo:
                     for r in _prior if r["id"] == i),
                 key="geo_base_id")
 
-    # ── 测试问题 ────────────────────────────────────────────────────────────────
     with st.expander("③ 查看/编辑 AI 测试问题（可修改）", expanded=False):
-        questions_text = st.text_area("每行一个问题（建议至少 4 个）", key="geo_questions_text", height=180)
+        st.text_area("每行一个问题（建议至少 4 个）", key="geo_questions_text", height=180)
     questions = [q.strip() for q in st.session_state.get("geo_questions_text", "").strip().split("\n") if q.strip()]
     st.caption(f"当前共 {len(questions)} 个测试问题"
                + (f"　|　关键词组：品牌词 {len(brand_words)} · 产品词 {len(product_words)} · 品类词 {len(category_words)}"))
@@ -112,7 +100,7 @@ with tab_geo:
         if _DM and not _idb(brand):
             st.warning("💡 当前为 **Demo 模式**，仅对内置演示品牌（喜茶/奈雪/茶百道）提供预置 GEO 样例。"
                        "自定义主体请配置 API Key 后再分析。\n\n"
-                       "提示：「🔑 关键词蒸馏」「✍️ 批量创作」「📡 收录监测」等功能为本地规则计算，"
+                       "提示：「关键词蒸馏」「批量创作」「收录监测」「区域指数」等为本地规则计算，"
                        "**自定义主体可正常使用**，不受此限制。")
             st.stop()
         with st.spinner("正在进行 GEO 可见度分析…（约 30-60 秒）"):
@@ -127,27 +115,22 @@ with tab_geo:
                 result["_brand"] = brand
                 st.session_state["geo_result"] = result
                 st.session_state.pop("reviewed_geo", None)
-                # C4 · 记录监测历史（S2-3：附结构化指标 + 对比基准）
                 from modules import geo_compare as _GC
                 _meta = dict(result.get("_meta", {}))
-                _meta["metrics"] = _GC.synth_metrics(
-                    brand + region, result["_query_time"])
+                _meta["metrics"] = _GC.synth_metrics(brand + region, result["_query_time"])
                 if link_base and base_id:
                     _meta["base_id"] = base_id
                 new_gid = geo_tasks.add_record(
                     brand, period, region, _meta,
-                    summary=f"{len(questions)}题 · 竞品 {len(competitors)} · {region}",
-                )
+                    summary=f"{len(questions)}题 · 竞品 {len(competitors)} · {region}")
                 if link_base and base_id:
                     st.session_state["_geo_new_compare"] = (new_gid, base_id)
             except Exception as e:
                 st.error(f"分析失败：{e}")
 
-    # S2-3 · 复测完成后给出快捷入口
     if st.session_state.get("_geo_new_compare"):
-        st.success("✅ 本轮已关联基准，请切到上方「📈 复测评估」标签查看前后对比与效果评级。")
+        st.success("✅ 本轮已关联基准，请在「复测评估」标签查看前后对比与效果评级。")
 
-    # 品牌切换后旧结果保护
     if st.session_state.get("geo_result", {}).get("_brand") != brand:
         st.session_state.pop("geo_result", None)
 
@@ -155,91 +138,99 @@ with tab_geo:
         res = st.session_state["geo_result"]
         st.markdown("---")
         maybe_show_banner(res)
-
         m = res.get("_meta", {})
         col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("测试问题数", len(res.get("questions") or questions))
-        with col2:
-            st.metric("知识库引用块", len(res["chunks"]))
-        with col3:
-            st.metric("监测地域", m.get("region", "全国"))
-        with col4:
-            st.metric("竞品对标", f"{len(m.get('competitors', []))} 个")
-
+        col1.metric("测试问题数", len(res.get("questions") or []))
+        col2.metric("知识库引用块", len(res["chunks"]))
+        col3.metric("监测地域", m.get("region", "全国"))
+        col4.metric("竞品对标", f"{len(m.get('competitors', []))} 个")
         st.markdown("---")
-        # A1 · 四大区块渲染（含 E-E-A-T 结构化诊断）
         render_four_blocks(res["output"])
-        # A2 · 信息溯源
         render_source_meta(res["chunks"], query_time=res.get("_query_time"))
-        # A4 · 人工复核门控
         review_gate("geo")
-        st.info("💡 **下一步**：将内容补强建议中的具体措施交由品牌方核实后，"
-                "在官网/FAQ/媒体稿中补充对应内容，不得用于虚假宣传。")
-        # A3 · 免责声明
+        st.info("💡 **下一步**：将内容补强建议交由品牌方核实后，在官网/FAQ/媒体稿补充对应内容，不得用于虚假宣传。")
         render_disclaimer()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 2 — 复测评估（S2-3，并入 GEO 页）
-# ══════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB · 关键词蒸馏（G1）
-# ══════════════════════════════════════════════════════════════════════════════
-with tab_distill:
-    from utils.keyword_distill_view import render as render_distill
-    render_distill(brand)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB · 批量创作 + SEO 埋词（G2）
-# ══════════════════════════════════════════════════════════════════════════════
-with tab_batch:
-    from utils.geo_batch_view import render as render_batch
-    render_batch(brand)
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB · 导出发布包（G3，合规版分发：人工发布）
-# ══════════════════════════════════════════════════════════════════════════════
-with tab_publish:
-    from utils.geo_publish_view import render as render_publish
-    render_publish(brand)
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB · 多平台收录监测（G4）
-# ══════════════════════════════════════════════════════════════════════════════
-with tab_inclusion:
-    from utils.geo_inclusion_view import render as render_inclusion
-    render_inclusion(brand)
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB · 区域竞争指数（G5）
-# ══════════════════════════════════════════════════════════════════════════════
-with tab_region:
-    from utils.geo_region_view import render as render_region
-    render_region(brand)
-
-with tab_compare:
-    from utils.geo_compare_view import render as render_geo_compare
-    render_geo_compare(brand)
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — 监测历史（C4）
-# ══════════════════════════════════════════════════════════════════════════════
-with tab_history:
-    st.caption("GEO 监测任务历史记录（含时间戳、周期、地域与状态）。仅显示当前品牌。")
+def _render_history(brand):
+    st.caption("GEO 监测任务历史记录（含时间戳、周期、地域与状态）。仅显示当前主体。")
     f_period = st.selectbox("按周期筛选", ["全部"] + geo_tasks.PERIODS, key="geo_hist_period")
     records = geo_tasks.list_records(brand_key=brand, period=None if f_period == "全部" else f_period)
-
     if not records:
-        st.info("暂无监测记录。在「GEO 分析」标签页运行一次分析后即会生成历史记录。")
-    else:
-        _pb = {"单次": "▶️", "每日": "🔁", "每周": "📅"}
-        for r in records:
-            with st.container(border=True):
-                hc1, hc2 = st.columns([5, 1])
-                with hc1:
-                    st.markdown(f"**{_pb.get(r['period'],'•')} {r['period']}监测** · 地域：{r['region']} · `{r['status']}`")
-                    st.caption(f"⏱ {r.get('created_at','')}　|　{r.get('summary','')}")
-                with hc2:
-                    if st.button("删除", key=f"geo_del_{r['id']}", use_container_width=True):
-                        geo_tasks.delete_record(r["id"])
-                        st.rerun()
+        st.info("暂无监测记录。在「GEO 分析」运行一次分析后即会生成历史记录。")
+        return
+    _pb = {"单次": "▶️", "每日": "🔁", "每周": "📅"}
+    for r in records:
+        with st.container(border=True):
+            hc1, hc2 = st.columns([5, 1])
+            with hc1:
+                st.markdown(f"**{_pb.get(r['period'],'•')} {r['period']}监测** · 地域：{r['region']} · `{r['status']}`")
+                st.caption(f"⏱ {r.get('created_at','')}　|　{r.get('summary','')}")
+            with hc2:
+                if st.button("删除", key=f"geo_del_{r['id']}", use_container_width=True):
+                    geo_tasks.delete_record(r["id"]); st.rerun()
+
+
+def _set_mode(m):
+    st.session_state["_geo_mode"] = m
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 场景模式调度（方案 A）+ 概览工作流引导（方案 B）
+# ══════════════════════════════════════════════════════════════════════════════
+MODES = ["🧭 概览", "🔍 监测诊断", "🚀 获客生产"]
+mode = st.radio("场景", MODES, horizontal=True, key="_geo_mode", label_visibility="collapsed")
+st.divider()
+
+if mode == "🧭 概览":
+    st.markdown("#### GEO 获客全链路")
+    st.markdown(
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;margin:6px 0 14px">'
+        '<span style="background:#EEF4FB;border:1px solid #C9DDF0;border-radius:18px;padding:6px 14px">🌐 GEO分析<br><small>现状诊断</small></span>→'
+        '<span style="background:#FDF6EC;border:1px solid #EAD9BF;border-radius:18px;padding:6px 14px">🔑 关键词蒸馏<br><small>选词</small></span>→'
+        '<span style="background:#FDF6EC;border:1px solid #EAD9BF;border-radius:18px;padding:6px 14px">✍️ 批量创作<br><small>做内容</small></span>→'
+        '<span style="background:#FDF6EC;border:1px solid #EAD9BF;border-radius:18px;padding:6px 14px">📤 发布包<br><small>人工发布</small></span>→'
+        '<span style="background:#EAF5EE;border:1px solid #C9E2D2;border-radius:18px;padding:6px 14px">📡 收录监测 / 🗺️ 区域指数<br><small>看效果</small></span>→'
+        '<span style="background:#EAF5EE;border:1px solid #C9E2D2;border-radius:18px;padding:6px 14px">📈 复测评估<br><small>验效迭代</small></span>'
+        '</div>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**🔍 监测诊断**　看品牌在 AI 里的现状")
+        st.caption("GEO 分析 · 收录监测 · 区域竞争指数 · 复测评估 · 监测历史")
+        st.button("进入「监测诊断」", on_click=_set_mode, args=("🔍 监测诊断",),
+                  use_container_width=True, type="primary")
+    with c2:
+        st.markdown("**🚀 获客生产**　做内容、抢占 AI 搜索")
+        st.caption("关键词蒸馏 · 批量创作 · 导出发布包（合规人工发布，不自动分发）")
+        st.button("进入「获客生产」", on_click=_set_mode, args=("🚀 获客生产",),
+                  use_container_width=True, type="primary")
+    st.caption("提示：先用「监测诊断」摸清现状，再用「获客生产」补内容，发布后回「监测诊断」验证收录。")
+
+elif mode == "🔍 监测诊断":
+    t_geo, t_inc, t_region, t_cmp, t_his = st.tabs(
+        ["🌐 GEO 分析", "📡 收录监测", "🗺️ 区域指数", "📈 复测评估", "📜 监测历史"])
+    with t_geo:
+        _render_geo_analysis(brand)
+    with t_inc:
+        from utils.geo_inclusion_view import render as _r
+        _r(brand)
+    with t_region:
+        from utils.geo_region_view import render as _r
+        _r(brand)
+    with t_cmp:
+        from utils.geo_compare_view import render as _r
+        _r(brand)
+    with t_his:
+        _render_history(brand)
+
+elif mode == "🚀 获客生产":
+    t_kw, t_batch, t_pub = st.tabs(["🔑 关键词蒸馏", "✍️ 批量创作", "📤 发布包"])
+    with t_kw:
+        from utils.keyword_distill_view import render as _r
+        _r(brand)
+    with t_batch:
+        from utils.geo_batch_view import render as _r
+        _r(brand)
+    with t_pub:
+        from utils.geo_publish_view import render as _r
+        _r(brand)
