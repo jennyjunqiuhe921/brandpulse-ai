@@ -1,8 +1,42 @@
 """G5 · GEO 区域竞争指数视图（嵌入 GEO 页「区域指数」tab）。"""
 import streamlit as st
 import pandas as pd
+from pathlib import Path
 import config.geo_region as GR
 from modules import geo_region_advice as RA
+
+_GEOJSON = Path(__file__).parent.parent / "data" / "china_provinces.geojson"
+
+
+@st.cache_data(show_spinner=False)
+def _load_geojson():
+    import json
+    return json.loads(_GEOJSON.read_text(encoding="utf-8"))
+
+
+def _render_heatmap(own: dict) -> bool:
+    """中国省份热力地图（plotly choropleth）。成功返回 True，失败返回 False（调用方降级）。"""
+    try:
+        import plotly.express as px
+        gj = _load_geojson()
+        # 省份短名 → geojson 全名（前缀匹配，如 广东→广东省）
+        full_names = [f["properties"]["name"] for f in gj["features"]]
+        rows = []
+        for short, idx in own.items():
+            full = next((n for n in full_names if n.startswith(short)), short)
+            rows.append({"省份": full, "竞争指数": idx})
+        df = pd.DataFrame(rows)
+        fig = px.choropleth(
+            df, geojson=gj, featureidkey="properties.name", locations="省份",
+            color="竞争指数", color_continuous_scale="RdYlGn", range_color=(0, 100),
+            hover_name="省份")
+        fig.update_geos(fitbounds="locations", visible=False)
+        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=420,
+                          coloraxis_colorbar=dict(title="指数"))
+        st.plotly_chart(fig, use_container_width=True)
+        return True
+    except Exception:
+        return False
 
 
 def render(brand: str) -> None:
@@ -52,8 +86,12 @@ def render(brand: str) -> None:
     c[1].metric("监测省份", len(stats["own"]))
     c[2].metric("对标竞品", "、".join(stats["competitors"]) or "—")
 
-    # G5-2 分省竞争指数排名（条形榜，地图后置）
-    st.markdown("#### 分省区域竞争指数（排名）")
+    # G5-2 全国热力地图（plotly choropleth，失败降级为条形榜）
+    st.markdown("#### 全国区域竞争指数热力地图")
+    if not _render_heatmap(stats["own"]):
+        st.caption("（地图组件不可用，已降级为分省排名图）")
+    # 分省排名榜（始终展示，作为明细）
+    st.markdown("#### 分省竞争指数排名")
     rank_df = pd.DataFrame({"竞争指数": dict(stats["ranking"])})
     st.bar_chart(rank_df)
 
