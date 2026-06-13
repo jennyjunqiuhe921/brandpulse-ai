@@ -360,7 +360,17 @@ class SentimentTicket(Base):
     sla: Mapped[str] = mapped_column(String(30), default="")
     segment_tags: Mapped[list] = mapped_column(JSON, default=list)  # 人群/地域/场景/情绪
     response: Mapped[str] = mapped_column(Text, default="")         # 处置话术/记录
-    status: Mapped[str] = mapped_column(String(20), default="待处理")  # 待处理/处理中/已办结
+    # 状态流转：待处理 → 处置中 → 待消影 → 待复盘 → 已归档
+    status: Mapped[str] = mapped_column(String(20), default="待处理")
+    # D5-4 消影
+    disposal_method: Mapped[str] = mapped_column(String(40), default="")  # 消影处置方式
+    impact_removed: Mapped[bool] = mapped_column(Boolean, default=False)  # 已消除影响
+    elimination_note: Mapped[str] = mapped_column(Text, default="")       # 消影备注
+    eliminated_at: Mapped[str] = mapped_column(String(20), default="")
+    # D5-3 复盘
+    reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    review_data: Mapped[dict] = mapped_column(JSON, default=dict)   # 根因/影响范围/及时性/结论/整改
+    reviewed_at: Mapped[str] = mapped_column(String(20), default="")
     is_case: Mapped[bool] = mapped_column(Boolean, default=False)   # 归入负面案例库
     created_at: Mapped[str] = mapped_column(String(20), default="")
     closed_at: Mapped[str] = mapped_column(String(20), default="")

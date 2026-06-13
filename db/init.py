@@ -28,6 +28,10 @@ _NEW_COLUMNS = {
     "pin_geo_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
     "pin_sentiment_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
     "pin_collect_tasks": [("priority", "VARCHAR(10)", "'普通'"), ("task_tags", "JSON", "'[]'"), ("due_date", "VARCHAR(20)", "''")],
+    "pin_sentiment_tickets": [("disposal_method", "VARCHAR(40)", "''"), ("impact_removed", "BOOLEAN", "false"),
+                              ("elimination_note", "TEXT", "''"), ("eliminated_at", "VARCHAR(20)", "''"),
+                              ("reviewed", "BOOLEAN", "false"), ("review_data", "JSON", "'{}'"),
+                              ("reviewed_at", "VARCHAR(20)", "''")],
 }
 
 
