@@ -224,6 +224,24 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+# ── GEO 发布计划（G3，合规版分发：人工发布，系统不自动发布）──────────────────
+class GeoPublishItem(Base):
+    __tablename__ = "pin_geo_publish"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand: Mapped[str] = mapped_column(String(64), index=True)
+    task_id: Mapped[str] = mapped_column(String(40), default="")   # 关联 ContentTask
+    keyword: Mapped[str] = mapped_column(String(200), default="")
+    platform: Mapped[str] = mapped_column(String(40), default="")
+    title: Mapped[str] = mapped_column(String(200), default="")
+    content: Mapped[str] = mapped_column(Text, default="")
+    plan_time: Mapped[str] = mapped_column(String(20), default="")
+    status: Mapped[str] = mapped_column(String(20), default="待发布")  # 待发布/已发布
+    created_at: Mapped[str] = mapped_column(String(20), default="")
+    published_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── GEO 关键词蒸馏（G1）──────────────────────────────────────────────────────
 # 意图类型 → 推荐平台
 GEO_INTENT_PLATFORMS = {

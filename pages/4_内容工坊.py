@@ -142,6 +142,15 @@ with tab_gen:
     # ── 生成按钮 ────────────────────────────────────────────────────────────────
     if st.button("🚀 生成内容矩阵", type="primary",
                  disabled=not platforms or not product_name):
+        # Demo 模式 + 自定义主体：预置样例仅覆盖演示品牌，避免甩出无关的茶饮内容
+        from core.llm_client import DEMO_MODE, is_demo_brand
+        if DEMO_MODE and not is_demo_brand(brand):
+            st.warning(
+                "💡 当前为 **Demo 模式**（未配置 API Key）。Demo 仅对内置演示品牌"
+                "（喜茶/奈雪/茶百道）提供预置样例内容，**无法为自定义主体生成针对性内容**。\n\n"
+                f"要生成关于「{product_name}」的真实文案，请在「设置」中配置大模型 API Key 后再生成"
+                "（届时限流防护会自动生效）。")
+            st.stop()
         with st.spinner(f"正在为「{product_name}」生成 {len(platforms)} 个平台 × {versions} 版本的内容…（约 25-50 秒）"):
             try:
                 result = content_mod.run(

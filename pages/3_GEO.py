@@ -41,8 +41,8 @@ if st.session_state.get("_geo_last_brand") != brand:
         st.session_state.pop("geo_result", None)
         st.session_state.pop("reviewed_geo", None)
 
-tab_geo, tab_distill, tab_batch, tab_inclusion, tab_compare, tab_history = st.tabs(
-    ["🌐 GEO 分析", "🔑 关键词蒸馏", "✍️ 批量创作", "📡 收录监测", "📈 复测评估", "📜 监测历史"])
+tab_geo, tab_distill, tab_batch, tab_publish, tab_inclusion, tab_compare, tab_history = st.tabs(
+    ["🌐 GEO 分析", "🔑 关键词蒸馏", "✍️ 批量创作", "📤 发布包", "📡 收录监测", "📈 复测评估", "📜 监测历史"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — GEO 分析
@@ -106,6 +106,13 @@ with tab_geo:
         st.warning("建议至少设置 4 个测试问题以获得更全面的分析")
 
     if st.button("🚀 运行 GEO 分析", type="primary"):
+        from core.llm_client import DEMO_MODE as _DM, is_demo_brand as _idb
+        if _DM and not _idb(brand):
+            st.warning("💡 当前为 **Demo 模式**，仅对内置演示品牌（喜茶/奈雪/茶百道）提供预置 GEO 样例。"
+                       "自定义主体请配置 API Key 后再分析。\n\n"
+                       "提示：「🔑 关键词蒸馏」「✍️ 批量创作」「📡 收录监测」等功能为本地规则计算，"
+                       "**自定义主体可正常使用**，不受此限制。")
+            st.stop()
         with st.spinner("正在进行 GEO 可见度分析…（约 30-60 秒）"):
             try:
                 result = geo_mod.run(
@@ -186,6 +193,13 @@ with tab_distill:
 with tab_batch:
     from utils.geo_batch_view import render as render_batch
     render_batch(brand)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 导出发布包（G3，合规版分发：人工发布）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_publish:
+    from utils.geo_publish_view import render as render_publish
+    render_publish(brand)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB · 多平台收录监测（G4）

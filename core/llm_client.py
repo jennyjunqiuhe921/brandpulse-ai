@@ -249,6 +249,13 @@ _DEMO_BRAND_MAP = {
     "chapanda": _DEMO_BRAND_CHAPANDA,
 }
 
+# 内置演示品牌集合（Demo 模式下仅这些品牌有针对性预置内容）
+DEMO_BRANDS = {"heytea", "nayuki", "chapanda"}
+
+
+def is_demo_brand(brand_key: str) -> bool:
+    return brand_key in DEMO_BRANDS
+
 _DEMO_PRODUCT_HEYTEA = """## 产品基本信息
 ✅ **产品名称**：多肉葡萄
 ✅ **品类**：鲜果茶
