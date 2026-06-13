@@ -242,6 +242,28 @@ class GeoPublishItem(Base):
     published_at: Mapped[str] = mapped_column(String(20), default="")
 
 
+# ── GEO 区域竞争指数（G5）────────────────────────────────────────────────────
+# 本模块按 PRD 指定的 5 个 AI 检索平台
+GEO_REGION_PLATFORMS = ["百度AI对话", "豆包", "文心一言", "通义千问", "Kimi"]
+GEO_PROVINCES = ["北京", "上海", "广东", "江苏", "浙江", "四川",
+                 "湖北", "陕西", "山东", "河南", "福建", "湖南"]
+
+
+class GeoRegionRecord(Base):
+    __tablename__ = "pin_geo_region"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand: Mapped[str] = mapped_column(String(64), index=True)
+    round_id: Mapped[str] = mapped_column(String(40), index=True)
+    province: Mapped[str] = mapped_column(String(20), default="")
+    platform: Mapped[str] = mapped_column(String(20), default="")
+    subject: Mapped[str] = mapped_column(String(64), default="")   # 己方品牌 或 竞品名
+    is_competitor: Mapped[bool] = mapped_column(Boolean, default=False)
+    mention_rate: Mapped[float] = mapped_column(default=0.0)        # 提及率 0-100
+    checked_at: Mapped[str] = mapped_column(String(20), default="")
+
+
 # ── GEO 关键词蒸馏（G1）──────────────────────────────────────────────────────
 # 意图类型 → 推荐平台
 GEO_INTENT_PLATFORMS = {

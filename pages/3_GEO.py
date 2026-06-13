@@ -41,8 +41,10 @@ if st.session_state.get("_geo_last_brand") != brand:
         st.session_state.pop("geo_result", None)
         st.session_state.pop("reviewed_geo", None)
 
-tab_geo, tab_distill, tab_batch, tab_publish, tab_inclusion, tab_compare, tab_history = st.tabs(
-    ["🌐 GEO 分析", "🔑 关键词蒸馏", "✍️ 批量创作", "📤 发布包", "📡 收录监测", "📈 复测评估", "📜 监测历史"])
+(tab_geo, tab_distill, tab_batch, tab_publish, tab_inclusion, tab_region,
+ tab_compare, tab_history) = st.tabs(
+    ["🌐 GEO 分析", "🔑 关键词蒸馏", "✍️ 批量创作", "📤 发布包", "📡 收录监测",
+     "🗺️ 区域指数", "📈 复测评估", "📜 监测历史"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — GEO 分析
@@ -207,6 +209,13 @@ with tab_publish:
 with tab_inclusion:
     from utils.geo_inclusion_view import render as render_inclusion
     render_inclusion(brand)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 区域竞争指数（G5）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_region:
+    from utils.geo_region_view import render as render_region
+    render_region(brand)
 
 with tab_compare:
     from utils.geo_compare_view import render as render_geo_compare
