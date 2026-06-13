@@ -59,13 +59,14 @@ _INITIALIZED = False
 
 
 def init_db(force: bool = False) -> None:
-    # 进程级缓存：每次应用启动只真正初始化一次，避免每个新访客都重复
-    # create_all + 列检查 + 种子查询（对远端 Postgres 是多次往返，拖慢首屏）。
     global _INITIALIZED
-    if _INITIALIZED and not force:
-        return
+    # 建表 + 列迁移：每次调用都跑（幂等、低开销）。务必在 _INITIALIZED 早退之前执行，
+    # 否则 Streamlit Cloud 热重载（不重启进程）时新代码新增的表/列不会被创建。
     Base.metadata.create_all(engine)
     _ensure_columns()
+    # 较重的"种子写入"才做进程级缓存：每次应用启动只写一次，避免重复往返拖慢首屏。
+    if _INITIALIZED and not force:
+        return
     with get_session() as s:
         # 1. 默认租户
         tenant = s.query(Tenant).first()
