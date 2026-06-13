@@ -31,8 +31,8 @@ st.markdown(
 
 brand_name = BRAND_DISPLAY_NAMES[brand]
 
-tab_analyze, tab_tickets, tab_reputation, tab_pr, tab_history = st.tabs(
-    ["📰 舆情分析", "🎫 工单处置", "📊 口碑健康分", "💬 公关话术", "📜 历史记录"])
+tab_analyze, tab_tickets, tab_reputation, tab_pr, tab_geo, tab_history = st.tabs(
+    ["📰 舆情分析", "🎫 工单处置", "📊 口碑健康分", "💬 公关话术", "🔗 GEO联动", "📜 历史记录"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — 舆情分析
@@ -209,6 +209,37 @@ with tab_pr:
                         unsafe_allow_html=True)
         if sc == "食品安全":
             st.warning("⚠️ 食品安全类：对外引导私域沟通，切勿公开争辩或作绝对化承诺；须经主管复核后使用。")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB · 舆情 ↔ GEO 联动（交汇点）
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_geo:
+    from modules import sentiment_geo_bridge as BR
+    st.caption("把舆情里的**高频负面话题**推送到 GEO：针对这些话题，补充真实、准确的官方问答内容，"
+               "改善 AI 搜索回答。⚠️ 仅补充真实信息，严禁刷好评/伪造/灌水。")
+    topics = BR.hot_negatives(brand)
+    if not topics:
+        st.info("当前主体暂无高频负面话题（需有 3 级及以上舆情/工单）。先在「舆情分析」「工单处置」积累数据。")
+    else:
+        sugs = BR.geo_suggestions(brand, topics)
+        import pandas as _pd
+        st.markdown("#### 高频负面话题 → GEO 前置优化建议")
+        st.dataframe(_pd.DataFrame([{
+            "负面话题": s["topic"], "声量": s["count"], "AI 风险点": s["concern"],
+            "GEO 优化方向": s["geo_action"],
+        } for s in sugs]), use_container_width=True, hide_index=True)
+
+        st.markdown("**建议补充的 GEO 关键词**")
+        kws = BR.all_keywords(sugs)
+        st.code("\n".join(kws))
+        cc1, cc2 = st.columns(2)
+        with cc1:
+            if st.button("📡 带入 GEO 收录监测", use_container_width=True):
+                st.session_state["gi_kw"] = "\n".join(kws)
+                st.success(f"已带入 {len(kws)} 个词 → 去「GEO → 📡收录监测」运行检测")
+        with cc2:
+            st.page_link("pages/3_GEO.py", label="🌐 前往 GEO 布局优化内容", icon="🌐")
+        st.caption("闭环：舆情发现负面话题 → GEO 前置补充真实内容 → 改善 AI 回答 → 收录监测验证。")
 
 with tab_history:
     st.caption("舆情分析历史记录（含时间戳、摘要、风险等级、来源渠道）。仅显示当前品牌。")
