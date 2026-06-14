@@ -1,7 +1,7 @@
 import streamlit as st
 from config.settings import BRAND_DISPLAY_NAMES, BRAND_FOCUS
 from core.rag_engine import collection_count
-from core.llm_client import DEMO_MODE, get_demo_snapshot
+from core.llm_client import is_demo_mode, get_demo_snapshot
 
 
 def _preload_demo_for_brand(brand_key: str):
@@ -886,7 +886,7 @@ def render() -> str:
         )
 
         # ── API status ────────────────────────────────────────────────────
-        if DEMO_MODE:
+        if is_demo_mode():
             st.markdown(
                 '<div class="sidebar-status demo">💡 Demo 模式（使用预置数据）<br>'
                 '若要处理自有文件，请在设置中配置 API Key</div>',
@@ -921,6 +921,18 @@ def render() -> str:
         except Exception:
             pass
 
+        # ── 演示安全模式开关（仅管理员）：一键强制预置文案，配了 Key 也能现场切纯 Demo ──
+        if _admin:
+            try:
+                st.toggle(
+                    "🎭 演示安全模式",
+                    key="_force_demo",
+                    help="开启=强制使用预置演示文案（即使已配 API Key），现场最稳；关闭=恢复真实 AI（若已配 Key）。运行时即时生效，无需重启。",
+                )
+                st.caption("🎭 当前：预置文案" if is_demo_mode() else "🛰️ 当前：真实 AI")
+            except Exception:
+                pass
+
         # ── Disclaimer ────────────────────────────────────────────────────
         st.markdown(
             '<div style="padding:0 16px 24px 16px;font-size:10px;color:var(--text-muted,#4A5168);line-height:1.6">'
@@ -938,7 +950,7 @@ def render() -> str:
         pass
 
     # ── Demo 模式软提示横条（页面顶部，不干扰操作）──────────────────────────────
-    if DEMO_MODE:
+    if is_demo_mode():
         st.markdown(
             '<div style="background:#FFF7E6;border:1px solid #FFE0A3;border-radius:6px;'
             'padding:8px 14px;margin:0 0 12px;font-size:12.5px;color:#8A6D3B">'

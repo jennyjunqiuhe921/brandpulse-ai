@@ -1,6 +1,6 @@
 from __future__ import annotations
 from core.rag_engine import retrieve
-from core.llm_client import chat, build_rag_context, DEMO_MODE
+from core.llm_client import chat, build_rag_context, is_demo_mode
 from config.settings import BRAND_DISPLAY_NAMES
 
 # ── DEMO_MODE 预置竞品分析数据 ─────────────────────────────────────────────
@@ -351,7 +351,7 @@ def _get_preset(main_brand: str, competitor_brand: str) -> str | None:
 
 def run(main_brand: str, competitor_brand: str) -> dict:
     # Use preset text only in DEMO_MODE AND a preset exists
-    if DEMO_MODE:
+    if is_demo_mode():
         preset = _get_preset(main_brand, competitor_brand)
         if preset:
             return {"output": preset, "chunks": [], "demo_mode": True}

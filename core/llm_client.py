@@ -9,8 +9,35 @@ from config.settings import (
 _anthropic_client = None
 _openai_client = None
 
-# Demo mode activates only when neither key is present
-DEMO_MODE = not bool(ANTHROPIC_API_KEY or OPENAI_API_KEY)
+
+def _force_demo() -> bool:
+    """运行时强制 Demo 开关（无需重启）：环境变量 / secrets / 会话级开关任一开启即生效。"""
+    if os.getenv("FORCE_DEMO", "").strip().lower() in ("1", "true", "yes", "on"):
+        return True
+    try:
+        import streamlit as st
+        if str(st.secrets.get("FORCE_DEMO", "")).strip().lower() in ("1", "true", "yes", "on"):
+            return True
+        if st.session_state.get("_force_demo"):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def is_demo_mode() -> bool:
+    """是否走预置演示文案：强制开关开启，或两个 API Key 都没配。运行时实时判断。"""
+    if _force_demo():
+        return True
+    return not bool(ANTHROPIC_API_KEY or OPENAI_API_KEY)
+
+
+def __getattr__(name: str):
+    # 兼容历史用法 `from core.llm_client import DEMO_MODE` / `llm_client.DEMO_MODE`：
+    # 通过模块级 __getattr__ 实时求值，函数内 import 的调用点每次都能拿到最新状态。
+    if name == "DEMO_MODE":
+        return is_demo_mode()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def _get_anthropic_client() -> anthropic.Anthropic:
@@ -38,30 +65,36 @@ def set_call_tag(module: str = "", prompt_category: str = "") -> None:
 
 
 def _do_chat(system: str, user: str, max_tokens: int) -> str:
-    if DEMO_MODE:
+    if is_demo_mode():
         return _demo_response(system, user)
 
-    # Prefer OpenAI-compatible provider when its key is set
-    if OPENAI_API_KEY:
-        client = _get_openai_client()
-        resp = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            max_tokens=max_tokens,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        )
-        return resp.choices[0].message.content
+    # 真实 API 调用；任何失败（断网/超时/限流/鉴权）自动兜底到预置演示文案，演示不崩、观众无感。
+    try:
+        # Prefer OpenAI-compatible provider when its key is set
+        if OPENAI_API_KEY:
+            client = _get_openai_client()
+            resp = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                max_tokens=max_tokens,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            )
+            return resp.choices[0].message.content
 
-    # Fallback: Anthropic SDK
-    response = _get_anthropic_client().messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=max_tokens,
-        system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-        messages=[{"role": "user", "content": user}],
-    )
-    return response.content[0].text
+        # Fallback: Anthropic SDK
+        response = _get_anthropic_client().messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=max_tokens,
+            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+            messages=[{"role": "user", "content": user}],
+        )
+        return response.content[0].text
+    except Exception as e:
+        import sys
+        print(f"[llm_client] 真实 API 调用失败，自动回退 Demo 文案：{type(e).__name__}: {e}", file=sys.stderr)
+        return _demo_response(system, user)
 
 
 def chat(system: str, user: str, max_tokens: int = 2048) -> str:
@@ -85,7 +118,7 @@ def chat(system: str, user: str, max_tokens: int = 2048) -> str:
     finally:
         try:
             from core import ai_gateway
-            model = "demo" if DEMO_MODE else (OPENAI_MODEL if OPENAI_API_KEY else CLAUDE_MODEL)
+            model = "demo" if is_demo_mode() else (OPENAI_MODEL if OPENAI_API_KEY else CLAUDE_MODEL)
             ai_gateway.record_call(
                 module=_current_tag.get("module", ""),
                 prompt_category=_current_tag.get("prompt_category", ""),
