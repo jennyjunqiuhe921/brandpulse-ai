@@ -19,6 +19,15 @@ def authenticate(username: str, password: str) -> dict | None:
         return _to_dict(u, s)
 
 
+def get_user_by_id(user_id: int) -> dict | None:
+    """按 id 加载活跃用户（供 cookie 持久化恢复会话用）。不存在/冻结返回 None。"""
+    with get_session() as s:
+        u = s.query(User).filter(User.id == user_id).first()
+        if not u or u.status != "active":
+            return None
+        return _to_dict(u, s)
+
+
 def _to_dict(u: User, s) -> dict:
     t = s.query(Tenant).filter(Tenant.id == u.tenant_id).first()
     return {

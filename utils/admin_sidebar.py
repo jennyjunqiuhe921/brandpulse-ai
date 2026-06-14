@@ -31,6 +31,16 @@ def render() -> None:
             render_account_widget()
         except Exception:
             pass
+
+        # 持久化登录 cookie：登录态在但 cookie 缺失 → 补写（刷新/重连后可恢复）
+        try:
+            from auth import session_cookie as sc
+            from auth.platform_login import current_user as _pcu
+            _u = _pcu()
+            if _u:
+                sc.ensure("platform", _u["id"])
+        except Exception:
+            pass
         st.markdown(
             '<div style="padding:0 16px 24px;font-size:10px;color:#9C8E82;line-height:1.6">'
             "运营后台与品牌方系统物理隔离，仅供平台运营人员使用。</div>",

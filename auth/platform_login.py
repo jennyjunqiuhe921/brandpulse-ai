@@ -32,6 +32,8 @@ def logout():
     if u:
         audit.log("运营端登出", username=u["username"], user_id=u["id"])
     st.session_state.pop(_SESSION_KEY, None)
+    # cookie 清除放到 gate 登录页分支（set_page_config 之后渲染 remove，避免紧接 rerun 来不及）
+    st.session_state["_just_logged_out_platform"] = True
 
 
 def _render_login_form():
@@ -65,8 +67,27 @@ def _render_login_form():
 
 
 def platform_login_gate():
+    # 先尝试用持久化 cookie 恢复（仅平台管理员；只读 cookie 不渲染组件）
+    just_out = st.session_state.pop("_just_logged_out_platform", False)
+    if current_user() is None and not just_out:
+        try:
+            from auth import session_cookie as sc
+            from auth.users import get_user_by_id
+            uid = sc.read_uid("platform")
+            if uid:
+                u = get_user_by_id(uid)
+                if u and u.get("role") == ROLE_PLATFORM:
+                    st.session_state[_SESSION_KEY] = u
+        except Exception:
+            pass
     if current_user() is None:
         st.set_page_config(page_title="运营后台登录 — 智营AI", page_icon="🛰️", layout="centered")
+        if just_out:
+            try:
+                from auth import session_cookie as sc
+                sc.clear("platform")
+            except Exception:
+                pass
         _render_login_form()
         st.stop()
 

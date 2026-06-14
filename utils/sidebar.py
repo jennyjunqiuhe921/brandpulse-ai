@@ -921,6 +921,16 @@ def render() -> str:
         except Exception:
             pass
 
+        # ── 持久化登录 cookie：登录态在但 cookie 缺失 → 补写（刷新/重连后可恢复）──
+        try:
+            from auth import session_cookie as sc
+            from auth.login import current_user_id
+            _uid = current_user_id()
+            if _uid:
+                sc.ensure("brand", _uid)
+        except Exception:
+            pass
+
         # ── 演示安全模式开关（仅管理员）：一键强制预置文案，配了 Key 也能现场切纯 Demo ──
         if _admin:
             try:

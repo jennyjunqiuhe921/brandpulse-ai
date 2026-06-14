@@ -25,3 +25,4 @@ requests>=2.32.0
 SQLAlchemy>=2.0.0
 bcrypt>=4.0.0
 psycopg2-binary>=2.9.0   # 线上 Postgres（本地默认 SQLite 无需此项也能跑）
+streamlit-cookies-controller>=0.0.4   # 登录态持久化（签名token写cookie，刷新/重连不掉登录）

@@ -55,6 +55,9 @@ def logout():
     if u:
         audit.log("登出", username=u["username"], tenant_id=u["tenant_id"], user_id=u["id"])
     st.session_state.pop(_SESSION_KEY, None)
+    # 标记"刚登出"：下一轮 gate 跳过 cookie 自动恢复，并在登录页分支（set_page_config 之后，
+    # 组件能正常渲染 remove）清除 cookie——若在此处 clear 后紧接 st.rerun，组件来不及执行。
+    st.session_state["_just_logged_out"] = True
 
 
 # ── 登录页 ───────────────────────────────────────────────────────────────────
@@ -91,9 +94,32 @@ def _render_login_form():
 
 
 def login_gate():
-    """未登录 → 渲染登录页并停止；已登录 → 放行。"""
+    """未登录 → 先尝试 cookie 恢复；仍未登录则渲染登录页并停止；已登录 → 放行。
+
+    注意：此处只做 cookie **读取**（原生 st.context.cookies，不渲染组件），
+    cookie 的**写入**在侧边栏（set_page_config 之后）由 session_cookie.ensure 完成。
+    """
+    just_out = st.session_state.pop("_just_logged_out", False)
+    if current_user() is None and not just_out:
+        try:
+            from auth import session_cookie as sc
+            from auth.users import get_user_by_id
+            uid = sc.read_uid("brand")
+            if uid:
+                u = get_user_by_id(uid)
+                if u and u.get("role") != ROLE_PLATFORM:
+                    st.session_state[_SESSION_KEY] = u
+        except Exception:
+            pass
     if current_user() is None:
         st.set_page_config(page_title="登录 — PinSight AI", page_icon="🔐", layout="centered")
+        if just_out:
+            # 主动登出：在登录页（set_page_config 之后）清除 cookie，组件有完整渲染机会
+            try:
+                from auth import session_cookie as sc
+                sc.clear("brand")
+            except Exception:
+                pass
         _render_login_form()
         st.stop()
 
