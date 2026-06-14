@@ -39,6 +39,10 @@ def logout():
 def _render_login_form():
     st.markdown(
         """
+<style>
+/* 登录页隐藏 Streamlit 默认 pages/ 自动导航与侧边栏（避免运营端登录页泄露品牌端内部页面名）*/
+[data-testid="stSidebarNav"], [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+</style>
 <div style="max-width:560px;margin:8vh auto 0;text-align:center">
   <div style="font-size:40px">🛰️</div>
   <h1 style="font-family:'Noto Serif SC',serif;margin:6px 0 2px;font-size:24px;line-height:1.3;white-space:nowrap">智营AI · 运营管理后台</h1>

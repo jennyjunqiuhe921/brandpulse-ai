@@ -64,6 +64,10 @@ def logout():
 def _render_login_form():
     st.markdown(
         """
+<style>
+/* 登录页隐藏 Streamlit 默认 pages/ 自动导航与侧边栏（居中布局无需侧栏，避免泄露内部页面名）*/
+[data-testid="stSidebarNav"], [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+</style>
 <div style="max-width:420px;margin:8vh auto 0;text-align:center">
   <div style="font-size:40px">🧠</div>
   <h1 style="font-family:'Noto Serif SC',serif;margin:6px 0 2px">PinSight AI</h1>
