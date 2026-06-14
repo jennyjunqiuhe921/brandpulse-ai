@@ -6,6 +6,12 @@
       "runtimeExecutable": ".venv/bin/streamlit",
       "runtimeArgs": ["run", "main.py", "--server.port", "8610", "--server.headless", "true"],
       "port": 8610
+    },
+    {
+      "name": "pinsight-admin",
+      "runtimeExecutable": ".venv/bin/streamlit",
+      "runtimeArgs": ["run", "admin_app.py", "--server.port", "8611", "--server.headless", "true"],
+      "port": 8611
     }
   ]
 }
