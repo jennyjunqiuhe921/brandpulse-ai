@@ -40,14 +40,18 @@ def render_top_bar(brand_label: str = "") -> None:
             st.caption("· 每个模块顶部有操作引导\n\n· 正式内容需人工复核后导出\n\n· "
                        "Demo 模式使用预置数据")
             st.divider()
-            # 永远可见的逃生口：不依赖登录态是否正常，任何状态都能一键登出
+            # 永远可见的逃生口：决定性清除会话+cookie，不依赖登录态字段是否完整
             if st.button("🚪 退出登录", key="_topbar_logout", use_container_width=True):
+                for _k in ("auth", "platform_auth"):
+                    st.session_state.pop(_k, None)
+                st.session_state["_just_logged_out"] = True
+                st.session_state["_just_logged_out_platform"] = True
                 try:
-                    from auth.login import logout
-                    logout()
+                    from auth import session_cookie as sc
+                    sc.clear("brand")
+                    sc.clear("platform")
                 except Exception:
-                    st.session_state.pop("auth", None)
-                    st.session_state["_just_logged_out"] = True
+                    pass
                 st.rerun()
     st.markdown('<div style="height:4px"></div>', unsafe_allow_html=True)
 

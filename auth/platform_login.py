@@ -25,13 +25,14 @@ def ensure_db():
 
 def current_user() -> dict | None:
     u = st.session_state.get(_SESSION_KEY)
-    return u if u else None  # 空字典 {} 归一化为 None，全局判断一致
+    # 残缺/空登录态（空字典、缺 id 的字典）一律归一化为未登录
+    return u if (isinstance(u, dict) and u.get("id")) else None
 
 
 def logout():
     u = current_user()
     if u:
-        audit.log("运营端登出", username=u["username"], user_id=u["id"])
+        audit.log("运营端登出", username=u.get("username", ""), user_id=u.get("id"))
     st.session_state.pop(_SESSION_KEY, None)
     # cookie 清除放到 gate 登录页分支（set_page_config 之后渲染 remove，避免紧接 rerun 来不及）
     st.session_state["_just_logged_out_platform"] = True

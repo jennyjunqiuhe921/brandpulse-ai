@@ -29,7 +29,8 @@ def ensure_db():
 # ── 当前用户上下文 ───────────────────────────────────────────────────────────
 def current_user() -> dict | None:
     u = st.session_state.get(_SESSION_KEY)
-    return u if u else None  # 空字典 {} 归一化为 None，全局判断一致
+    # 残缺/空登录态（空字典、缺 id 的字典）一律归一化为未登录，避免半残状态
+    return u if (isinstance(u, dict) and u.get("id")) else None
 
 
 def current_tenant_id():
@@ -54,7 +55,7 @@ def is_admin() -> bool:
 def logout():
     u = current_user()
     if u:
-        audit.log("登出", username=u["username"], tenant_id=u["tenant_id"], user_id=u["id"])
+        audit.log("登出", username=u.get("username", ""), tenant_id=u.get("tenant_id"), user_id=u.get("id"))
     st.session_state.pop(_SESSION_KEY, None)
     # 标记"刚登出"：下一轮 gate 跳过 cookie 自动恢复，并在登录页分支（set_page_config 之后，
     # 组件能正常渲染 remove）清除 cookie——若在此处 clear 后紧接 st.rerun，组件来不及执行。
