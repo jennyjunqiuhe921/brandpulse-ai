@@ -916,8 +916,22 @@ def render() -> str:
 
         # ── 账号 + 登出 ────────────────────────────────────────────────────
         try:
-            from auth.login import render_account_widget
+            from auth.login import render_account_widget, current_user
             render_account_widget()
+            # 兜底逃生口：万一登录态残缺导致账号区未渲染，仍给一个无条件退出按钮，
+            # 保证任何状态下都能登出（决定性清除会话 + cookie + 粘性登出标记，永不卡死）。
+            if not current_user():
+                if st.button("🚪 退出登录", use_container_width=True, key="_sidebar_force_logout"):
+                    for _k in ("auth", "platform_auth"):
+                        st.session_state.pop(_k, None)
+                    st.session_state["_brand_logged_out"] = True
+                    st.session_state["_platform_logged_out"] = True
+                    try:
+                        from auth import session_cookie as sc
+                        sc.clear("brand"); sc.clear("platform")
+                    except Exception:
+                        pass
+                    st.rerun()
         except Exception:
             pass
 

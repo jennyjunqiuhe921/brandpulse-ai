@@ -34,8 +34,8 @@ def logout():
     if u:
         audit.log("运营端登出", username=u.get("username", ""), user_id=u.get("id"))
     st.session_state.pop(_SESSION_KEY, None)
-    # cookie 清除放到 gate 登录页分支（set_page_config 之后渲染 remove，避免紧接 rerun 来不及）
-    st.session_state["_just_logged_out_platform"] = True
+    # 「粘性登出」：持续拒绝 cookie 自动恢复，直到真正重新登录才解除（防残留 cookie 幽灵复活）。
+    st.session_state["_platform_logged_out"] = True
 
 
 def _render_login_form():
@@ -62,6 +62,7 @@ def _render_login_form():
         if submitted:
             user = authenticate(username, password)
             if user and user.get("role") == ROLE_PLATFORM:
+                st.session_state.pop("_platform_logged_out", None)
                 st.session_state[_SESSION_KEY] = user
                 audit.log("运营端登录", username=user["username"], user_id=user["id"])
                 st.rerun()
@@ -74,9 +75,9 @@ def _render_login_form():
 
 def platform_login_gate():
     # 先尝试用持久化 cookie 恢复（仅平台管理员；只读 cookie 不渲染组件）
-    just_out = st.session_state.pop("_just_logged_out_platform", False)
+    logged_out = st.session_state.get("_platform_logged_out", False)
     # 用 not 判断：同时兜住 None 和异常空字典 {}
-    if not current_user() and not just_out:
+    if not current_user() and not logged_out:
         try:
             from auth import session_cookie as sc
             from auth.users import get_user_by_id
@@ -89,7 +90,7 @@ def platform_login_gate():
             pass
     if not current_user():
         st.set_page_config(page_title="运营后台登录 — 智营AI", page_icon="🛰️", layout="centered")
-        if just_out:
+        if logged_out:
             try:
                 from auth import session_cookie as sc
                 sc.clear("platform")
@@ -107,7 +108,8 @@ def render_account_widget():
                 unsafe_allow_html=True)
     st.markdown(
         f'<div style="padding:2px 16px 6px;font-size:12px;color:#5C4F42">'
-        f'🛰️ <b>{u["name"]}</b>（平台管理员）</div>', unsafe_allow_html=True)
+        f'🛰️ <b>{u.get("name") or u.get("username") or "运营管理员"}</b>（平台管理员）</div>',
+        unsafe_allow_html=True)
     if st.button("退出登录", use_container_width=True, key="_plat_logout"):
         logout()
         st.rerun()

@@ -44,8 +44,9 @@ def render_top_bar(brand_label: str = "") -> None:
             if st.button("🚪 退出登录", key="_topbar_logout", use_container_width=True):
                 for _k in ("auth", "platform_auth"):
                     st.session_state.pop(_k, None)
-                st.session_state["_just_logged_out"] = True
-                st.session_state["_just_logged_out_platform"] = True
+                # 粘性登出标记：持续挡住 cookie 自动恢复，直到真正重新登录（杜绝幽灵复活）
+                st.session_state["_brand_logged_out"] = True
+                st.session_state["_platform_logged_out"] = True
                 try:
                     from auth import session_cookie as sc
                     sc.clear("brand")

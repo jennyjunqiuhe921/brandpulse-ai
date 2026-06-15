@@ -57,9 +57,10 @@ def logout():
     if u:
         audit.log("登出", username=u.get("username", ""), tenant_id=u.get("tenant_id"), user_id=u.get("id"))
     st.session_state.pop(_SESSION_KEY, None)
-    # 标记"刚登出"：下一轮 gate 跳过 cookie 自动恢复，并在登录页分支（set_page_config 之后，
-    # 组件能正常渲染 remove）清除 cookie——若在此处 clear 后紧接 st.rerun，组件来不及执行。
-    st.session_state["_just_logged_out"] = True
+    # 「粘性登出」：持续拒绝 cookie 自动恢复，直到用户**真正重新登录**才解除。
+    # （旧的一次性标记在云端 sc.clear 不可靠时，会被残留 cookie 在下一轮 rerun 悄悄登回，
+    #  造成"点了退出又被弹回登录态"的幽灵复活——粘性标记根治此问题。）
+    st.session_state["_brand_logged_out"] = True
 
 
 # ── 登录页 ───────────────────────────────────────────────────────────────────
@@ -90,6 +91,8 @@ def _render_login_form():
                 # 物理隔离：平台运营账号不得登录品牌端，只能走运营后台入口
                 st.error("该账号为平台运营账号，请使用运营管理后台入口登录（与品牌端隔离）。")
             elif user:
+                # 真正登录成功 → 解除粘性登出，恢复 cookie 持久化能力
+                st.session_state.pop("_brand_logged_out", None)
                 st.session_state[_SESSION_KEY] = user
                 audit.log("登录", username=user["username"],
                           tenant_id=user["tenant_id"], user_id=user["id"])
@@ -105,9 +108,10 @@ def login_gate():
     注意：此处只做 cookie **读取**（原生 st.context.cookies，不渲染组件），
     cookie 的**写入**在侧边栏（set_page_config 之后）由 session_cookie.ensure 完成。
     """
-    just_out = st.session_state.pop("_just_logged_out", False)
+    # 粘性登出标记：只要为 True，就**持续**拒绝 cookie 自动恢复（不 pop），直到登录成功才清除。
+    logged_out = st.session_state.get("_brand_logged_out", False)
     # 用 not 判断：同时兜住 None 和异常的空字典 {}（避免"能浏览但无退出按钮"的怪态）
-    if not current_user() and not just_out:
+    if not current_user() and not logged_out:
         try:
             from auth import session_cookie as sc
             from auth.users import get_user_by_id
@@ -120,8 +124,9 @@ def login_gate():
             pass
     if not current_user():
         st.set_page_config(page_title="登录 — PinSight AI", page_icon="🔐", layout="centered")
-        if just_out:
-            # 主动登出：在登录页（set_page_config 之后）清除 cookie，组件有完整渲染机会
+        if logged_out:
+            # 主动登出：在登录页（set_page_config 之后）尽力清除 cookie；即便 clear 不生效，
+            # 粘性标记也已挡住自动恢复，不会再被弹回登录态。
             try:
                 from auth import session_cookie as sc
                 sc.clear("brand")
@@ -136,15 +141,16 @@ def render_account_widget():
     u = current_user()
     if not u:
         return
-    role_label = ROLE_LABELS.get(u["role"], u["role"])
+    # 全部用 .get() 取字段：即便登录态字段残缺也绝不抛异常，保证「退出登录」按钮永远渲染。
+    role_label = ROLE_LABELS.get(u.get("role", ""), u.get("role", "") or "用户")
     st.markdown(
         f'<div class="sidebar-section-label" style="margin-top:8px">账号</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
         f'<div style="padding:2px 16px 6px;font-size:12px;color:var(--text-secondary,#5C4F42)">'
-        f'👤 <b>{u["name"]}</b>（{role_label}）<br>'
-        f'<span style="color:#9C8E82">{u["tenant_name"]}</span></div>',
+        f'👤 <b>{u.get("name") or u.get("username") or "当前用户"}</b>（{role_label}）<br>'
+        f'<span style="color:#9C8E82">{u.get("tenant_name","")}</span></div>',
         unsafe_allow_html=True,
     )
     if st.button("退出登录", use_container_width=True, key="_logout_btn"):
