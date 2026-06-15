@@ -24,7 +24,8 @@ def ensure_db():
 
 
 def current_user() -> dict | None:
-    return st.session_state.get(_SESSION_KEY)
+    u = st.session_state.get(_SESSION_KEY)
+    return u if u else None  # 空字典 {} 归一化为 None，全局判断一致
 
 
 def logout():
@@ -73,7 +74,8 @@ def _render_login_form():
 def platform_login_gate():
     # 先尝试用持久化 cookie 恢复（仅平台管理员；只读 cookie 不渲染组件）
     just_out = st.session_state.pop("_just_logged_out_platform", False)
-    if current_user() is None and not just_out:
+    # 用 not 判断：同时兜住 None 和异常空字典 {}
+    if not current_user() and not just_out:
         try:
             from auth import session_cookie as sc
             from auth.users import get_user_by_id
@@ -84,7 +86,7 @@ def platform_login_gate():
                     st.session_state[_SESSION_KEY] = u
         except Exception:
             pass
-    if current_user() is None:
+    if not current_user():
         st.set_page_config(page_title="运营后台登录 — 智营AI", page_icon="🛰️", layout="centered")
         if just_out:
             try:

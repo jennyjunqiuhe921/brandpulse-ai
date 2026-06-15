@@ -28,7 +28,8 @@ def ensure_db():
 
 # ── 当前用户上下文 ───────────────────────────────────────────────────────────
 def current_user() -> dict | None:
-    return st.session_state.get(_SESSION_KEY)
+    u = st.session_state.get(_SESSION_KEY)
+    return u if u else None  # 空字典 {} 归一化为 None，全局判断一致
 
 
 def current_tenant_id():
@@ -104,7 +105,8 @@ def login_gate():
     cookie 的**写入**在侧边栏（set_page_config 之后）由 session_cookie.ensure 完成。
     """
     just_out = st.session_state.pop("_just_logged_out", False)
-    if current_user() is None and not just_out:
+    # 用 not 判断：同时兜住 None 和异常的空字典 {}（避免"能浏览但无退出按钮"的怪态）
+    if not current_user() and not just_out:
         try:
             from auth import session_cookie as sc
             from auth.users import get_user_by_id
@@ -115,7 +117,7 @@ def login_gate():
                     st.session_state[_SESSION_KEY] = u
         except Exception:
             pass
-    if current_user() is None:
+    if not current_user():
         st.set_page_config(page_title="登录 — PinSight AI", page_icon="🔐", layout="centered")
         if just_out:
             # 主动登出：在登录页（set_page_config 之后）清除 cookie，组件有完整渲染机会
