@@ -1119,7 +1119,8 @@ def get_demo_snapshot(brand_key: str) -> dict:
         "geo_result":         _r(geo_text, questions=geo_questions),
         "content_result":     _r(content_text),
         "mp_result":          _r(mp_text),
-        "compliance_result":  _r(_DEMO_COMPLIANCE),
+        # 合规审查不做首屏预填：固定样板与任何输入无关，会出现"报告违禁词原文里没有"的穿帮。
+        # 合规卫士页改为输入后用规则引擎(precheck)对真实内容实时出报告（见 compliance_checker）。
         "sentiment_result":   _r(sentiment_text, comments_used="（示例预览，实际运行时显示真实样本评论）"),
         "comp_result":        _r(brand_text, _brand=b),   # competitor page uses brand context
     }
