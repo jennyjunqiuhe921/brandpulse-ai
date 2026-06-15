@@ -418,11 +418,17 @@ with tab_kb:
             elif not paste_source.strip():
                 st.error("请填写来源名称")
             else:
-                with st.spinner("正在分块并写入知识库…"):
-                    n = ingest_text(selected_brand, paste_text.strip(),
-                                    source=paste_source.strip())
-                st.success(f"✅ 已导入 {n} 个文档块（来源：{paste_source.strip()}）")
-                st.rerun()
+                try:
+                    with st.spinner("正在分块并写入知识库…"):
+                        n = ingest_text(selected_brand, paste_text.strip(),
+                                        source=paste_source.strip())
+                    st.success(f"✅ 已导入 {n} 个文档块（来源：{paste_source.strip()}）")
+                    st.rerun()
+                except Exception as e:
+                    # 知识库（向量库）在演示/云端环境可能未启用——优雅提示而非整页崩溃
+                    st.warning("⚠️ 知识库暂不可用：当前演示环境未启用本地向量库（chromadb），"
+                               "文本未写入。其余功能不受影响。")
+                    st.caption(f"技术详情：{type(e).__name__}: {e}")
 
     # ── URL scrape ────────────────────────────────────────────────────────
     with url_tab:

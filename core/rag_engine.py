@@ -79,9 +79,29 @@ def get_client():
     return _client
 
 
+def _make_embedding_function():
+    """创建默认嵌入函数；不同 chromadb 版本 / 缺 onnxruntime 时返回 None（优雅降级）。
+
+    云端曾出现 chromadb 半残（可导入但 DefaultEmbeddingFunction 缺失）→ 直接 AttributeError
+    裸崩整页。这里把它收敛为「返回 None」，由 get_collection 统一转成标准降级信号。"""
+    global CHROMA_OK
+    if _ef is None:
+        return None
+    try:
+        return _ef.DefaultEmbeddingFunction()
+    except Exception:
+        CHROMA_OK = False
+        return None
+
+
 def get_collection(brand_key: str):
-    _load_chromadb()
-    ef = _ef.DefaultEmbeddingFunction()
+    if _load_chromadb() is None:
+        raise RuntimeError("chromadb 不可用（知识库功能已降级）")
+    ef = _make_embedding_function()
+    if ef is None:
+        # 嵌入模型不可用（云端缺 onnxruntime / 版本不兼容）→ 与其它函数一致地降级，
+        # 抛标准 RuntimeError 供调用方捕获，而非把 AttributeError 抛到页面顶层。
+        raise RuntimeError("嵌入模型不可用（知识库功能已降级）")
     return get_client().get_or_create_collection(
         name=BRAND_COLLECTIONS[brand_key],
         embedding_function=ef,
