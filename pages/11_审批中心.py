@@ -27,7 +27,7 @@ def _render_list(scope: str, *, can_decide: bool):
         urge = " ⏰催办" if r["urged"] else ""
         with st.expander(f"{r['title']} · {r['biz_type']} · 风险{r['risk_level']}"
                          f" · {r['status']}{urge}", expanded=False):
-            render_detail(r, can_decide=can_decide)
+            render_detail(r, can_decide=can_decide, key_prefix=f"{scope}_")
 
 
 with tab1:

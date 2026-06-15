@@ -48,7 +48,7 @@ else:
             continue
         urge = ""
         with st.expander(f"{r['title']} · {r['status']} · v{r['version']} · {r['created_at']}"):
-            render_detail(r, can_decide=False, can_resubmit=True)
+            render_detail(r, can_decide=False, can_resubmit=True, key_prefix="myapr_")
             if r["status"] == "审批中":
                 cc1, cc2, _ = st.columns([1, 1, 3])
                 with cc1:

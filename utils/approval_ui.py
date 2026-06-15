@@ -35,7 +35,13 @@ def render_steps(req: dict) -> None:
                 st.markdown(f"> 针对原文：{s['quote']}")
 
 
-def render_detail(req: dict, *, can_decide: bool = False, can_resubmit: bool = False) -> None:
+def render_detail(req: dict, *, can_decide: bool = False, can_resubmit: bool = False,
+                  key_prefix: str = "") -> None:
+    # 同一单据可能同时出现在多个 tab（如既是发起人又是审批人），st.tabs 会同时渲染
+    # 所有 tab 内容 → 控件 key 必须带上下文前缀，否则重复 key 报错。
+    def _k(name: str) -> str:
+        return f"{key_prefix}{name}_{req['id']}"
+
     risk_c = _RISK_COLOR.get(req["risk_level"], "#9C8E82")
     st.markdown(
         f"### {req['title']}　{status_chip(req['status'])}", unsafe_allow_html=True)
@@ -71,8 +77,8 @@ def render_detail(req: dict, *, can_decide: bool = False, can_resubmit: bool = F
             st.markdown(f"**{c['username']}** · <span style='font-size:11px;color:#9C8E82'>"
                         f"{c['created_at']}</span>", unsafe_allow_html=True)
             st.markdown(c["body"])
-        nc = st.text_input("写评论…", key=f"cmt_{req['id']}")
-        if st.button("发表评论", key=f"cmtbtn_{req['id']}"):
+        nc = st.text_input("写评论…", key=_k("cmt"))
+        if st.button("发表评论", key=_k("cmtbtn")):
             if A.add_comment(req["id"], nc):
                 st.rerun()
 
@@ -80,17 +86,17 @@ def render_detail(req: dict, *, can_decide: bool = False, can_resubmit: bool = F
     if can_decide and req["status"] == "审批中":
         st.divider()
         st.markdown("**审批决策**")
-        quote = st.text_input("（可选）驳回时高亮的原文段落", key=f"q_{req['id']}")
-        comment = st.text_area("审批意见", key=f"c_{req['id']}",
+        quote = st.text_input("（可选）驳回时高亮的原文段落", key=_k("q"))
+        comment = st.text_area("审批意见", key=_k("c"),
                                placeholder="可选用意见模板：内容合规，同意 / 存在风险，请修改…")
         cc1, cc2, _ = st.columns([1, 1, 3])
         with cc1:
-            if st.button("✅ 通过", key=f"pass_{req['id']}", type="primary"):
+            if st.button("✅ 通过", key=_k("pass"), type="primary"):
                 if A.decide(req["id"], True, comment, quote):
                     st.toast("已通过")
                     st.rerun()
         with cc2:
-            if st.button("❌ 驳回", key=f"rej_{req['id']}"):
+            if st.button("❌ 驳回", key=_k("rej")):
                 if A.decide(req["id"], False, comment or "请修改后重提", quote):
                     st.toast("已驳回")
                     st.rerun()
@@ -99,8 +105,8 @@ def render_detail(req: dict, *, can_decide: bool = False, can_resubmit: bool = F
     if can_resubmit and req["status"] == "已驳回":
         st.divider()
         st.markdown("**修改后重新提交**")
-        new = st.text_area("修改内容", value=req["content"], key=f"re_{req['id']}", height=160)
-        if st.button("🔁 修改重提", key=f"rebtn_{req['id']}", type="primary"):
+        new = st.text_area("修改内容", value=req["content"], key=_k("re"), height=160)
+        if st.button("🔁 修改重提", key=_k("rebtn"), type="primary"):
             if A.resubmit(req["id"], new):
                 st.toast("已重新提交审批")
                 st.rerun()
