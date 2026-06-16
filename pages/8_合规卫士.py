@@ -35,15 +35,30 @@ st.markdown(
 
 
 
-# Pre-populate from content studio if available
+# 待审查内容：用 session key 作为唯一可编辑来源，避免"示例/导入"持续覆盖用户手动编辑。
+# （此前 bug：加载示例后 example_loaded 一直覆盖编辑框，用户改了字仍被旧示例覆盖→永远高风险）
+# 所有对 cc_input 的写入都必须在 text_area 实例化之前完成。
+if st.session_state.pop("_cc_clear", False):
+    st.session_state["cc_input"] = ""
+    st.session_state["content_for_compliance"] = ""
+    st.session_state["_cc_last_prefill"] = ""
+
 prefill = st.session_state.get("content_for_compliance", "")
+# 内容工坊送审导入：仅当有"新"导入时写入编辑框（不覆盖用户后续编辑）
+if prefill and st.session_state.get("_cc_last_prefill") != prefill:
+    st.session_state["cc_input"] = prefill
+    st.session_state["_cc_last_prefill"] = prefill
+# 加载风险示例：写入编辑框（一次性，pop 后框即可正常编辑）
+if "example_loaded" in st.session_state:
+    st.session_state["cc_input"] = st.session_state.pop("example_loaded")
+st.session_state.setdefault("cc_input", "")
 
 if prefill:
     st.success("✅ 已从「内容生成工厂」导入内容，可直接运行审查")
 
 content_input = st.text_area(
     "待审查内容",
-    value=prefill,
+    key="cc_input",
     placeholder="粘贴需要合规审查的文案、分析报告、推广策略等内容...",
     height=250,
 )
@@ -51,7 +66,7 @@ content_input = st.text_area(
 col1, col2 = st.columns([3, 1])
 with col2:
     if st.button("清除导入内容", type="secondary"):
-        st.session_state["content_for_compliance"] = ""
+        st.session_state["_cc_clear"] = True   # 在下一轮 text_area 实例化前清空
         st.rerun()
 
 EXAMPLE_RISKY = """我们是行业第一品牌，产品口味最好，用了我们的产品你一定不会去选其他家！我们的原料是全国最顶级的食材，健康无添加，用了包你效果翻倍。竞争对手的产品根本比不上我们。"""
@@ -74,9 +89,6 @@ with st.expander("📋 风险示例库（点击展开 · 一键加载并运行�
             st.session_state["example_loaded"] = EXAMPLE_B
             st.session_state["auto_run_compliance"] = True
             st.rerun()
-
-if "example_loaded" in st.session_state:
-    content_input = st.session_state["example_loaded"]
 
 auto_run = st.session_state.pop("auto_run_compliance", False)
 
