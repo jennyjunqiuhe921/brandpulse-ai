@@ -45,6 +45,7 @@ if "cw_prefill" in st.session_state:
 if st.session_state.get("_cw_last_brand") != brand:
     st.session_state.pop("content_result", None)
     st.session_state.pop("cw_selected_versions", None)
+    st.session_state.pop("cw_working_copy", None)   # 就地编辑的工作副本随品牌重置
     st.session_state["_cw_last_brand"] = brand
 
 st.markdown(
@@ -162,6 +163,7 @@ with tab_gen:
                 )
                 st.session_state["content_result"] = result
                 st.session_state["content_for_compliance"] = result["output"]
+                st.session_state["cw_working_copy"] = result["output"]  # 工作副本（可就地编辑）
                 st.session_state.pop("reviewed_content", None)
                 st.session_state.pop("cw_selected_versions", None)
             except Exception as e:
@@ -173,7 +175,10 @@ with tab_gen:
         st.markdown("---")
         maybe_show_banner(res)
 
-        raw_output = res["output"]
+        # 工作副本：用户可就地编辑，作为合规检测 / 保存 / 送审的真实依据
+        # （兼容 Demo 预览：content_result 由侧栏预填而未走生成时，惰性初始化）
+        st.session_state.setdefault("cw_working_copy", res["output"])
+        raw_output = st.session_state["cw_working_copy"]
 
         # 拆出末尾的「AI 输出内容分类」章节
         split_marker = "---\n\n### AI 输出内容分类"
@@ -183,7 +188,7 @@ with tab_gen:
             body, tail = raw_output.split(split_marker, 1)
             classification_part = split_marker + tail
 
-        # ── B5 · 合规预检（即时关键词扫描）────────────────────────────────────
+        # ── B5 · 合规预检（即时关键词扫描，扫的是当前工作副本）──────────────────
         pc = precheck(body)
         level_render = {"高": st.error, "中": st.warning, "低": st.success}
         level_render[pc["level"]](f"🛡️ 合规预检风险等级：**{pc['level']}** — {pc['summary']}")
@@ -191,6 +196,24 @@ with tab_gen:
             st.caption("⚠️ 高风险词：" + "、".join(pc["high"]))
         if pc["med"]:
             st.caption("⚠️ 需核实表述：" + "、".join(pc["med"]))
+
+        # ── 就地修改文案 → 重新检测（高风险时默认展开，引导用户修改）─────────────
+        with st.expander("✏️ 就地修改文案 → 重新检测合规", expanded=(pc["level"] == "高")):
+            st.caption("可直接删改下方文案（如去掉绝对化用语），点按钮后风险等级会即时刷新。"
+                       "修改后的版本将用于保存任务 / 送审。")
+            edited = st.text_area("文案内容（可编辑）", value=raw_output, height=300,
+                                  label_visibility="collapsed")
+            ec1, ec2 = st.columns([1, 1])
+            with ec1:
+                if st.button("🔄 应用修改并重新检测", use_container_width=True, type="primary"):
+                    st.session_state["cw_working_copy"] = edited
+                    st.session_state.pop("reviewed_content", None)  # 内容已变，需重新人工复核
+                    st.rerun()
+            with ec2:
+                if st.button("↩️ 还原为 AI 原始生成", use_container_width=True):
+                    st.session_state["cw_working_copy"] = res["output"]
+                    st.session_state.pop("reviewed_content", None)
+                    st.rerun()
 
         st.markdown("---")
 
@@ -260,7 +283,7 @@ with tab_gen:
         col_a, col_b = st.columns([2, 2])
         with col_a:
             if not pc["can_export"]:
-                st.error("🚫 存在高风险词，请修改后重新生成方可导出/送审")
+                st.error("🚫 存在高风险词，请在上方「✏️ 就地修改文案」中删改后重新检测，方可导出/送审")
             elif not reviewed:
                 st.info("🔒 完成人工复核后可送往合规审查")
             else:
@@ -268,12 +291,12 @@ with tab_gen:
         with col_b:
             if st.button("🛡️ 一键送往合规审查", type="primary",
                          use_container_width=True, disabled=not can_export):
-                st.session_state["content_for_compliance"] = res["output"]
+                st.session_state["content_for_compliance"] = raw_output  # 送审用编辑后的工作副本
                 st.session_state["auto_run_compliance"] = False
                 st.switch_page("pages/8_合规卫士.py")
 
         with st.expander("📋 查看完整输出", expanded=False):
-            st.text_area("完整文本（可复制）", value=res["output"], height=300)
+            st.text_area("完整文本（可复制）", value=raw_output, height=300)
 
         # A3 · 免责声明
         render_disclaimer()
