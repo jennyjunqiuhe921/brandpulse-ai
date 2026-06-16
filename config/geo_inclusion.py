@@ -112,13 +112,34 @@ def round_stats(brand: str, round_id: str | None = None) -> dict:
     positions = [pos for *_, i, pos in [(k, p, i, pos) for k, p, i, pos in rows] if i and pos]
     avg_pos = round(sum(positions) / len(positions), 1) if positions else 0
     top10 = round(len(positions) / total_cells * 100, 1) if total_cells else 0  # 占位率
+    # 前3名占比：被收录且排进前3名的格子占全部检测格子的比例（衡量"排名靠前"，与收录率区分开）
+    top3_rate = round(sum(1 for p in positions if p <= 3) / total_cells * 100, 1) if total_cells else 0
 
     return {
         "round_id": rid, "checked_at": rounds[0]["checked_at"] if not round_id else None,
         "keywords": keywords, "per_platform": per_platform, "overall_rate": overall,
         "by_keyword": by_keyword, "avg_position": avg_pos, "occupancy_rate": top10,
+        "top3_rate": top3_rate,
         "total_included": total_inc, "total_cells": total_cells,
     }
+
+
+def round_matrix(brand: str, round_id: str | None = None) -> dict:
+    """问题 × 平台 收录矩阵：{keywords, platforms, cells[kw][pf]=(included, position)}。
+
+    供前端展示"哪个问题、在哪个平台、是否收录、排第几"——直接回答用户"这是哪个问题
+    在各平台的收录情况、排名在前吗"的疑问。数据源为逐条 (问题,平台,收录,名次)。
+    """
+    rounds = list_rounds(brand)
+    if not rounds:
+        return {}
+    rid = round_id or rounds[0]["round_id"]
+    rows = _round_rows(brand, rid)
+    keywords = sorted({k for k, *_ in rows})
+    cells = {k: {pf: (False, 0) for pf in PLATFORMS} for k in keywords}
+    for k, pf, inc, pos in rows:
+        cells[k][pf] = (bool(inc), int(pos or 0))
+    return {"keywords": keywords, "platforms": list(PLATFORMS), "cells": cells}
 
 
 def trend(brand: str) -> list[dict]:

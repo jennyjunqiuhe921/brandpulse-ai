@@ -45,11 +45,18 @@ def render(brand: str) -> None:
                            f"{r['checked_at']}（{r['round_id']}）" for r in rounds if r["round_id"] == i))
     stats = GI.round_stats(brand, rid)
 
+    # ── 指标说明：区分"收录(覆盖广度)"与"名次(排名靠前)"两个维度 ───────────────
+    st.info("📖 **两个维度别混淆**：**收录** = 品牌是否出现在 AI 对该问题的回答里（覆盖广度）；"
+            "**命中名次** = 出现时排第几（越小越靠前）。下方矩阵可看每个问题在每个平台的具体表现。")
+
     # ── 顶部核心指标 ──────────────────────────────────────────────────────────
     c = st.columns(4)
-    c[0].metric("整体收录率", f"{stats['overall_rate']}%")
-    c[1].metric("关键词占位率", f"{stats['occupancy_rate']}%", help="命中 AI 回答的比例")
-    c[2].metric("平均命中名次", stats["avg_position"] or "—")
+    c[0].metric("整体收录率", f"{stats['overall_rate']}%",
+                help="所有「问题×平台」检测中，品牌出现的比例（覆盖广度）")
+    c[1].metric("前3名占比", f"{stats.get('top3_rate', 0)}%",
+                help="被收录且排进前3名的比例（衡量排名是否靠前，与收录率是两回事）")
+    c[2].metric("平均命中名次", stats["avg_position"] or "—",
+                help="品牌被收录时的平均排名，数值越小越靠前")
     c[3].metric("检测轮次", len(rounds))
 
     # ── 8 大平台收录卡片（仿真实界面）────────────────────────────────────────
@@ -84,13 +91,27 @@ def render(brand: str) -> None:
         else:
             st.caption("多跑几轮后显示趋势。")
 
-    # ── 按关键词收录明细 ──────────────────────────────────────────────────────
-    st.markdown("#### 按关键词收录明细")
-    st.dataframe(pd.DataFrame([{
-        "关键词": k["keyword"],
-        "收录平台数": f'{k["platforms_hit"]}/{k["total_platforms"]}',
-        "收录率": f'{round(k["platforms_hit"]/k["total_platforms"]*100)}%',
-    } for k in stats["by_keyword"]]), use_container_width=True, hide_index=True)
+    # ── 问题 × 平台 收录矩阵（逐格：是否收录 + 命中名次）──────────────────────
+    st.markdown("#### 问题 × 平台 收录矩阵")
+    st.caption("每格 = 该问题在该平台的表现：**✅ 第N** = 被收录且排第 N 名；**—** = 未收录。"
+               "最后一列「收录平台数」= 该问题被几个平台收录。")
+    mx = GI.round_matrix(brand, rid)
+
+    def _cell(inc: bool, pos: int) -> str:
+        return (f"✅ 第{pos}" if pos else "✅") if inc else "—"
+
+    matrix_rows = []
+    for kw in mx.get("keywords", []):
+        row = {"问题": kw}
+        hit = 0
+        for pf in mx["platforms"]:
+            inc, pos = mx["cells"][kw][pf]
+            row[f'{_PF_ICON.get(pf, "")}{pf}'] = _cell(inc, pos)
+            if inc:
+                hit += 1
+        row["收录平台数"] = f'{hit}/{len(mx["platforms"])}'
+        matrix_rows.append(row)
+    st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
 
     st.caption("演示数据：收录情况为模拟生成，持续检测轮次越多收录率越高。接入真实 AI 平台 "
                "API 后替换为实测。所有内容优化须基于真实信息，严禁刷量灌水。")
