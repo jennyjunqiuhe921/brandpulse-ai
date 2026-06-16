@@ -790,6 +790,11 @@ _NAV_GROUPS = [
 
 
 def render() -> str:
+    # 页面级登录强制：兜底 app.py 门控在多页路由下未拦住空登录态的情况
+    # （症状：操作人「—」、侧栏无账号区、退出按钮失效）。已登录则瞬间返回。
+    from auth.login import enforce_login
+    enforce_login()
+
     # Inject global CSS on every page
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 

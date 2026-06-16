@@ -64,12 +64,10 @@ def logout():
 
 
 def do_hard_logout():
-    """决定性登出：清会话 + 用浏览器 JS 直接删 cookie 并硬跳转到根地址。
+    """决定性登出（服务端）：清会话 + 粘性登出标记 + best-effort 清 cookie + rerun。
 
-    背景：Streamlit 的 cookie 控件（streamlit-cookies-controller）在云端删除 cookie
-    的时序不可靠，导致"点退出→残留 cookie 又把人登回"的顽固问题。这里绕过它，
-    用前端 JS 在**父文档**（同源 iframe 的 window.parent）上让 cookie 过期，并硬刷新
-    到干净 URL —— 这是浏览器层面的真删除真跳转，不依赖任何会话状态机，必定生效。
+    rerun 后由 enforce_login()（每个页面顶部调用）把空登录态弹回登录页。
+    不用 JS 跳转——它被 Streamlit 组件 iframe 沙箱的 allow-top-navigation 限制挡死。
     """
     for _k in ("auth", "platform_auth"):
         st.session_state.pop(_k, None)
@@ -80,29 +78,7 @@ def do_hard_logout():
         sc.clear("brand"); sc.clear("platform")
     except Exception:
         pass
-    import streamlit.components.v1 as components
-    components.html(
-        """
-<script>
-  var names = ["pin_auth", "pin_platform_auth"];
-  var expire = "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
-  try {
-    var doc = window.parent.document;
-    names.forEach(function(n){ doc.cookie = n + expire; document.cookie = n + expire; });
-  } catch (e) {
-    names.forEach(function(n){ document.cookie = n + expire; });
-  }
-  try {
-    var L = window.parent.location;
-    L.replace(L.origin + L.pathname);          // 硬跳转到应用根，触发全新门控
-  } catch (e) {
-    window.top.location.replace("/");
-  }
-</script>
-""",
-        height=0,
-    )
-    st.stop()
+    st.rerun()
 
 
 # ── 登录页 ───────────────────────────────────────────────────────────────────
@@ -169,6 +145,40 @@ def login_gate():
         if logged_out:
             # 主动登出：在登录页（set_page_config 之后）尽力清除 cookie；即便 clear 不生效，
             # 粘性标记也已挡住自动恢复，不会再被弹回登录态。
+            try:
+                from auth import session_cookie as sc
+                sc.clear("brand")
+            except Exception:
+                pass
+        _render_login_form()
+        st.stop()
+
+
+def enforce_login() -> None:
+    """页面级登录强制（每个品牌页在 render_sidebar 顶部调用）。
+
+    背景：观测到 app.py 的 login_gate 在某些多页路由下未能拦住空登录态（页面照常渲染，
+    状态栏「操作人 —」、侧栏无账号区、退出按钮形同虚设）。此处在**每个页面**重做强制：
+    先尝试 cookie 恢复（粘性登出时跳过），仍未登录则直接渲染登录页并 st.stop()。
+    与 login_gate 的区别：不调用 set_page_config（页面已调用），避免重复设置报错。
+    已登录时立即返回，几乎零开销。
+    """
+    if current_user():
+        return
+    logged_out = st.session_state.get("_brand_logged_out", False)
+    if not logged_out:
+        try:
+            from auth import session_cookie as sc
+            from auth.users import get_user_by_id
+            uid = sc.read_uid("brand")
+            if uid:
+                u = get_user_by_id(uid)
+                if u and u.get("role") != ROLE_PLATFORM:
+                    st.session_state[_SESSION_KEY] = u
+        except Exception:
+            pass
+    if not current_user():
+        if logged_out:
             try:
                 from auth import session_cookie as sc
                 sc.clear("brand")
