@@ -55,9 +55,17 @@ elif step == 1:
         st.session_state["_wiz_step"] = 2; st.rerun()
 
 elif step == 2:
-    st.markdown("### 第 3 步：上传品牌 VI / 优质历史文案，AI 学习品牌调性")
-    st.file_uploader("上传文件（VI 手册 / 历史文案，可多选）", accept_multiple_files=True)
-    st.caption("演示环境不实际训练，仅展示流程。正式版会让 AI 学习品牌调性。")
+    st.markdown("### 第 3 步：让 AI 学习品牌调性")
+    st.caption("提供品牌 VI / 优质历史文案，下列方式任选其一即可，不必非得上传文件。")
+    _t_up, _t_paste, _t_url = st.tabs(["📎 上传文件", "📝 粘贴文本", "🔗 官网链接"])
+    with _t_up:
+        st.file_uploader("上传文件（VI 手册 / 历史文案，可多选）", accept_multiple_files=True)
+    with _t_paste:
+        st.text_area("粘贴品牌文案 / 调性说明", height=160,
+                     placeholder="把品牌官网介绍、过往优质文案、调性要求等粘贴到此处……")
+    with _t_url:
+        st.text_input("品牌官网 / 内容页链接", placeholder="https://…")
+    st.caption("演示环境不实际训练，仅展示流程。正式版会据此让 AI 学习品牌调性。")
     c1, c2 = st.columns(2)
     if c1.button("上一步"):
         st.session_state["_wiz_step"] = 1; st.rerun()
