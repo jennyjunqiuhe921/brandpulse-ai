@@ -158,6 +158,7 @@ with tab_list:
                         else:
                             if st.button("删除", key=f"del_{bid}", use_container_width=True):
                                 st.session_state["bm_confirm_del"] = bid
+                                st.rerun()   # 立即刷新，让「确认删除」按钮当场出现（否则首点像无反应）
 
         # ── Inline edit form ──────────────────────────────────────────────
         edit_id = st.session_state.get("bm_edit_id")
