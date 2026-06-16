@@ -20,11 +20,10 @@ def render_top_bar(brand_label: str = "") -> None:
 
     c1, c2, c3, c4 = st.columns([5, 3, 1.2, 1.2])
     with c1:
+        # 顶部不再重复显示当前品牌（左侧栏已标明所选品牌），保持标题简洁
         st.markdown(
-            f'<div style="font-family:var(--font-display,serif);font-size:15px;'
-            f'font-weight:700;color:#1C1510;padding-top:6px">智营AI · 一体化营销工作台'
-            f'<span style="font-size:12px;color:#9C8E82;font-weight:400">'
-            f'　{brand_label}</span></div>',
+            '<div style="font-family:var(--font-display,serif);font-size:15px;'
+            'font-weight:700;color:#1C1510;padding-top:6px">智营AI · 一体化营销工作台</div>',
             unsafe_allow_html=True,
         )
     with c2:
