@@ -159,16 +159,25 @@ def _render_history(brand):
     if not records:
         st.info("暂无监测记录。在「GEO 分析」运行一次分析后即会生成历史记录。")
         return
-    _pb = {"单次": "▶️", "每日": "🔁", "每周": "📅"}
+    _pb = {"单次": "🔹", "每日": "🔁", "每周": "📅"}
+    from modules.geo_compare import get_metrics as _gc_metrics, METRICS as _GC_METRICS
     for r in records:
-        with st.container(border=True):
-            hc1, hc2 = st.columns([5, 1])
-            with hc1:
-                st.markdown(f"**{_pb.get(r['period'],'•')} {r['period']}监测** · 地域：{r['region']} · `{r['status']}`")
-                st.caption(f"⏱ {r.get('created_at','')}　|　{r.get('summary','')}")
-            with hc2:
-                if st.button("删除", key=f"geo_del_{r['id']}", use_container_width=True):
-                    geo_tasks.delete_record(r["id"]); st.rerun()
+        # 整条做成可展开详情（此前 ▶️ 是静态文字、点不开，误导用户）
+        with st.expander(
+            f"{_pb.get(r['period'],'•')} {r['period']}监测 · 地域：{r['region']} · {r['status']}"
+            f"　｜　⏱ {r.get('created_at','')}　｜　{r.get('summary','')}"):
+            st.markdown(
+                f"- **周期**：{r['period']}　**地域**：{r['region']}　**状态**：{r['status']}\n"
+                f"- **创建时间**：{r.get('created_at','')}\n"
+                f"- **概要**：{r.get('summary','—')}")
+            m = _gc_metrics(r)
+            parts = [f"{label} **{m.get(key)}{unit}**"
+                     for key, label, _bb, unit in _GC_METRICS if m.get(key) is not None]
+            if parts:
+                st.markdown("**本轮 GEO 指标**：　" + "　·　".join(parts))
+            st.caption("演示数据：指标为确定性合成，接入真实 AI 平台 API 后替换为实测。")
+            if st.button("🗑 删除此记录", key=f"geo_del_{r['id']}"):
+                geo_tasks.delete_record(r["id"]); st.rerun()
 
 
 def _set_mode(m):

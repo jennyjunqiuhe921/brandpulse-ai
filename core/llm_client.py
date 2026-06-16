@@ -159,7 +159,9 @@ def _demo_response(system: str, user: str) -> str:
 
     if "GEO" in system or "可见度" in system:
         return _DEMO_GEO_MAP.get(brand, _DEMO_GEO_HEYTEA)
-    if "合规" in system or ("风险" in system and "审查" in system):
+    # 只匹配合规审查 prompt 的独有标志，避免误伤含"合规要求"四区块说明的舆情/内容等 prompt
+    # （此前 bug：舆情 prompt 含"合规要求"→被贪婪的 "合规" in system 命中→舆情页错显合规报告）
+    if "合规审查专员" in system or "合规审查报告" in system:
         return _DEMO_COMPLIANCE
     if "舆情" in system:
         return _DEMO_SENTIMENT_MAP.get(brand, _DEMO_SENTIMENT_HEYTEA)
