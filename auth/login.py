@@ -63,6 +63,48 @@ def logout():
     st.session_state["_brand_logged_out"] = True
 
 
+def do_hard_logout():
+    """决定性登出：清会话 + 用浏览器 JS 直接删 cookie 并硬跳转到根地址。
+
+    背景：Streamlit 的 cookie 控件（streamlit-cookies-controller）在云端删除 cookie
+    的时序不可靠，导致"点退出→残留 cookie 又把人登回"的顽固问题。这里绕过它，
+    用前端 JS 在**父文档**（同源 iframe 的 window.parent）上让 cookie 过期，并硬刷新
+    到干净 URL —— 这是浏览器层面的真删除真跳转，不依赖任何会话状态机，必定生效。
+    """
+    for _k in ("auth", "platform_auth"):
+        st.session_state.pop(_k, None)
+    st.session_state["_brand_logged_out"] = True
+    st.session_state["_platform_logged_out"] = True
+    try:
+        from auth import session_cookie as sc
+        sc.clear("brand"); sc.clear("platform")
+    except Exception:
+        pass
+    import streamlit.components.v1 as components
+    components.html(
+        """
+<script>
+  var names = ["pin_auth", "pin_platform_auth"];
+  var expire = "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+  try {
+    var doc = window.parent.document;
+    names.forEach(function(n){ doc.cookie = n + expire; document.cookie = n + expire; });
+  } catch (e) {
+    names.forEach(function(n){ document.cookie = n + expire; });
+  }
+  try {
+    var L = window.parent.location;
+    L.replace(L.origin + L.pathname);          // 硬跳转到应用根，触发全新门控
+  } catch (e) {
+    window.top.location.replace("/");
+  }
+</script>
+""",
+        height=0,
+    )
+    st.stop()
+
+
 # ── 登录页 ───────────────────────────────────────────────────────────────────
 def _render_login_form():
     st.markdown(
@@ -154,5 +196,4 @@ def render_account_widget():
         unsafe_allow_html=True,
     )
     if st.button("退出登录", use_container_width=True, key="_logout_btn"):
-        logout()
-        st.rerun()
+        do_hard_logout()

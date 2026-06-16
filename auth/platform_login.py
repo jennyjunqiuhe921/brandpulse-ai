@@ -111,5 +111,5 @@ def render_account_widget():
         f'🛰️ <b>{u.get("name") or u.get("username") or "运营管理员"}</b>（平台管理员）</div>',
         unsafe_allow_html=True)
     if st.button("退出登录", use_container_width=True, key="_plat_logout"):
-        logout()
-        st.rerun()
+        from auth.login import do_hard_logout
+        do_hard_logout()

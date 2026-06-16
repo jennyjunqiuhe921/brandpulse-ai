@@ -42,18 +42,9 @@ def render_top_bar(brand_label: str = "") -> None:
             st.divider()
             # 永远可见的逃生口：决定性清除会话+cookie，不依赖登录态字段是否完整
             if st.button("🚪 退出登录", key="_topbar_logout", use_container_width=True):
-                for _k in ("auth", "platform_auth"):
-                    st.session_state.pop(_k, None)
-                # 粘性登出标记：持续挡住 cookie 自动恢复，直到真正重新登录（杜绝幽灵复活）
-                st.session_state["_brand_logged_out"] = True
-                st.session_state["_platform_logged_out"] = True
-                try:
-                    from auth import session_cookie as sc
-                    sc.clear("brand")
-                    sc.clear("platform")
-                except Exception:
-                    pass
-                st.rerun()
+                # 决定性登出：前端 JS 直删 cookie + 硬跳转，绕过 cookie 控件的不可靠时序
+                from auth.login import do_hard_logout
+                do_hard_logout()
     st.markdown('<div style="height:4px"></div>', unsafe_allow_html=True)
 
 
