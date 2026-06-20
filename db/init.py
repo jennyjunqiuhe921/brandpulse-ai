@@ -51,8 +51,24 @@ def _ensure_columns() -> None:
 
 _BRANDS_DIR = Path(__file__).parent.parent / "brands"
 
-_DEFAULT_ADMIN_USER = os.getenv("DEFAULT_ADMIN_USER", "admin")
-_DEFAULT_ADMIN_PASS = os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123")
+def _get_secret(key: str, default: str = "") -> str:
+    """从环境变量 / Streamlit Secrets 读取（生产环境账号密码来源）。"""
+    try:
+        from config.settings import _get_env
+        return _get_env(key, default)
+    except Exception:
+        return os.getenv(key, default)
+
+
+def _truthy(v: str) -> bool:
+    return str(v).strip().lower() in ("1", "true", "yes", "on")
+
+
+_DEFAULT_ADMIN_USER = _get_secret("DEFAULT_ADMIN_USER", "admin")
+# ⚠️ 生产环境务必在 Secrets 配置以下强密码。未配置时回退到弱口令——仅供本地开发，严禁用于生产。
+_ADMIN_PASS    = _get_secret("ADMIN_PASSWORD") or _get_secret("DEFAULT_ADMIN_PASSWORD") or "admin123"
+_STAFF_PASS    = _get_secret("STAFF_PASSWORD") or "staff123"
+_PLATFORM_PASS = _get_secret("PLATFORM_PASSWORD") or "platform123"
 
 
 _INITIALIZED = False
@@ -80,14 +96,14 @@ def init_db(force: bool = False) -> None:
             s.add(User(
                 tenant_id=tenant.id,
                 username=_DEFAULT_ADMIN_USER,
-                password_hash=hash_password(_DEFAULT_ADMIN_PASS),
+                password_hash=hash_password(_ADMIN_PASS),
                 name="管理员",
                 role=ROLE_ADMIN,
             ))
             s.add(User(
                 tenant_id=tenant.id,
                 username="staff1",
-                password_hash=hash_password("staff123"),
+                password_hash=hash_password(_STAFF_PASS),
                 name="市场专员",
                 role=ROLE_STAFF,
             ))
@@ -95,10 +111,20 @@ def init_db(force: bool = False) -> None:
             s.add(User(
                 tenant_id=tenant.id,
                 username="platform",
-                password_hash=hash_password("platform123"),
+                password_hash=hash_password(_PLATFORM_PASS),
                 name="平台运营",
                 role=ROLE_PLATFORM,
             ))
+
+        # 一次性密码轮换（生产用）：在 Secrets 设 RESET_SEED_PASSWORDS=1 + 上面三个强密码，
+        # 重启一次即把【已存在】的种子账号密码改为 Secrets 中的值（无需数据库手术）。
+        # 轮换完成后请把 RESET_SEED_PASSWORDS 置回 0 / 删除，以免后续重启覆盖你在 App 内改过的密码。
+        if _truthy(_get_secret("RESET_SEED_PASSWORDS")):
+            for _uname, _pw in [(_DEFAULT_ADMIN_USER, _ADMIN_PASS),
+                                ("staff1", _STAFF_PASS), ("platform", _PLATFORM_PASS)]:
+                _u = s.query(User).filter(User.username == _uname).first()
+                if _u and _pw:
+                    _u.password_hash = hash_password(_pw)
 
         # 3. 导入演示品牌（仅当库内无品牌时）
         if s.query(Brand).count() == 0 and _BRANDS_DIR.exists():

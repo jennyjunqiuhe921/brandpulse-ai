@@ -117,7 +117,7 @@ def _render_login_form():
                 st.rerun()
             else:
                 st.error("用户名或密码错误，或账号已被冻结")
-        st.caption("默认管理员：admin / admin123（首次登录后请尽快修改密码）")
+        st.caption("账号由企业管理员统一分配；首次登录后请尽快修改密码。")
 
 
 def login_gate():

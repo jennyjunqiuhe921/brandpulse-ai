@@ -70,7 +70,7 @@ def _render_login_form():
                 st.error("该账号无运营后台权限（仅限平台管理员）")
             else:
                 st.error("账号或密码错误，或账号已被冻结")
-        st.caption("本入口无注册功能，账号由系统统一分配。演示账号：platform / platform123")
+        st.caption("本入口无注册功能，账号由系统统一分配。")
 
 
 def platform_login_gate():
